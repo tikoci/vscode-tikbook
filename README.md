@@ -51,19 +51,50 @@ _Currently in early/conceptual stages — feedback welcome!_
 > Both "Known Issues" and a per-version "Changelog" (as well as future feature tracking) are now in [`CHANGELOG.md`](https://github.com/tikoci/vscode-tikbook/blob/main/CHANGELOG.md) which tracks the _current_ state of affairs for `vscode-tikbook`.
 
 
+### Available Features
 
+#### RouterOS Quick Commander Menu
+  - Provide a "menu tree" of TikBook features and help – many of other feature described here can be invoked from the "Quick Commander"
+  - Built-in keymapping provide access via <kbd>**Shift**</kbd>+<kbd>**Option**</kbd>+<kbd>**M**</kbd> (with <kbd>Alt</kbd> `==` <kbd>Option</kbd>) _and customizable by user in VSCode Keymapping Settings_
+  - Various website and are linked, including links to other TIKOCI projects on GitHub and Mikrotik-specific sites.
+
+#### Take Actions on connected RouterOS device
+  * Insert Global Variable
+  * Insert Interface Name
+  * Run System Script
+  * Show (:export) Configuration
+  * Show Default Configuration
+
+#### Status Bar Watchdog
+  - On bottom right of VS Code, a `StatusBar` item appears indicating the connection status to RouterOS.  `Error` state (typically "red" but follows VS Code theme) means disconnection a connection check failed, and will only get cleared by a success REST API call.  `Warning` (yellow) state indicates _some_ REST API error occurred
+#### Using Keychain‡ for RouterOS Password
+  - Technically, TikBook uses VSCode's `SecretStore` which indirect uses the OS-specific secure password storage.
+  - The RouterOS password can be set using the Quick Commander menu, or in Setting by using "Set Secret" link.  
+  - With multiple routers that use _different_ passwords, the secret must be set again for a new connected router.  Their is only one secret.
+
+#### Markdown Integration
+  - TikBook support using a plain `.md` file as a file format.  So you can use the TikBook Editor just as if it was a "regular" TikBook.  Any changes are save into ` ```routeros ` code blocks (described below).
+  - When editing **any `markdown` file** in VSCode, a **Run RouterOS** option will appear above any ` ```routeros ` code blocks inside the normal editor.  When a Markdown ` ```routeros ` block is run, the results will be appear in the "Outputs" which is displayed automatically on first run.  Output is formatted  as `markdown` to allow for easy cut-and-paste back into a Markdown file.
+
+#### Watch MikroTik Help Videos inside VSCode
+  - Experimental and basic but shows a few videos _[specifically ones using MP3 for audio stream in MP4 container]_ from _[CORS-enabled]_ web server as window in VSCode. 
+  - While not implemented, their are variety of "interactive" things possible with VSCode embedded video possible.  Currently, video player has a "chapter selector" as an early test on the mechanics and verify the plumbing.
+
+#### JSON to RouterOS Array Conversion
+  - In **any** `JSON` file that's loaded, a button will appear in editor's to bar.  The button can be used to convert JSON into RouterOS array for use in a script.  If nothing is selected, the entire `JSON` document will be copied to the clipboard as a RouterOS array.  If only a portion is select, only that part will be put on to the clipboard.
+  - Only strings and numbers are supported for conversion currently, but not RouterOS connection is needed for the conversion. 
+  - Conversion **to JSON** is one-way.  There is **no** _direct_ RouterOS Array to JSON but their is `[:serialize to=json]` available to notebooks that be more exact and consistent.  
 
 ### Security Considerations
 
 If you do not want to "Run" a TikBook, you technically do not need a RouterOS account configured.  In this mode, scripts are still visualized in Markdown in the Notebook interface and be edited and saved too.  
 
 
-TikBook for RouterOS does not strictly need "write" or "sensitive" policies.  As such, it is highly recommended to avoid using "full" users in the configuration.  Instead, a new RouterOS user can be used to limit the needed permissions.  To create one with the minimum, use:
+TikBook for RouterOS does not strictly need "write" or "sensitive" policies.  To create one with the minimum, use:
 ```
 /user/group add name=list policy=read,api,rest-api
 /user add name=lsp password=changeme group=lsp
 ```
-_The defaults/example configuration uses the above – change as needed._
 
 On the router, either the "www" or "www-ssl" service must be enabled, and accessible to any editor using the TikBook.  _Firewall configuration may need to be adjusted too, specific to your environment._
 
@@ -81,11 +112,75 @@ Also, when using "https://" (TLS), the certificate chain must be valid on the lo
 >
 > For Mac, UTM can be used as the host, and tikoci's "mikropkl" has ready-to-use images that bring up RouterOS CHR in a few steps, see [tikoci/mikropkl](https://github.com/tikoci/mikropkl) for details. 
 
+## _Draft_ Serialization Schemes
 
-## `*.tikbook.rsc` Spec
+TikBook is built on plain `.rsc` files.  But exactly _how_ notebook content _could_ be rendered as RouterOS script file is a WIP.
 
-TikBook is built on plain `.rsc` files with three special comment prefixes:
+The current version tries a new scheme, both appear identical in the VSCode's notebook interface.  But based on the file extension, the "saved" format be different.  This allows a "markup first" or "script first" rendering of the notebook for different needs.  For example, `.rsc.md` could be used to create a forum.mikrotik.com posting.  While `.md.rsc` could be used to document and test a script used to configuration a router.   
 
+### `.md.rsc`
+
+All text is assumed to be RouterOS script, with any markup or output encoded into a RouterOS comment.  
+
+`#.\n` token is used to separate code, markup, or output different cells.
+
+`#.`_<type>_ on a line indicate the _start_ of "markup" cell, with _<type>_ `=== markdown` today.   
+
+Non-script content also begins on column 3 with a preceding comment to keep it valid `rsc`:
+```
+#.markdown
+#  # TikBook `.md.rsc` Example
+#.
+/ip/address/print
+#.
+/ip/route/print
+#.markdown
+#  > In a notebook, the output of a "print" is also rendered as JSON
+#.
+```
+
+
+Notebooks support "metadata" and saving "outputs", neither are supported today. 
+
+Concept for output of a code cell is to use `#=` at start of line to indicate the start of saved output, followed `>` for "well known" type like `json`.  Plain text is assumed so marker is just `#=>`.  For fully-qualified mime types,`#=>>data/random`.  Like `#.markdown`, output is assumed to start on column 3.  An example:
+```
+/system/identity/print
+#=>
+#  name: bigdude
+#=>json
+#  { "name": "bigdude" }
+#=>>application/html
+#  <span>name: <pre>bigdude</pre></span>
+```
+
+For metadata, current thinking is something like: `#<> attr1=val1 attr2=value`
+
+
+### `.rsc.md`
+
+This is the "reverse" format, so ` ```routeros ` marks a code cell - all other ` ```any-other-lang ` blocks and texts is assumed to be Markdown.  In a notebook, RouterOS code fence blocks are treated as a "Code" cell.  Markdown broken up into cell with any RouterOS script blocks being a divider.  
+
+The only "special" support for a "Markdown First" TikBook notebook is the equivalent of the `#.` cell separator from `.md.rsc`/`.tikbook` file.  In Markdown, it uses the unofficial "comment", _or more specifically a fake footnote_ for this purpose:
+```
+[//]: #.
+```
+is will create a "cell break" when viewed as a TikBook.  _RouterOS code fence blocks automatically break the markdown text at the point of the RouterOS code.
+
+While none today, any persisted metadata _could_ be encoded inside `( )` in same form as `#.` but the parenthesis are needed to be "compatible" with Markdown-It used by VSCode and Discourse.
+```
+[//]: #. (.. key=val .. key=value...)
+```
+
+Notebooks support a "Run All Cells" and **all** ` ```routeros ` block will get run.  If you wanted to exclude a block from consideration as a "runnable" cell.  You can move the code to a Markdown cell and use the alternative code block marker ` ~~~routeros `.
+
+"Markdown First" TikBook have an additional feature where if you view the Markdown as a VS Code `TextDocument` – or any `.md` file – a "Run RouterOS" link will appear above any ` ```routeros ` code blocks.
+
+
+### **Retiring** `*.tikbook.rsc` Spec
+
+> [!NOTE]
+>
+> This is the original scheme/idea.  However, it's both a PITA to parse, nor flexible, nor easily to write _outside_ of notebook.  
 
 | Prefix | Purpose |
 |--------|---------|
@@ -128,27 +223,10 @@ With specific rules on formatting:
 
 ### TypeScript Implementation
 
-The TikBook code is in [`tikoci/vscode-tikbook` on GitHub](https://github.com/tikoci/vscode-tikbook).  It uses Microsoft's [TypeScript library for VSCode extensions](https://code.visualstudio.com/api/get-started/your-first-extension).  These are then bundled by [`bun`](https://bun.sh) into "-web" and "-node" (desktop) targets since packaging TypeScript varies between normal VSCode and VSCode for Web.  The implementation is largely based on the framework from [RouterOS LSP project](https://github.com/tikoci/lsp-routeros-ts), and that project has more details on implementation.
+The TikBook code is in [`tikoci/vscode-tikbook` on GitHub](https://github.com/tikoci/vscode-tikbook).  It uses Microsoft's [TypeScript library for VSCode extensions](https://code.visualstudio.com/api/get-started/your-first-extension).  These are then bundled by [`bun`](https://bun.sh) into "-web" and "-node" (desktop) targets since packaging TypeScript varies between normal VSCode and VSCode for Web.  The implementation is largely based on the framework from [RouterOS LSP project](https://github.com/tikoci/lsp-routeros-ts), and that project has more details on "developing" VS Code extensions.
 
 TikBook is built using the official [VSCode Notebook API](https://code.visualstudio.com/api/extension-guides/notebook) and the TypeScript extension framework from [RouterOS LSP](https://github.com/tikoci/vscode-routeros-lsp).  See Microsoft's [Your First Extension]([TypeScript library for VSCode extensions](https://code.visualstudio.com/api/get-started/your-first-extension) for basic background on structure.
 
-#### Local Development
-
-You will need `git` and [`bun`](https://bun.sh) installed, and obviously VSCode too.  But the basic local development setup start with: 
-```bash
-git clone https://github.com/tikoci/vscode-tikbook
-cd vscode-tikbook
-bun install
-bun compile
-code .
-```
-
-Then make changes as desired.  
-> Press F5 to launch the extension in debug mode in a new VSCode window
-
-To package a local build as VSIX file, use `bun run vsix:package` which create an installable extension package, from your development environment.  
-
-If you make changes to vscode-tikbook, feel free to make "pull request" with anything useful to others.
 
 > #### Disclaimers
 > **Not affiliated, associated, authorized, endorsed by, or in any way officially connected with MikroTik, Apple, nor UTM from Turing Software, LLC.**

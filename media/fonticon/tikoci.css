@@ -1,0 +1,19 @@
+@font-face {
+    font-family: "tikoci";
+    src: url("./tikoci.woff2?abe3c3482cfd2eb34d8bcb40a52630d9") format("woff2");
+}
+
+i[class^="icon-"]:before, i[class*=" icon-"]:before {
+    font-family: tikoci !important;
+    font-style: normal;
+    font-weight: normal !important;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-tikbook:before {
+    content: "\f101";
+}

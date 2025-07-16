@@ -1,0 +1,28 @@
+@font-face {
+    font-family: "mikrotik";
+    src: url("./mikrotik.woff2?ea34dc2baa845d90a72f989d0162ab94") format("woff2");
+}
+
+i[class^="icon-"]:before, i[class*=" icon-"]:before {
+    font-family: mikrotik !important;
+    font-style: normal;
+    font-weight: normal !important;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-MT_Symbol_Line_Black:before {
+    content: "\f101";
+}
+.icon-MT_Symbol_Black:before {
+    content: "\f102";
+}
+.icon-MT_Line_Black:before {
+    content: "\f103";
+}
+.icon-MT_Black:before {
+    content: "\f104";
+}

@@ -19,3 +19,12 @@ vscode-tikbook-*
 *.map
 
 tests
+
+.scratch
+
+.DS_Store
+
+.vscode/sftp.json
+*.code-workspace
+
+cloc.*

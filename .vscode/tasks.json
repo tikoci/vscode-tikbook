@@ -2,31 +2,45 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "npm",
-      "script": "compile",
-      "group":{
+      "label": "watch",
+      "dependsOn": ["lint", "compile"],
+      "group": {
         "kind": "build",
         "isDefault": true
       },
       "presentation": {
         "panel": "dedicated",
-        "reveal": "never"
-      },
-      "problemMatcher": ["$tsc"]
+        "reveal": "silent"
+      }
     },
     {
+      "label": "compile",
       "type": "npm",
-      "script": "watch",
-      "isBackground": true,
+      "script": "compile",
+      "dependsOn": ["lint"],
+      "isBackground": false,
       "group": {
         "kind": "build",
         "isDefault": false
       },
       "presentation": {
         "panel": "dedicated",
-        "reveal": "never"
+        "reveal": "silent",
+        "group": "watch"
       },
-      "problemMatcher": ["$tsc-watch"]
+      "problemMatcher": []
+    },
+    {
+      "label": "lint",
+      "type": "npm",
+      "script": "lint",
+      "isBackground": false,
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "silent",
+        "group": "watch"
+      },
+      "problemMatcher": ["$eslint-stylish"]
     }
   ]
 }

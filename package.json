@@ -1,9 +1,9 @@
 {
   "name": "tikbook",
-  "description": "VSCode Notebook++ for MikroTik RouterOS",
+  "description": "VS Code Notebook and Tools for MikroTik RouterOS",
   "author": "AmmØ",
   "license": "MIT",
-  "version": "0.1.9",
+  "version": "0.3.1",
   "publisher": "TIKOCI",
   "categories": [
     "Notebooks",
@@ -20,7 +20,12 @@
     "notebook",
     "literate",
     "tikbook",
-    "notebookKernelTikbook"
+    "vscode",
+    "vscode-extension",
+    "notebookKernelTikbook",
+    "notebookKernelMarkdownRouteros",
+    "notebookKernelInteractiveTikbook",
+    "notebookKernelRouteros"
   ],
   "preview": true,
   "pricing": "Free",
@@ -37,7 +42,7 @@
   "qna": "https://github.com/orgs/tikoci/discussions/categories/q-a",
   "homepage": "https://github.com/tikoci/vscode-tikbook/blob/main/README.md",
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.101.0"
   },
   "browser": "./out/extension-web.js",
   "main": "./out/extension-node.js",
@@ -49,138 +54,730 @@
     "RandomFractalsInc.vscode-data-table"
   ],
   "activationEvents": [
-    "onNotebook:tikbook"
+    "onNotebook:tikbook",
+    "onNotebook:markdown-routeros",
+    "onNotebook:interactive",
+    "onNotebook:routeros",
+    "onLanguage:routeros",
+    "onLanguage:markdown",
+    "onFileSystem:systemscriptfs"
   ],
   "contributes": {
     "languages": [
       {
-        "id": "routeros-tikbook",
+        "id": "tikbook",
+        "extensions": [
+          ".tikbook",
+          ".md.rsc"
+        ],
+        "firstLine": "#!tikbook.*",
+        "filenamePatterns": [
+          "*.tikbook.rsc",
+          "*.md.rsc"
+        ],
         "icon": {
           "light": "icon.png",
           "dark": "icon.png"
         },
-        "extensions": [
-          ".tikbook.rsc",
-          ".tikbook"
-        ],
-        "firstLine": "^#!tikbook",
         "aliases": [
-          "RouterOS TikBook",
-          "routeros-notebook",
-          "tikbook",
-          "routeros-tikbook"
+          "TikBook",
+          "tikbook"
         ]
+      },
+      {
+        "id": "markdown",
+        "extensions": [
+          "*.rscmd"
+        ]
+      },
+      {
+        "id": "markdown-routeros",
+        "firstLine": ".*#!tikbook.*",
+        "filenamePatterns": [
+          "*.rscmd",
+          "*.rsc.md"
+        ],
+        "icon": {
+          "light": "icon.png",
+          "dark": "icon.png"
+        },
+        "aliases": [
+          "Markdown RouterOS",
+          "Markdown",
+          "markdown"
+        ]
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "tikbook.show.menu.main",
+        "key": "shift+alt+m"
       }
     ],
     "configuration": {
       "type": "object",
       "title": "TikBook for RouterOS",
       "properties": {
-        "tikbook.profiles": {
-          "scope": "resource",
-          "type": "array",
-          "default": [],
-          "description": "Set the host and protocol to connect to RouterOS.  e.g.: 'https://192.168.88.1'"
-        },
         "tikbook.baseUrl": {
           "scope": "resource",
           "type": "string",
-          "default": "http://192.168.74.1",
-          "description": "Set the host and protocol to connect to RouterOS.  e.g.: 'https://192.168.88.1'"
+          "default": "http://192.168.88.1",
+          "description": "Set the host and protocol to connect to RouterOS.",
+          "order": 1,
+          "examples": [
+            "http://192.0.2.0",
+            "https://portsok.example.com:8443"
+          ]
         },
         "tikbook.username": {
           "scope": "resource",
           "type": "string",
-          "default": "lsp",
-          "description": "Username to use when TikBook connects to a real RouterOS device"
+          "default": "admin",
+          "description": "Username to use when TikBook connects to a RouterOS device",
+          "order": 2
         },
         "tikbook.password": {
+          "scope": "application",
+          "type": "string",
+          "markdownDeprecationMessage": "Settings are stored plain text.  Instead, REST API password should use VSCode's SecretStorage instead.  [Store Password as Secret](command:tikoci.secrets.default.set)",
+          "markdownDescription": "Password to use when TikBook connects to a RouterOS device.  _Only used if a secret is not set._",
+          "order": 3,
+          "when": "tikbook.usingSecrets === false"
+        },
+        "tikbook.passwordInfo": {
+          "scope": "application",
+          "type": "string",
+          "markdownDescription": "The RouterOS password should be stored in \"secrets\".  **Use [Store Password as Secret](command:tikoci.secrets.default.set) to set RouterOS password.**  _Or, [Clear Password Secret](command:tikoci.secrets.default.clear) to use plain text 'password' from VSCode Settings._",
+          "default": "❓ initializing",
+          "readOnly": true,
+          "order": 4
+        },
+        "tikbook.apiTimeout": {
+          "scope": "resource",
+          "type": "number",
+          "default": 60,
+          "description": "How long a command sent to RouterOS waits for a response before giving up",
+          "order": 5
+        },
+        "tikbook.sshCommand": {
           "scope": "resource",
           "type": "string",
-          "default": "changeme",
-          "description": "Password to use when TikBook connects to a real RouterOS device"
+          "default": "ssh",
+          "markdownDescription": "`ssh` Command (and any path or arguments) to with Terminal.  _Do not include the username/host or command parts_",
+          "order": 6
         }
       }
+    },
+    "menus": {
+      "file/newFile": [
+        {
+          "command": "tikbook.new.notebook.repl",
+          "group": "notebook",
+          "icon": "$(terminal)"
+        },
+        {
+          "command": "tikbook.new.notebook",
+          "group": "notebook",
+          "icon": "icon.png"
+        },
+        {
+          "command": "tikbook.new.notebook.markdown",
+          "group": "notebook",
+          "icon": "$(markdown)"
+        },
+        {
+          "command": "tikbook.new.notebook.router.scripts",
+          "group": "notebook",
+          "icon": "$(mikrotik-icon-line)"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "tikbook.fn.copyJsonAsRouterArray",
+          "group": "7_cutcopypaste",
+          "icon": "$(symbol-array)",
+          "when": "resourceLangId == json || resourceLangId == jsonc || editorLangId == json || editorLangId == jsonc"
+        },
+        {
+          "command": "tikbook.notebook.clone.routeros",
+          "group": "7_cutcopypaste",
+          "icon": "$(tikoci-tikbook)",
+          "when": "explorerResourceAvailableEditorIds =~ /tikbook/"
+        },
+        {
+          "command": "tikbook.notebook.clone.markdown",
+          "group": "7_cutcopypaste",
+          "icon": "$(markdown)",
+          "when": "explorerResourceAvailableEditorIds =~ /markdown-routeros/"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "tikbook.fn.copyJsonAsRouterArray",
+          "group": "9_cutcopypaste@3",
+          "icon": "$(symbol-array)",
+          "when": "resourceLangId == json || resourceLangId == jsonc || editorLangId == json || editorLangId == jsonc"
+        },
+        {
+          "command": "tikbook.convert.escapedRouterString.clipboard",
+          "group": "9_cutcopypaste@3",
+          "icon": "$(symbol-string)",
+          "when": "textInputFocus"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "tikbook.view.markdown",
+          "group": "navigation",
+          "icon": "$(markdown)",
+          "when": "notebookType == tikbook || notebookType == routeros || (resourceLangId == routeros || resourceExtname == .rsc)"
+        },
+        {
+          "command": "tikbook.view.script",
+          "group": "navigation",
+          "icon": "$(mikrotik-icon-solid)",
+          "when": "notebookType == markdown-routeros"
+        },
+        {
+          "command": "tikbook.markdown.reopen.notebook",
+          "group": "navigation@1",
+          "icon": "$(tikoci-tikbook)",
+          "when": "resourceScheme == file && (resourceLangId == markdown-routeros || resourceLangId == markdown || resourceExtname == .md || resourceExtname == .rscmd) && notebookType != markdown-routeros"
+        },
+        {
+          "command": "tikbook.routeros.reopen.notebook.routeros",
+          "group": "navigation@1",
+          "icon": "$(tikoci-tikbook)",
+          "when": "!notebookType && resourceScheme == file && (resourceLangId == routeros || resourceExtname == .rsc || editorLangId == routeros)"
+        },
+        {
+          "command": "tikbook.vdoc.clone.tikbook",
+          "group": "navigation@1",
+          "icon": "$(tikoci-tikbook)",
+          "when": "resourceScheme == rscena && (resourceLangId == routeros || editorLangId == routeros)"
+        },
+        {
+          "command": "tikbook.vdoc.clone.markdown",
+          "group": "navigation@1",
+          "icon": "$(tikoci-tikbook)",
+          "when": "resourceScheme == rscena && (resourceLangId == markdown || editorLangId == markdown || resourceExtname == .md)"
+        },
+        {
+          "command": "tikbook.notebook.reopen.routeros",
+          "group": "navigation@1",
+          "icon": "$(mikrotik-icon-line)",
+          "when": "notebookType == tikbook || notebookType == routeros"
+        },
+        {
+          "command": "tikbook.fn.copyJsonAsRouterArray",
+          "group": "navigation@1",
+          "icon": "$(symbol-array)",
+          "when": "resourceLangId == json || resourceLangId == jsonc || editorLangId == json || editorLangId == jsonc"
+        },
+        {
+          "command": "tikbook.notebook.markdown.preview.markdown",
+          "group": "navigation",
+          "when": "notebookType == markdown-routeros",
+          "icon": "$(markdown)"
+        }
+      ],
+      "notebook/cell/execute": [],
+      "notebook/cell/title": [],
+      "notebook/toolbar": [
+        {
+          "command": "tikbook.notebook.clone.routeros",
+          "group": "inline",
+          "when": "notebookType == markdown-routeros",
+          "icon": "$(arrow-swap)"
+        },
+        {
+          "command": "tikbook.notebook.clone.markdown",
+          "group": "inline",
+          "when": "notebookType == tikbook || notebookType == routeros",
+          "icon": "$(arrow-swap)"
+        }
+      ]
     },
     "notebooks": [
       {
         "type": "tikbook",
-        "displayName": "RouterOS Notebook",
+        "displayName": "RouterOS TikBook",
+        "icon": {
+          "light": "icon.png",
+          "dark": "icon.png"
+        },
         "selector": [
           {
-            "filenamePattern": "*.tikbook*"
+            "filenamePattern": "*.tikbook"
+          },
+          {
+            "filenamePattern": "*.tikbook.rsc"
+          },
+          {
+            "filenamePattern": "*.md.rsc"
           }
-        ]
+        ],
+        "priority": "default"
+      },
+      {
+        "type": "routeros",
+        "displayName": "RouterOS Notebook",
+        "icon": {
+          "light": "icon.png",
+          "dark": "icon.png"
+        },
+        "selector": [
+          {}
+        ],
+        "priority": "option"
+      },
+      {
+        "type": "markdown-routeros",
+        "displayName": "Markdown RouterOS",
+        "icon": {
+          "light": "icon.png",
+          "dark": "icon.png"
+        },
+        "selector": [
+          {
+            "filenamePattern": "*.rscmd"
+          },
+          {
+            "filenamePattern": "*.rsc.md"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "markdown-routeros",
+        "displayName": "Markdown RouterOS",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "tikbook",
+        "displayName": "RouterOS TikBook",
+        "selector": [
+          {
+            "filenamePattern": "*.rsc"
+          }
+        ],
+        "priority": "option",
+        "icon": "icon.png"
+      },
+      {
+        "viewType": "markdown",
+        "displayName": "Markdown",
+        "selector": [
+          {
+            "filenamePattern": "*.rscmd"
+          }
+        ],
+        "priority": "option"
       }
     ],
     "commands": [
       {
-        "command": "tikbook.cmd.routeros.active.config.show",
-        "title": "Show Current Configuration",
-        "category": "RouterOS"
+        "command": "tikbook.view.markdown",
+        "title": "View as Markdown",
+        "shortTitle": "As Markdown",
+        "category": "RouterOS",
+        "icon": "$(markdown)"
       },
       {
-        "command": "tikbook.cmd.tikociHome.browse",
+        "command": "tikbook.view.script",
+        "title": "View as RouterOS Script",
+        "shortTitle": "View RouterOS Script",
+        "category": "RouterOS",
+        "icon": "$(mikrotik-icon-solid)"
+      },
+      {
+        "command": "tikbook.open.terminal.router",
+        "title": "Open SSH Terminal to Connected Router",
+        "shortTitle": "Open SSH",
+        "category": "RouterOS",
+        "icon": "$(remote)"
+      },
+      {
+        "command": "tikbook.new.notebook",
+        "title": "Create Notebook for RouterOS",
+        "category": "TikBook",
+        "icon": "icon.png"
+      },
+      {
+        "command": "tikbook.new.notebook.repl",
+        "title": "Start Interactive REPL",
+        "category": "TikBook",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "tikbook.new.notebook.markdown",
+        "title": "Create Notebook for Markdown",
+        "category": "TikBook",
+        "icon": "$(markdown)"
+      },
+      {
+        "command": "tikbook.new.notebook.router.scripts",
+        "title": "New Notebook from System Scripts",
+        "category": "TikBook",
+        "icon": "$(mikrotik-icon-line)"
+      },
+      {
+        "command": "tikbook.notebook.reopen.routeros",
+        "title": "Open as RouterOS Script File",
+        "category": "TikBook",
+        "icon": "$(mikrotik-icon-line)",
+        "when": "notebookType == tikbook || notebookType == routeros"
+      },
+      {
+        "command": "tikbook.routeros.reopen.notebook.routeros",
+        "title": "Open as RouterOS TikBook Notebook",
+        "shortTitle": "Open as TikBook",
+        "category": "RouterOS",
+        "icon": "$(tikoci-tikbook)",
+        "when": "!notebookType && resourceScheme != rscena && (resourceLangId == routeros || resourceExtname == .rsc || editorLangId == routeros)"
+      },
+      {
+        "command": "tikbook.markdown.reopen.notebook",
+        "title": "Open as Markdown RouterOS Notebook",
+        "shortTitle": "Open as Notebook",
+        "category": "Markdown",
+        "icon": "$(tikoci-tikbook)",
+        "when": "resourceScheme == file && (resourceLangId == markdown-routeros || resourceLangId == markdown || resourceExtname == .md || resourceExtname == .rscmd) && notebookType != markdown-routeros"
+      },
+      {
+        "command": "tikbook.notebook.markdown.preview.markdown",
+        "title": "Markdown Preview",
+        "shortTitle": "Preview",
+        "when": "notebookType == markdown-routeros",
+        "icon": "$(markdown)"
+      },
+      {
+        "command": "tikbook.vdoc.clone.tikbook",
+        "title": "Copy as RouterOS TikBook Notebook",
+        "shortTitle": "Copy as TikBook (.rsc)",
+        "category": "RouterOS",
+        "icon": "$(tikoci-tikbook)",
+        "when": "resourceLangId == routeros && resourceScheme == rscena"
+      },
+      {
+        "command": "tikbook.vdoc.clone.markdown",
+        "title": "Copy as Markdown RouterOS Notebook",
+        "shortTitle": "Copy as TikBook (.md)",
+        "category": "RouterOS",
+        "icon": "$(tikoci-tikbook)",
+        "when": "(resourceExtname == .md || resourceLangId == markdown || editorLangId == markdown) && resourceScheme == rscena"
+      },
+      {
+        "command": "tikbook.markdown.routeros.run.block",
+        "title": "Run RouterOS code blocks in Markdown",
+        "shortTitle": "Run RouterOS",
+        "category": "RouterOS",
+        "icon": "$(play)",
+        "when": "resourceLangId == markdown || resourceExtname == .md || editorLangId == markdown"
+      },
+      {
+        "command": "tikbook.notebook.clone.routeros",
+        "title": "Copy As RouterOS TikBook",
+        "category": "TikBook",
+        "icon": "$(tikoci-tikbook)",
+        "when": "false"
+      },
+      {
+        "command": "tikbook.notebook.clone.markdown",
+        "title": "Copy As Markdown RouterOS",
+        "category": "TikBook",
+        "icon": "$(markdown)",
+        "when": "false"
+      },
+      {
+        "command": "tikbook.show.menu.main",
+        "title": "Quick Commander Menu",
+        "shortTitle": "Commander",
+        "category": "TikBook",
+        "icon": "icon.png"
+      },
+      {
+        "command": "tikbook.test.video.embedded",
+        "title": "Show Help Video (Experimental)",
+        "shortTitle": "Show Video",
+        "category": "TikBook",
+        "icon": "$(device-camera-video)"
+      },
+      {
+        "command": "tikbook.show.output.tikbook",
+        "title": "Show Output Logs",
+        "category": "TikBook",
+        "icon": "$(output)"
+      },
+      {
+        "command": "tikbook.fn.copyJsonAsRouterArray",
+        "title": "Copy as RouterOS Array",
+        "category": "RouterOS",
+        "icon": "$(symbol-array)",
+        "when": "resourceLangId == json || resourceLangId == jsonc || editorLangId == json || editorLangId == jsonc"
+      },
+      {
+        "command": "tikbook.convert.escapedRouterString.clipboard",
+        "title": "Copy as RouterOS String",
+        "category": "RouterOS",
+        "icon": "$(symbol-string)",
+        "when": "textInputFocus"
+      },
+      {
+        "command": "tikbook.open.router.export",
+        "title": "Show current RouterOS :export",
+        "shortTitle": ":export",
+        "category": "RouterOS",
+        "icon": "$(export)"
+      },
+      {
+        "command": "tikbook.open.router.default-configuration.script",
+        "title": "Show RouterOS /system/default-configuration",
+        "shortTitle": "RouterOS defconf",
+        "category": "RouterOS",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "tikbook.open.router.default-configuration.caps-mode-script",
+        "title": "Show RouterOS /system/default-configuration (CAPsMAN)",
+        "shortTitle": "RouterOS defconf-capsman",
+        "category": "RouterOS",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "tikbook.open.router.default-configuration.custom",
+        "title": "Show RouterOS /system/default-configuration (Custom)",
+        "shortTitle": "RouterOS defconf-custom",
+        "category": "RouterOS",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "tikoci.secrets.default.set",
+        "title": "Enable Secret for RouterOS Password",
+        "category": "TikBook",
+        "icon": "$(briefcase)"
+      },
+      {
+        "command": "tikoci.secrets.default.clear",
+        "title": "Disable Secret Password",
+        "category": "TikBook",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "tikbook.show.menu.variables.global",
+        "title": "$(symbol-variable)  Insert :global Variable",
+        "shortTitle": "$(check) :global insert",
+        "category": "RouterOS",
+        "icon": "$(symbol-variable)"
+      },
+      {
+        "command": "tikbook.browse.mikrotikstatus",
+        "title": "MikroTik Cloud Status (mikrotikstat.us)",
+        "category": "MikroTik",
+        "icon": "$(home)"
+      },
+      {
+        "command": "tikbook.browse.tikoci.home",
         "title": "Browse Project Homepage",
-        "category": "TIKOCI"
+        "category": "TIKOCI",
+        "icon": "$(home)"
       },
       {
-        "command": "tikbook.cmd.tikociDiscussions.browse",
-        "title": "View Discussions",
-        "category": "TIKOCI"
-      },
-      {
-        "command": "tikbook.cmd.tikociGithubRepos.browse",
+        "command": "tikbook.menu.showTikociRepoPicker",
         "title": "Browse GitHub Repository...",
-        "category": "TIKOCI"
+        "category": "TIKOCI",
+        "icon": "$(github)"
       },
       {
-        "command": "tikbook.cmd.mikrotikForum.browse",
+        "command": "tikbook.browse.mikrotik.forum",
         "title": "Browse Forum",
-        "category": "MikroTik"
+        "category": "MikroTik",
+        "icon": "$(comment-discussion)"
       },
       {
-        "command": "tikbook.cmd.mikrotikJira.browse",
+        "command": "tikbook.browse.mikrotik.issues",
         "title": "Bug Reporting",
-        "category": "MikroTik"
+        "category": "MikroTik",
+        "icon": "$(bug)"
       },
       {
-        "command": "tikbook.cmd.mikrotikConfluenceRouterOS.scripting.browse",
+        "command": "tikbook.browse.mikrotik.docs.scripting",
         "title": "Scripting Help",
-        "category": "MikroTik"
+        "category": "MikroTik",
+        "icon": "$(debug-continue)"
       },
       {
-        "command": "tikbook.cmd.mikrotikConfluenceRouterOS.browse",
+        "command": "tikbook.browse.mikrotik.docs",
         "title": "Documentation",
-        "category": "MikroTik"
+        "category": "MikroTik",
+        "icon": "$(mikrotik-icon-line)"
+      }
+    ],
+    "icons": {
+      "mikrotik-icon-line": {
+        "description": "MikroTik Line Icon",
+        "default": {
+          "fontCharacter": "",
+          "fontPath": "./media/fonticon/mikrotik.woff2"
+        }
+      },
+      "mikrotik-icon-solid": {
+        "description": "MikroTik Solid Icon",
+        "default": {
+          "fontCharacter": "",
+          "fontPath": "./media/fonticon/mikrotik.woff2"
+        }
+      },
+      "mikrotik-logo-line": {
+        "description": "MikroTik Solid Logo with Text",
+        "default": {
+          "fontCharacter": "",
+          "fontPath": "./media/fonticon/mikrotik.woff2"
+        }
+      },
+      "mikrotik-logo-solid": {
+        "description": "MikroTik Line Logo with Text",
+        "default": {
+          "fontCharacter": "",
+          "fontPath": "./media/fonticon/mikrotik.woff2"
+        }
+      },
+      "tikoci-tikbook": {
+        "description": "TIKOCI TikBook",
+        "default": {
+          "fontCharacter": "",
+          "fontPath": "./media/fonticon/tikoci.woff2"
+        }
+      }
+    },
+    "walkthroughs": [
+      {
+        "id": "tikoci-walkthrough",
+        "title": "TikBook",
+        "description": "NON FUNCTIONAL PLACE HOLDER!  ...   In order to use TikBook, a \"live\" connection to a RouterOS device is required.  This can be set in \"Settings\"",
+        "steps": [
+          {
+            "id": "changeBaseUri",
+            "title": "Set RouterOS `baseURL` with RouterOS connection information",
+            "description": "Protocol (`http:` or `https:`) and host to need to be set in the `baseURL`.\n\n[Change Setting](command:workbench.action.openSettings?\"routeroslsp.baseUrl\")",
+            "media": {
+              "markdown": "media/walkthroughs/walkthrough.md"
+            },
+            "completionEvents": [
+              "onSettingChanged:routeroslsp.baseUrl"
+            ]
+          },
+          {
+            "id": "changeUsername",
+            "title": "Set RouterOS `username` to use",
+            "description": "The default user name `lsp` and should be changed.\n\n[Change Setting](command:workbench.action.openSettings?\"routeroslsp.username\")",
+            "media": {
+              "markdown": "media/walkthroughs/walkthrough.md"
+            },
+            "completionEvents": [
+              "onSettingChanged:routeroslsp.username"
+            ]
+          },
+          {
+            "id": "changePassword",
+            "title": "Set RouterOS `password` to use",
+            "description": "The default password is `changeme` and should be changed.\n\n[Change Setting](command:workbench.action.openSettings?\"routeroslsp.password\")",
+            "media": {
+              "markdown": "media/walkthroughs/walkthrough.md"
+            },
+            "completionEvents": [
+              "onSettingChanged:routeroslsp.password"
+            ]
+          },
+          {
+            "id": "webRemote",
+            "title": "VSCode for Web needs a CORS proxy setup",
+            "description": "A proxy server is required between RouterOS and VSCode for Web, otherwise LSP will not work!",
+            "when": "workspacePlatform == 'webworker'",
+            "media": {
+              "markdown": "media/walkthroughs/walkthrough.md"
+            },
+            "completionEvents": [
+              "onStepSelected"
+            ]
+          }
+        ]
       }
     ]
   },
+  "enabledApiProposals": [
+    "notebookDeprecated",
+    "notebookMessaging",
+    "notebookMime",
+    "portsAttributes",
+    "quickPickSortByLabel",
+    "notebookKernelSource",
+    "interactiveWindow",
+    "quickPickItemTooltip",
+    "notebookExecution",
+    "notebookCellExecution",
+    "notebookVariableProvider",
+    "notebookReplDocument"
+  ],
   "scripts": {
+    "lint": "bun audit; eslint src/*.ts",
     "clean": "rm -rf ./out/* && rm -f *.vsix",
     "compile": "bun run compile:web && bun run compile:node",
     "compile:node": "bun build src/extension.ts --outdir=./out --entry-naming=extension-node.js --external vscode --format=cjs --target=node --sourcemap ",
     "compile:web": "bun build src/extension.ts --outdir=./out --entry-naming=extension-web.js --external vscode --format=cjs --target=browser --sourcemap",
+    "typecheck": "tsc --noEmit",
+    "bump:patch": "npm version patch",
+    "compile:icons": "bun run compile:icons:tikoci && bun run compile:icons:mikrotik",
+    "compile:icons:tikoci": "mkdir -p ./media/fonticon; npx fantasticon -t woff2 -g css --output ./media/fonticon --name tikoci ./media/svg/tikoci",
+    "compile:icons:mikrotik": "mkdir -p ./media/fonticon; npx fantasticon -t woff2 -g css --output ./media/fonticon --name mikrotik ./media/svg/mikrotik",
+    "compile:icons:all:ttf": "mkdir -p ./media/fonticon; npx fantasticon -t ttf -g html --output ./media/fonticon --name tikoci-all ./media/svg",
     "vsix:package:all": "bun run vsix:package:node && && bun run vsix:package:web ",
     "vsix:package": "bun run vsix:package:node && bun run vsix:package:web",
     "vsix:package:node": "rm -f *-node.vsix && bun run compile && npx @vscode/vsce package --no-dependencies --pre-release -o tikbook-node.vsix",
     "vsix:package:web": "rm -f *-web.vsix && bun run compile && npx @vscode/vsce package --target web --no-dependencies --pre-release -o tikbook-web.vsix",
     "vsix:install": "bun run vsix:remove; bun run vsix:package && code --install-extension tikbook-*.vsix",
     "vsix:remove": "code --uninstall-extension tikoci.tikbook || echo '... well if not install, cannot remove it'",
-    "watch": "bun build src/extension.ts --outfile=./out/extension-node.ts --external vscode --format=cjs --target=node --sourcemap --watch",
-    "bump:patch": "npm version patch",
-    "vscode:prepublish": "bun run compile",
+    "vscode:prepublish": "bun run lint && bun run compile",
     "ovsx:publish": "npx ovsx publish tikbook-node.vsix -p $OVSX_PAT",
     "vsix:publish:node": "npx @vscode/vsce publish --packagePath ./tikbook-node.vsix --no-dependencies --pre-release -p $VSCE_PAT",
-    "vsix:publish:web": "npx @vscode/vsce publish --target web --packagePath ./tikbook-web.vsix --no-dependencies --pre-release -p $VSCE_PAT"
+    "vsix:publish:web": "npx @vscode/vsce publish --target web --packagePath ./tikbook-web.vsix --no-dependencies --pre-release -p $VSCE_PAT",
+    "test:ffmpeg": "ffmpeg -i in-aac.mp4 -c:v copy -c:a libmp3lame -q:a 0 out-mp3.mp4",
+    "test:serve": "npx serve --cors -l 7474 --ssl-cert $HOME/.local/certs/localhost.pem --ssl-key $HOME/.local/certs/localhost-key.pem",
+    "postinstall": ""
+  },
+  "dependencies": {
+    "axios": "^1.10.0",
+    "jsonpath-plus": "^10.3.0",
+    "luxon": "^3.7.1"
   },
   "devDependencies": {
-    "@types/bun": "^1.2.16",
-    "axios": "^1.9.0"
+    "@stylistic/eslint-plugin-js": "^4.4.1",
+    "@typescript-eslint/eslint-plugin": "^8.37.0",
+    "@typescript-eslint/parser": "^8.37.0",
+    "esbuild": "^0.25.6",
+    "eslint": "^9.31.0",
+    "eslint-config-prettier": "^10.1.5",
+    "hls.js": "^1.6.7",
+    "mocha": "^10.8.2",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.37.0"
   },
   "peerDependencies": {
-    "@types/axios": "^0.9.36",
-    "@types/node": "^20.5.7",
+    "@stylistic/eslint-plugin": "^5.0.0",
+    "@types/axios": "^0.14.4",
+    "@types/bun": "^1.2.17",
+    "@types/luxon": "^3.6.2",
+    "@types/mocha": "^10.0.10",
+    "@types/vscode": "^1.101.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/test-web": "^0.0.70",
     "typescript": "^5"
   },
   "private": false

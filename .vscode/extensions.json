@@ -1,0 +1,27 @@
+{
+    "recommendations": [
+        "randomfractalsinc.vscode-data-table",
+        "stxr.iconfont-preview",
+        "tschranz.jsonpath-notebook",
+        "ms-vscode.live-server",
+        "pkl.pkl-vscode",
+        "mechatroner.rainbow-csv",
+        "tanhakabir.rest-book",
+        "redhat.vscode-yaml",
+        "me-dutour-mathieu.vscode-github-actions",
+        "github.vscode-github-actions",
+        "dbaeumer.vscode-eslint",
+        "streetsidesoftware.code-spell-checker",
+        "pandy.bun",
+        "github.copilot",
+        "github.remotehub",
+        "foxundermoon.shell-format",
+        "redhat.vscode-xml",
+        "ms-vscode.makefile-tools",
+        "natizyskunk.sftp",
+        "sandipchitale.vscode-decode-x509certificates",
+        "m4ns0ur.base64",
+        "tintinweb.graphviz-interactive-preview",
+        "geeklearningio.graphviz-markdown-preview",
+    ]
+}

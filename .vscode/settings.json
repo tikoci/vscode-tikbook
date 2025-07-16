@@ -13,6 +13,9 @@
         "routeroslsp",
         "scalearr",
         "scriptname",
-        "Tikbook"
-    ]
+        "Tikbook",
+        "webfig"
+    ],
+    "editor.tabSize": 2,
+    "editor.stickyTabStops": false,
 }
