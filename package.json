@@ -1,13 +1,15 @@
 {
   "name": "tikbook",
-  "description": "VS Code Notebook and Tools for MikroTik RouterOS",
+  "description": "Notebook and Tools for MikroTik RouterOS",
   "author": "AmmØ",
   "license": "MIT",
   "version": "0.3.1",
   "publisher": "TIKOCI",
   "categories": [
     "Notebooks",
-    "Testing"
+    "Testing",
+    "Programming Languages",
+    "Education"
   ],
   "displayName": "TikBook for RouterOS",
   "icon": "icon.png",
@@ -42,7 +44,7 @@
   "qna": "https://github.com/orgs/tikoci/discussions/categories/q-a",
   "homepage": "https://github.com/tikoci/vscode-tikbook/blob/main/README.md",
   "engines": {
-    "vscode": "^1.101.0"
+    "vscode": "^1.78.2"
   },
   "browser": "./out/extension-web.js",
   "main": "./out/extension-node.js",
@@ -50,8 +52,7 @@
     "https://coff.ee/amm0"
   ],
   "extensionPack": [
-    "TIKOCI.lsp-routeros-ts",
-    "RandomFractalsInc.vscode-data-table"
+    "TIKOCI.lsp-routeros-ts"
   ],
   "activationEvents": [
     "onNotebook:tikbook",
@@ -119,7 +120,7 @@
       "title": "TikBook for RouterOS",
       "properties": {
         "tikbook.baseUrl": {
-          "scope": "resource",
+          "scope": "application",
           "type": "string",
           "default": "http://192.168.88.1",
           "description": "Set the host and protocol to connect to RouterOS.",
@@ -130,7 +131,7 @@
           ]
         },
         "tikbook.username": {
-          "scope": "resource",
+          "scope": "application",
           "type": "string",
           "default": "admin",
           "description": "Username to use when TikBook connects to a RouterOS device",
@@ -149,21 +150,36 @@
           "type": "string",
           "markdownDescription": "The RouterOS password should be stored in \"secrets\".  **Use [Store Password as Secret](command:tikoci.secrets.default.set) to set RouterOS password.**  _Or, [Clear Password Secret](command:tikoci.secrets.default.clear) to use plain text 'password' from VSCode Settings._",
           "default": "❓ initializing",
-          "readOnly": true,
           "order": 4
         },
         "tikbook.apiTimeout": {
-          "scope": "resource",
+          "scope": "application",
           "type": "number",
-          "default": 60,
+          "default": 30,
+          "maximum": 120,
+          "minimum": 5,
           "description": "How long a command sent to RouterOS waits for a response before giving up",
-          "order": 5
+          "order": 6
         },
         "tikbook.sshCommand": {
-          "scope": "resource",
+          "scope": "application",
           "type": "string",
           "default": "ssh",
           "markdownDescription": "`ssh` Command (and any path or arguments) to with Terminal.  _Do not include the username/host or command parts_",
+          "order": 7
+        },
+        "tikbook.checkCertificates": {
+          "scope": "application",
+          "type": "boolean",
+          "default": false,
+          "order": 5,
+          "markdownDescription": "When using `https`, whether to check if router certificate is locally trusted.  This setting has **no effect** _unless_ [`http.proxySupport`](command:workbench.action.openSettings?%5B%22http.proxySupport%22%5D) ([Help: Proxy Support]((command:workbench.action.openSettings?%5B%22http.proxySupport%22%5D))) [setting](command:workbench.action.openSettings?%5B%22http.proxySupport%22%5D) is **_fallback_** or **_off_**.  The `http.proxySupport` default of _override_ does not allow certificate checks to be disabled.  _In VS Code for the Web, a trusted certificate is always required and cannot be disabled._"
+        },
+        "tikbook.provideLspServerCredentials": {
+          "scope": "application",
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "When enabled, TikBook's credentials will 'override' RouterOS LSP's credentials.  _Note: RouterOS LSP [Allow Client Provided Credentials](command:workbench.action.openSettings?%5B%22routeroslsp.allowClientProvidedCredentials%22%5D) Setting must be enabled, otherwise TikBook credentials are ignored._",
           "order": 6
         }
       }
@@ -202,13 +218,13 @@
           "command": "tikbook.notebook.clone.routeros",
           "group": "7_cutcopypaste",
           "icon": "$(tikoci-tikbook)",
-          "when": "explorerResourceAvailableEditorIds =~ /tikbook/"
+          "when": "explorerResourceAvailableEditorIds =~ /markdown-routeros/"
         },
         {
           "command": "tikbook.notebook.clone.markdown",
           "group": "7_cutcopypaste",
           "icon": "$(markdown)",
-          "when": "explorerResourceAvailableEditorIds =~ /markdown-routeros/"
+          "when": "explorerResourceAvailableEditorIds =~ /tikbook/"
         }
       ],
       "editor/context": [
@@ -223,6 +239,18 @@
           "group": "9_cutcopypaste@3",
           "icon": "$(symbol-string)",
           "when": "textInputFocus"
+        },
+        {
+          "command": "tikbook.vdoc.refresh.active",
+          "group": "navigation",
+          "icon": "$(refresh)",
+          "when": "resourceScheme == rscena"
+        },
+        {
+          "command": "tikbook.browse.mikrotik.help",
+          "group": "z_help",
+          "icon": "$(question)",
+          "when": "resourceScheme == rscena || resourceLangId == routeros || resourceLangId == markdown || editorLangId == routeros"
         }
       ],
       "editor/title": [
@@ -277,8 +305,14 @@
         {
           "command": "tikbook.notebook.markdown.preview.markdown",
           "group": "navigation",
-          "when": "notebookType == markdown-routeros",
+          "when": "notebookType == markdown-routeros && resourceScheme == file",
           "icon": "$(markdown)"
+        },
+        {
+          "command": "tikbook.vdoc.refresh.active",
+          "group": "navigation",
+          "icon": "$(refresh)",
+          "when": "resourceScheme == rscena"
         }
       ],
       "notebook/cell/execute": [],
@@ -383,6 +417,13 @@
       }
     ],
     "commands": [
+      {
+        "command": "tikbook.browse.mikrotik.help",
+        "title": "RouterOS Help Resources...",
+        "shortTitle": "MikroTik Help Menu",
+        "category": "RouterOS",
+        "icon": "$(question)"
+      },
       {
         "command": "tikbook.view.markdown",
         "title": "View as Markdown",
@@ -618,6 +659,18 @@
         "title": "Documentation",
         "category": "MikroTik",
         "icon": "$(mikrotik-icon-line)"
+      },
+      {
+        "command": "tikbook.vdoc.refresh.all",
+        "title": "Refresh All Virtual Documents",
+        "category": "TikBook",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "tikbook.vdoc.refresh.active",
+        "title": "Refresh Current Virtual Document",
+        "category": "TikBook",
+        "icon": "$(refresh)"
       }
     ],
     "icons": {
@@ -656,78 +709,10 @@
           "fontPath": "./media/fonticon/tikoci.woff2"
         }
       }
-    },
-    "walkthroughs": [
-      {
-        "id": "tikoci-walkthrough",
-        "title": "TikBook",
-        "description": "NON FUNCTIONAL PLACE HOLDER!  ...   In order to use TikBook, a \"live\" connection to a RouterOS device is required.  This can be set in \"Settings\"",
-        "steps": [
-          {
-            "id": "changeBaseUri",
-            "title": "Set RouterOS `baseURL` with RouterOS connection information",
-            "description": "Protocol (`http:` or `https:`) and host to need to be set in the `baseURL`.\n\n[Change Setting](command:workbench.action.openSettings?\"routeroslsp.baseUrl\")",
-            "media": {
-              "markdown": "media/walkthroughs/walkthrough.md"
-            },
-            "completionEvents": [
-              "onSettingChanged:routeroslsp.baseUrl"
-            ]
-          },
-          {
-            "id": "changeUsername",
-            "title": "Set RouterOS `username` to use",
-            "description": "The default user name `lsp` and should be changed.\n\n[Change Setting](command:workbench.action.openSettings?\"routeroslsp.username\")",
-            "media": {
-              "markdown": "media/walkthroughs/walkthrough.md"
-            },
-            "completionEvents": [
-              "onSettingChanged:routeroslsp.username"
-            ]
-          },
-          {
-            "id": "changePassword",
-            "title": "Set RouterOS `password` to use",
-            "description": "The default password is `changeme` and should be changed.\n\n[Change Setting](command:workbench.action.openSettings?\"routeroslsp.password\")",
-            "media": {
-              "markdown": "media/walkthroughs/walkthrough.md"
-            },
-            "completionEvents": [
-              "onSettingChanged:routeroslsp.password"
-            ]
-          },
-          {
-            "id": "webRemote",
-            "title": "VSCode for Web needs a CORS proxy setup",
-            "description": "A proxy server is required between RouterOS and VSCode for Web, otherwise LSP will not work!",
-            "when": "workspacePlatform == 'webworker'",
-            "media": {
-              "markdown": "media/walkthroughs/walkthrough.md"
-            },
-            "completionEvents": [
-              "onStepSelected"
-            ]
-          }
-        ]
-      }
-    ]
+    }
   },
-  "enabledApiProposals": [
-    "notebookDeprecated",
-    "notebookMessaging",
-    "notebookMime",
-    "portsAttributes",
-    "quickPickSortByLabel",
-    "notebookKernelSource",
-    "interactiveWindow",
-    "quickPickItemTooltip",
-    "notebookExecution",
-    "notebookCellExecution",
-    "notebookVariableProvider",
-    "notebookReplDocument"
-  ],
   "scripts": {
-    "lint": "bun audit; eslint src/*.ts",
+    "lint": "bun audit && eslint src/*.ts src/test/*.ts",
     "clean": "rm -rf ./out/* && rm -f *.vsix",
     "compile": "bun run compile:web && bun run compile:node",
     "compile:node": "bun build src/extension.ts --outdir=./out --entry-naming=extension-node.js --external vscode --format=cjs --target=node --sourcemap ",
@@ -738,6 +723,7 @@
     "compile:icons:tikoci": "mkdir -p ./media/fonticon; npx fantasticon -t woff2 -g css --output ./media/fonticon --name tikoci ./media/svg/tikoci",
     "compile:icons:mikrotik": "mkdir -p ./media/fonticon; npx fantasticon -t woff2 -g css --output ./media/fonticon --name mikrotik ./media/svg/mikrotik",
     "compile:icons:all:ttf": "mkdir -p ./media/fonticon; npx fantasticon -t ttf -g html --output ./media/fonticon --name tikoci-all ./media/svg",
+    "compile:test": "bun build src/test/*.test.ts --outdir=./out/test --external vscode --format=cjs --target=node --sourcemap",
     "vsix:package:all": "bun run vsix:package:node && && bun run vsix:package:web ",
     "vsix:package": "bun run vsix:package:node && bun run vsix:package:web",
     "vsix:package:node": "rm -f *-node.vsix && bun run compile && npx @vscode/vsce package --no-dependencies --pre-release -o tikbook-node.vsix",
@@ -748,37 +734,45 @@
     "ovsx:publish": "npx ovsx publish tikbook-node.vsix -p $OVSX_PAT",
     "vsix:publish:node": "npx @vscode/vsce publish --packagePath ./tikbook-node.vsix --no-dependencies --pre-release -p $VSCE_PAT",
     "vsix:publish:web": "npx @vscode/vsce publish --target web --packagePath ./tikbook-web.vsix --no-dependencies --pre-release -p $VSCE_PAT",
+    "watch:test": "bun build src/test/*.test.ts --outdir=./out/test --external vscode --format=cjs --target=node --sourcemap --watch",
+    "watch:node": "bun build src/extension.ts --outdir=./out --entry-naming=extension-node.js --external vscode --format=cjs --target=node --sourcemap --watch",
+    "pretest": "bun run compile:test",
+    "test": "vscode-test",
     "test:ffmpeg": "ffmpeg -i in-aac.mp4 -c:v copy -c:a libmp3lame -q:a 0 out-mp3.mp4",
     "test:serve": "npx serve --cors -l 7474 --ssl-cert $HOME/.local/certs/localhost.pem --ssl-key $HOME/.local/certs/localhost-key.pem",
     "postinstall": ""
   },
   "dependencies": {
     "axios": "^1.10.0",
-    "jsonpath-plus": "^10.3.0",
+    "ebnf": "^1.9.1",
     "luxon": "^3.7.1"
   },
   "devDependencies": {
+    "@vscode/test-cli": "^0.0.11",
     "@stylistic/eslint-plugin-js": "^4.4.1",
-    "@typescript-eslint/eslint-plugin": "^8.37.0",
-    "@typescript-eslint/parser": "^8.37.0",
-    "esbuild": "^0.25.6",
+    "@stylistic/eslint-plugin": "^5.2.1",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "esbuild": "^0.25.8",
     "eslint": "^9.31.0",
-    "eslint-config-prettier": "^10.1.5",
+    "eslint-config-prettier": "^10.1.8",
     "hls.js": "^1.6.7",
     "mocha": "^10.8.2",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.37.0"
+    "typescript-eslint": "^8.38.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/test-web": "^0.0.70"
   },
   "peerDependencies": {
-    "@stylistic/eslint-plugin": "^5.0.0",
     "@types/axios": "^0.14.4",
-    "@types/bun": "^1.2.17",
     "@types/luxon": "^3.6.2",
     "@types/mocha": "^10.0.10",
-    "@types/vscode": "^1.101.0",
-    "@vscode/test-electron": "^2.5.2",
-    "@vscode/test-web": "^0.0.70",
-    "typescript": "^5"
+    "@types/vscode": "1.78.2"
+  },
+  "overrides": {
+    "on-headers": "^1.1.0",
+    "@eslint/plugin-kit": "^0.3.3",
+    "form-data": "^4.0.4"
   },
   "private": false
 }

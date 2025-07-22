@@ -89,7 +89,7 @@ async function processMp4File(fullPath, relativePath) {
     // Corrected: Removed .stdio("inherit") as it's not a function on the command itself,
     // and Bun Shell often inherits stdio by default for direct command execution.
     // If you need explicit streaming, you'd chain it with something like .stdout.pipeTo(Bun.stdout).
-    await $`ffmpeg -y -analyzeduration 100M -probesize 100M -i  ${fullPath} -c:v copy -c:a libmp3lame -q:a 0 -movflags faststart ${newFilePath}`
+    await $`ffmpeg -y -analyzeduration 100M -probesize 100M -i  ${fullPath} -c:v copy -c:a libmp3lame -c:s copy -q:a 0 -movflags +faststart ${newFilePath}`
 
     console.log(`Successfully converted "${relativePath}" to "${newFilePath}"`)
     totalFilesConverted++

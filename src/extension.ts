@@ -8,7 +8,7 @@ import { initializeVirtualDocs } from './virtualdocs'
 import { initializeMenus } from './menus'
 import { initializeCommands } from './commands'
 import { log, initializeLogging } from './shared'
-import { initializeSSH } from './ssh'
+import { initializeSSH } from './remote'
 import { initializeConverters } from './converters'
 // import { initializeSystemScriptFileSystem } from './scriptfs'
 

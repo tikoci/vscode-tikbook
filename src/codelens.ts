@@ -1,4 +1,4 @@
-import { CancellationToken, CodeLens, CodeLensProvider, commands, languages, OutputChannel, ProviderResult, Range, TextDocument, window } from 'vscode'
+import { CancellationToken, CodeLens, CodeLensProvider, commands, ExtensionContext, languages, OutputChannel, ProviderResult, Range, TextDocument, window } from 'vscode'
 import { RouterRestClient } from './routeros'
 import { DateTime } from 'luxon'
 import { log } from './shared'
@@ -7,7 +7,7 @@ export class MarkdownHandlers {
   static log: OutputChannel
   output: OutputChannel
   killswitch = new AbortController()
-  constructor(context) {
+  constructor(context: ExtensionContext) {
     if (!MarkdownHandlers.log) {
       MarkdownHandlers.log = this.output = window.createOutputChannel('RouterOS Run', 'markdown')
     }
@@ -39,9 +39,10 @@ export class MarkdownHandlers {
           }
           this.output.appendLine('')
         }
-        catch (error) {
+        catch (err) {
+          const error = err as Error
           this.output.appendLine(`> ### **ERROR** in ${timeTaken()}`)
-          if (error.cause) this.output.appendLine(`**${error.cause}**`)
+          if (error?.cause) this.output.appendLine(`**${error.cause}**`)
           error.toString()
             .split('\n')
             .forEach(e =>
@@ -58,6 +59,8 @@ export class MarkdownHandlers {
     this.killswitch.abort()
   }
 }
+
+// MARK: md provider
 
 export class MarkdownCodeFenceCodeLensProvider implements CodeLensProvider {
   provideCodeLenses(document: TextDocument, _token: CancellationToken): ProviderResult<CodeLens[]> {
@@ -99,7 +102,7 @@ export class MarkdownCodeFenceCodeLensProvider implements CodeLensProvider {
           const codeContent = document.getText(codeContentRange)
 
           codeLenses.push(new CodeLens(range, {
-            title: 'RouterOS Run',
+            title: '$(play) RouterOS Run',
             command: 'tikbook.markdown.routeros.run.block',
             arguments: [codeContent.trim(), document.fileName, range], // Pass the code content to the command
           }))

@@ -23,5 +23,6 @@
         "m4ns0ur.base64",
         "tintinweb.graphviz-interactive-preview",
         "geeklearningio.graphviz-markdown-preview",
+        "ms-vscode.extension-test-runner",
     ]
 }

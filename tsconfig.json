@@ -1,23 +1,25 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es2020",
+    "target": "es2017",
     "lib": [
-      "es2020",
+      "ES2017",
       "WebWorker"
     ],
     "moduleResolution": "node",
     "sourceMap": true,
-    "strict": false,
+    "strict": true,
     "outDir": "./out",
     "rootDir": "./src",
-    "incremental": false
+    "incremental": false,
+    "esModuleInterop": true
   },
   "include": [
     "src"
   ],
   "exclude": [
-    "node_modules/**",
-    ".vscode-test"
+    "node_modules",
+    ".vscode-test",
+    ".vscode-test-web"
   ]
 }

@@ -1,13 +1,13 @@
 import * as axios from 'axios'
-import * as vscode from 'vscode'
-import { ExtensionContext, Uri } from 'vscode'
+// import * as vscode from 'vscode'
+import { commands, ExtensionContext, Uri, ViewColumn, window } from 'vscode'
 import { log } from './shared'
 
 export class VideoViewer {
   context: ExtensionContext
 
-  static videoViewer
-  static default(context) {
+  static videoViewer: VideoViewer
+  static default(context: ExtensionContext) {
     if (VideoViewer.videoViewer) {
       log.trace('<VideoViewer> {default} accessed using cache')
       return VideoViewer.videoViewer
@@ -17,20 +17,29 @@ export class VideoViewer {
     return VideoViewer.videoViewer
   }
 
-  constructor(context) {
+  constructor(context: ExtensionContext) {
     this.context = context
     this.activate()
   }
 
+  // MARK: activate
+
   activate() {
     log.trace('<VideoViewer> [activate]')
     this.context.subscriptions.push(
-      vscode.commands.registerCommand('tikbook.test.video.embedded', async () => {
+      commands.registerCommand('tikbook.test.video.embedded', async (params?: { name: string, group: string, languages?: string[], chapters?: string[] | boolean, baseUrl?: string }) => {
+        const repoUrl = params?.baseUrl || 'https://tikoci.github.io/media/videos/'
+        const repoGroup = params?.group || 'test'
+        const repoLanguages = params?.languages || ['en']
+        const videoBaseName = params?.name || 'video'
+        const videoDefaultLanguage = repoLanguages[0] || ['en']
+        const videoTitle = params?.name || 'video'
+
         log.trace('<VideoViewer> [tikbook.test.video.embedded] start')
-        const panel = vscode.window.createWebviewPanel(
-          'tikbookVideoViwer',
-          'TikBook Video',
-          vscode.ViewColumn.Two,
+        const panel = window.createWebviewPanel(
+          'tikbookVideoViewer',
+          videoTitle,
+          ViewColumn.Two,
           {
             enableScripts: true,
             retainContextWhenHidden: true,
@@ -48,13 +57,13 @@ export class VideoViewer {
         }
 
         const jsUrl = panel.webview.asWebviewUri(
-          vscode.Uri.joinPath(this.context.extensionUri, 'media', 'web', 'video.js'),
+          Uri.joinPath(this.context.extensionUri, 'media', 'web', 'video.js'),
         )
-        const video = panel.webview.asWebviewUri(vscode.Uri.parse('https://tikoci.github.io/media/videos/test/video.vscode.mp4'))
-        const subtitles = await makeWebviewUrl('https://tikoci.github.io/media/videos/test/video.subtitles.en.vtt')
-        const chapters = await makeWebviewUrl('https://tikoci.github.io/media/videos/test/video.chapters.en.vtt')
+        const video = panel.webview.asWebviewUri(Uri.parse(`${repoUrl}${repoGroup}/${videoBaseName}.mp3audio.mp4`))
+        const subtitles = await makeWebviewUrl(`${repoUrl}${repoGroup}/${videoBaseName}.${videoDefaultLanguage}.vtt`)
+        const chapters = await makeWebviewUrl(`${repoUrl}${repoGroup}/${videoBaseName}.chapters.vtt`)
         const csp = `default-src data: 'self' ${cspSource} vscode-resource:; style-src 'unsafe-inline'; img-src 'self' ${cspSource} https: vscode-resource:; script-src ${cspSource} 'self' vscode-resource: https:; media-src data: 'self' ${cspSource} https: vscode-resource:;`
-        panel.webview.html = this.generateHtmlPage(csp, jsUrl, video, subtitles, chapters)
+        panel.webview.html = this.generateHtmlPage(videoBaseName, csp, jsUrl, video, subtitles, chapters)
         log.trace('<VideoViewer> [tikbook.test.video.embedded] done')
       },
       ),
@@ -65,7 +74,9 @@ export class VideoViewer {
     log.trace('<VideoViewer> {dispose}')
   }
 
-  generateHtmlPage(csp, jsUrl, videoUrl, subtitlesUrl, chaptersUrl) {
+  // MARK: html
+
+  generateHtmlPage(title: string, csp: string, jsUrl: Uri, videoUrl: Uri, subtitlesUrl: Uri, chaptersUrl: Uri) {
     log.trace('<VideoViewer> {generateHtmlPage}')
     log.trace(`<VideoViewer> .csp ${csp}`)
     log.trace(`<VideoViewer> .jsUrl ${jsUrl}`)
@@ -150,7 +161,7 @@ export class VideoViewer {
       position: fixed;
       top: 16px;
       font-family: var(--font-mono);
-      color: var(--text-color);
+      color: white; // var(--text-color);
       font-size: 0.9em;
     }
 
@@ -200,7 +211,6 @@ export class VideoViewer {
     }
   </style>
 </head>
-
 <body>
 <div class="video-container">
   <video id="video" crossorigin=anonymous controls preload="metadata">
@@ -211,7 +221,7 @@ export class VideoViewer {
       srclang="en" label="Chapters">
   </video>
   <div class="title">
-    <span><small>Scripting & APIs:</small> Trigger scripts with SMS</span>
+    <span>${title}</span>
   </div>
   <div class="chapter-selector">
     <details class="dropdown">

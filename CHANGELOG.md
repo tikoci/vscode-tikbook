@@ -3,13 +3,9 @@
 
 * Early builds & conceptional to get feedback on _some_ "RouterOS Notebook" format. 
 * After a notebook "cell run", errors are detected using regular expressions.  Problem is _full_ set of error strings is _unknown_.  As a result, some error may be shown as successful in UI, but not.
-* In a `markdown-routeros` notebook ("Markdown First", _i.e._ TikBook serialized to markdown using ` ```routeros `  for code view), syntax coloring is not working.
+* In a `markdown-routeros` notebook ("Markdown First", _i.e._ TikBook serialized to markdown using ` ```routeros `  for code view), syntax coloring does not work.
 * Typically, a notebook allow saving each cell's "outputs" to the notebook file on disk.  Currently saving outputs is unimplemented; however, is planned as an option.  
-* More user settings needed to control timeouts and enable/disable UI elements.  Currently hardcoded.
-
-### WIP
-* More work to correct expose commands as buttons (and perhaps more "when" clauses needed to hide when inappropriate)
-* Video player, actually works, but JavaScript does not run on VSCodeWeb so chapter picker etc does not show chapters
+* More user settings needed to control internal and enable/disable UI elements.  Currently hardcoded.
 
 ## Changelog
 
@@ -29,6 +25,7 @@
 * Add support to launch SSH session to connected router and appear in VS Code's Terminal panel.  Authentication is handled by `ssh`, the extension merely launches it, so if you have private key configurated, than it should just connect; otherwise, you may get prompted for `ssh` password (if allowed by RouterOS settings).
 * Experimental: Added VS Code video player with full WebVTT support (chapters, subtitles, metadata) to test concept and compatibility
 * `rscena:` Virtual read-only text documents support.  Used to present a read-only view of `:export`, `/system/scripts`, as well as previewing various notebook formats. _`rscena:` is the URI protocol for TikBook's virtual document generator, with `-ena` stem meaning "shadow" in Latvian_
+* Removed non-functional "walkthrough", plan to re-introduce later with better content
 
 
 #### Fixes

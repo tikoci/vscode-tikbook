@@ -1,11 +1,30 @@
-import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig, isAxiosError } from 'axios'
-import { EventEmitter, Event, log } from './shared'
+import axios, { AxiosError, AxiosResponse, GenericAbortSignal, InternalAxiosRequestConfig, isAxiosError } from 'axios'
+import { log } from './shared'
 import { getSettings, SecretManager } from './config'
+import { EventEmitter, Event, env, UIKind } from 'vscode'
+
+import * as https from 'https'
+let _httpsNoCheckCertificates: https.Agent
+export function getHttpsAgent() {
+  const shouldCheckCertificates = getSettings().checkCertificates
+  if (env.uiKind === UIKind.Web) return undefined
+  if (shouldCheckCertificates) return undefined
+  if (_httpsNoCheckCertificates) return _httpsNoCheckCertificates
+  return _httpsNoCheckCertificates = new https.Agent({
+    rejectUnauthorized: false,
+  })
+}
+
+// MARK: types
 
 export interface WrappedExecuteResponse {
   ret: string
 }
 export type ExecuteResponse = string
+
+export interface SystemIdentityGetResponse {
+  name: string
+}
 
 export interface InspectRequest {
   'input'?: string | undefined
@@ -52,15 +71,6 @@ export interface ChildInspectResponseItem {
   'type': string
 }
 
-/*
-const routerDefaultInitialization = {
-    //baseUrl: "http://192.168.74.144:7080",
-    // username: "lsp",
-    // password: "changeme",
-    apiTimeout: 30
-};
-*/
-
 export interface RouterOSInitialization {
   baseUrl: string
   username: string
@@ -68,14 +78,13 @@ export interface RouterOSInitialization {
   apiTimeout: number
 }
 
+// MARK: REST lib
+
 export class RouterRestClient {
-  // #settings;
-  // get settings() { return this.#settings; }
-  // set settings(newValue) { this.#settings = newValue; }
-  get settings() {
-    log.trace('<RouterRestClient> {get settings}')
-    return getSettings()
-  }
+  // get settings() {
+  // log.trace('<RouterRestClient> {get settings}')
+  //  return getSettings()
+  // }
 
   static #default: RouterRestClient | undefined = undefined
   static get default() {
@@ -111,11 +120,12 @@ export class RouterRestClient {
     this._onHttpRequestSuccess.dispose()
   }
 
+  // MARK: client
+
   get httpClient() {
     log.trace('<RouterRestClient> {httpClient}')
+    // const settings = getSettings()
     const client = axios.create({
-      // baseURL: `${this.#settings.baseUrl}/rest`,
-      // timeout: this.#settings.apiTimeout * 1000, // in ms, settings uses seconds
       headers: { 'Content-Type': 'application/json' },
       withCredentials: true,
     })
@@ -123,13 +133,14 @@ export class RouterRestClient {
     // update from setting per request
     client.interceptors.request.use(async (req) => {
       const password = await SecretManager.default.getPassword()
-      const settings = this.settings
+      const settings = getSettings()
       req.auth = {
         username: settings.username,
         password: password || settings.password || '',
       }
       req.baseURL = `${settings.baseUrl}/rest`
       req.timeout = settings.apiTimeout * 1000
+      if (env.uiKind === UIKind.Desktop) req.httpsAgent = getHttpsAgent()
       return req
     })
 
@@ -153,10 +164,13 @@ export class RouterRestClient {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private pipelineRequestError(error: any) {
     if (isAxiosError(error)) {
-      log.warn('<RouterRestClient> axios error _before_ sending', error.toJSON())
+      log.warn('<RouterRestClient> axios error _before_ sending', `${error.config?.url} ${error.code} '${error.message}' baseUrl ${error.config?.baseURL} user ${error.config?.auth?.username}`)
+      this._onHttpRequestError.fire(error as AxiosError)
     }
-    this._onHttpRequestError.fire(error as AxiosError)
-    log.error('<RouterRestClient> cannot send request', error)
+    else {
+      log.error('<RouterRestClient> cannot send request', error)
+    }
+    return Promise.reject(error)
     // return Promise.reject(error);
   }
 
@@ -169,14 +183,18 @@ export class RouterRestClient {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private pipelineResponseError(error: any) {
     if (isAxiosError(error)) {
-      log.warn('<RouterRestClient> axios error _before_ sending', error.toJSON())
+      log.warn('<RouterRestClient> axios error _before_ sending', `${error.config?.url} ${error.code} '${error.message}' baseUrl ${error.config?.baseURL} user ${error.config?.auth?.username}`)
+      this._onHttpRequestError.fire(error as AxiosError)
     }
-    this._onHttpRequestError.fire(error as AxiosError)
-    log.error('<RouterRestClient> request failed', error)
-    // return Promise.reject(error);
+    else {
+      log.error('<RouterRestClient> request failed', error)
+    }
+    return Promise.reject(error)
   }
 
-  async _execute(cmd: string, signal?) {
+  // MARK: wrappers
+
+  async _execute(cmd: string, signal?: GenericAbortSignal) {
     log.trace('<RouterRestClient> [_execute] ')
     return await this.httpClient.post<WrappedExecuteResponse>(
       '/execute', {
@@ -185,8 +203,16 @@ export class RouterRestClient {
       }, signal ? { signal: signal } : {}).then(resp => resp?.data?.ret)
   }
 
-  async run(cmd: string, signal): Promise<string> {
-    return this._execute(cmd, signal)
+  async _asCSV(cmd: string, signal?: GenericAbortSignal, _options?: string[]): Promise<string> {
+    return this._execute(
+      `:put [:serialize to=dsv delimiter=, options=dsv.remap [${cmd} as-value]]`,
+      signal)
+  }
+
+  async _asJSON(cmd: string, signal?: GenericAbortSignal, _pretty?: boolean): Promise<string> {
+    return this._execute(
+      `:put [:serialize to=json [${cmd} as-value]]`,
+      signal)
   }
 
   // async execute(cmd: string, wrapperType: "json"|"csv"|"rest"|undefined){}
@@ -200,8 +226,14 @@ export class RouterRestClient {
       }).then(resp => resp?.data)
   }
 
+  // MARK: methods
+
+  async run(cmd: string, signal: GenericAbortSignal): Promise<string> {
+    return this._execute(cmd, signal)
+  }
+
   inspectHighligh = (input: string, path?: string) => {
-    return this._inspect<HighlightInspectResponseItem>('highlight', (new RouterScriptPreprocessor(input)).unicodeCharReplace('?'), path)
+    return this._inspect<HighlightInspectResponseItem>('highlight', (new RouterScriptPreprocessor(input)).unicodeCharReplace('_'), path)
   }
 
   inspectSyntax = (input: string, path?: string) => {
@@ -216,7 +248,7 @@ export class RouterRestClient {
     return this._inspect<ChildInspectResponseItem>('child', input, path)
   }
 
-  exportConfig = (type: RouterOSExportType, token) => {
+  exportConfig = (type: RouterOSExportType, token: GenericAbortSignal) => {
     // return this.run(`:put [:execute script=":export ${type || ''}" as-value]`, token)
     log.info(`<RouterRestClient> [exportConfig] ${type}`)
     return this.run(`:export ${type}`, token)
@@ -234,7 +266,7 @@ export class RouterRestClient {
     return this.httpClient.post('/system/default-configuration/print', {}).then(resp => resp.data?.[0])
   }
 
-  getSystemScript = (name) => {
+  getSystemScript = (name: string) => {
     return this.httpClient.get(`/system/script/${encodeURIComponent(name)}`).then(resp => resp.data)
   }
 
@@ -242,22 +274,55 @@ export class RouterRestClient {
     return this.httpClient.get('/system/identity').then(resp => resp.data?.name)
   }
 
+  getRawIdentity = () => {
+    return this.httpClient.get<SystemIdentityGetResponse>('/system/identity')
+  }
+
   getSystemResources(): Promise<object> {
     return this.httpClient.get('/system/resource').then(resp => resp.data)
   }
-}
 
-export class RouterOSScriptParser {
-  source = ''
-  device: RouterRestClient
-  constructor(source: string, device: RouterRestClient) {
-    this.source = source
-    this.device = device
+  getNeighbors(format = 'csv') {
+    if (format !== 'csv') throw new Error('not implemented')
+    return this._asCSV('/ip/neighbor print detail')
   }
 }
 
+// MARK: preprocessor
+
 export class RouterScriptPreprocessor {
   text = ''
+  /*
+  findRestableCommand() {
+    // "print" is special to enable renders
+    const restableCommands = this.text.split('\n').map(e =>
+      // eslint-disable-next-line no-useless-escape
+      /^[\s]*(?<path>[\/]([a-z]+[\/ ])+)(?<cmd>(print|get))[\s]*(?<args>(([\S]+=[\S]+|([a-z\-]+))[\s]*)*)/
+        .exec(e))
+      .filter(e => e?.groups)
+    log.debug('<TikbookControllerBase> {_doExecution} processing any REST-able commands', restableCommands)
+    // log.trace(JSON.stringify(restableCommands, null, 2))
+    restableCommands.forEach((e) => {
+      if (e && e.groups && e.groups.args && e.groups.args.length > 0) {
+        const args = e.groups.args.split(/[\s]+/).reduce((m, e) => {
+          e = e.trim()
+          if (e.match(/[\S]+=[\S]+/)) {
+            const attr = e.split('=')
+            attr[1].replace(/^["]/, '').replace(/["]$/, '')
+            if (Number.isInteger(Number(attr[1]))) m[attr[0]] = Number(attr[1])
+            else m[attr[0]] = attr[1]
+          }
+          else if (e.match(/[A-z-.]+/)) {
+            m[e] = true
+          }
+          return m
+        }, {})
+        log.trace(`<TikbookControllerBase> {_doExecution} REST-able args`, args)
+      }
+    })
+    return restableCommands
+  }
+    */
 
   unicodeCharReplace(replace = '_'): string {
     let result = ''

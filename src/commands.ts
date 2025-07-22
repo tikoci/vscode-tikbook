@@ -1,14 +1,12 @@
-import { Uri, ViewColumn, commands, env, window, workspace } from 'vscode'
+import { CancellationTokenSource, Uri, ViewColumn, commands, env, window, workspace } from 'vscode'
 import { log } from './shared'
 import { getSettings, SecretManager } from './config'
 import { MarkdownSerializer, ScriptSerializer } from './notebook'
 
 export function initializeCommands() {
+  const killswitch = new CancellationTokenSource()
   return [
-    // Experiment with File System Provider for Scripting
-    // commands.registerCommand('tikbook.test.vfs.update', async () => {
-    //  workspace.updateWorkspaceFolders(0, 0, { uri: Uri.parse('systemscriptfs:/'), name: 'RouterOS Scripts' })
-    // }),
+
     commands.registerCommand('tikoci.secrets.default.set', async (_) => {
       log.trace('[tikoci.secrets.default.set] invoked')
       await SecretManager.default.setPassword(_)
@@ -27,20 +25,12 @@ export function initializeCommands() {
       // await commands.executeCommand('routeroslsp.runCommand', 'show.output.log')
     }),
     commands.registerCommand('tikbook.routeros.reopen.notebook.routeros', async (_uri?: Uri) => {
-      const uri = _uri || window.activeTextEditor.document.uri
-      const openNotebooksMatching = window.visibleNotebookEditors.filter(e => e.notebook.uri.path === uri.path)
+      const uri = _uri || window.activeTextEditor?.document.uri
+      const openNotebooksMatching = window.visibleNotebookEditors.filter(e => e.notebook.uri.path === uri?.path)
       if (openNotebooksMatching.length > 0) {
         window.showNotebookDocument(openNotebooksMatching[0].notebook, { preserveFocus: false })
       }
       else {
-        /* "editor/title":
-        {
-          "command": "tikbook.routeros.reopen.notebook.routeros",
-          "group": "navigation@1",
-          "icon": "$(tikoci-tikbook)",
-          "when": "!notebookType && resourceScheme == file && (resourceLangId == routeros || resourceExtname == .rsc || editorLangId == routeros)"
-        },
-        */
         commands.executeCommand('vscode.openWith', uri, 'tikbook', ViewColumn.Beside)
       }
     }),
@@ -49,7 +39,7 @@ export function initializeCommands() {
       if (!vdoc) return
       const content = vdoc.getText()
       const buffer = new TextEncoder().encode(content)
-      const notebookData = await (new ScriptSerializer()).deserializeNotebook(buffer, null)
+      const notebookData = await (new ScriptSerializer()).deserializeNotebook(buffer, killswitch.token)
       window.showNotebookDocument(await workspace.openNotebookDocument('tikbook', notebookData))
     }),
     commands.registerCommand('tikbook.vdoc.clone.markdown', async () => {
@@ -57,7 +47,7 @@ export function initializeCommands() {
       if (!vdoc) return
       const content = vdoc.getText()
       const buffer = new TextEncoder().encode(content)
-      const notebookData = await (new MarkdownSerializer()).deserializeNotebook(buffer, null)
+      const notebookData = await (new MarkdownSerializer()).deserializeNotebook(buffer, killswitch.token)
       const notebookDoc = await workspace.openNotebookDocument('markdown-routeros', notebookData)
       window.showNotebookDocument(notebookDoc)
     }),
@@ -68,20 +58,11 @@ export function initializeCommands() {
       if (!targetUri) {
         const msg = 'No file uri was found.  Cannot reopen as Markdown RouterOS notebook.'
         window.showWarningMessage(msg)
-        log.info(`[tikbook.markdown.reopen.notebook] not possible with scheme '${targetUri.scheme}' editorLangId '${activeEditor.document.languageId}', warned user '${msg}'`)
+        log.info(`[tikbook.markdown.reopen.notebook] not possible editorLangId '${activeEditor?.document.languageId}', warned user '${msg}'`)
         return
       }
 
       try {
-        // This is the core command to reopen the editor with a specific notebook
-        /* "editor/title":
-        {
-          "command": "tikbook.markdown.reopen.notebook",
-          "group": "navigation@1",
-          "icon": "$(tikoci-tikbook)",
-          "when": "resourceScheme == file && (resourceLangId == markdown || resourceExtname == .md) && notebookType != markdown-routeros"
-        },
-        */
         await commands.executeCommand('vscode.openWith', targetUri, 'markdown-routeros')
         window.showInformationMessage(`Opened '${targetUri.fsPath}' with RouterOS Notebook.`)
         log.debug(`[tikbook.markdown.reopen.notebook] opened ${targetUri.toString()}`)
@@ -113,5 +94,9 @@ export function initializeCommands() {
     commands.registerCommand('tikbook.browse.router.webfig', () => {
       env.openExternal(Uri.parse(`${getSettings().baseUrl}`))
     }),
+    // Experiment with File System Provider for Scripting
+    // commands.registerCommand('tikbook.test.vfs.update', async () => {
+    //  workspace.updateWorkspaceFolders(0, 0, { uri: Uri.parse('systemscriptfs:/'), name: 'RouterOS Scripts' })
+    // }),
   ]
 }

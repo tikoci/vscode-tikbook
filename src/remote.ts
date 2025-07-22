@@ -1,7 +1,38 @@
 /* GitHub Repo Fetch */
 
 import * as axios from 'axios'
+import { commands, ThemeIcon, window } from 'vscode'
+import { getSettings } from './config'
 import { log } from './shared'
+
+// MARK: ssh
+
+export function initializeSSH() {
+  log.debug(`<SSH> {initalizeSSH}`)
+  return [
+    commands.registerCommand('tikbook.open.terminal.router', () => openTerminalRouter()),
+  ]
+}
+
+export function openTerminalRouter() {
+  const settings = getSettings()
+  const url = URL.parse(settings.baseUrl)
+  if (!url) {
+    log.error(`<openTerminalRouter> got no URL`)
+    window.showWarningMessage(`Could not open SSH terminal.  TikBook 'Base URL' setting is invalid.`)
+    return
+  }
+  const connuri = `${settings.username}@${url.hostname}`
+  const terminal = window.createTerminal({
+    name: `ssh ${connuri}`,
+    iconPath: new ThemeIcon('mikrotik-icon-line'),
+  })
+  log.info(`<SSH> {openTerminalRouter} ${settings.sshCommand} ${connuri}`)
+  terminal.sendText(`${settings.sshCommand} ${connuri}`)
+  terminal.show(false)
+}
+
+// MARK: github wraper
 
 export interface GitHubRepo {
   name: string
@@ -10,6 +41,7 @@ export interface GitHubRepo {
   language: string | null
   stargazers_count: number
   updated_at: string
+  git_url: string
 }
 
 export async function fetchGitHubRepos(organization = 'tikoci'): Promise<GitHubRepo[]> {

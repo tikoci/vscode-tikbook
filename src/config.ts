@@ -1,5 +1,5 @@
-import { commands, ConfigurationTarget, ExtensionContext, window, workspace } from 'vscode'
-import { EventEmitter, Event, log } from './shared'
+import { commands, Disposable, ConfigurationTarget, ExtensionContext, EventEmitter, Event, window, workspace } from 'vscode'
+import { log } from './shared'
 
 interface TikbookSettings {
   username: string
@@ -7,16 +7,32 @@ interface TikbookSettings {
   baseUrl: string
   apiTimeout: number
   sshCommand: string
+  provideLspServerCredentials?: boolean
+  checkCertificates: boolean
 }
 
 export function getSettings(): TikbookSettings {
   const vsconf = workspace.getConfiguration('tikbook', null)
   return {
-    username: vsconf.get('username'),
-    password: vsconf.get('password'),
-    baseUrl: vsconf.get('baseUrl'),
-    apiTimeout: vsconf.get('apiTimeout'),
-    sshCommand: vsconf.get('sshCommand'),
+    username: vsconf.get('username') || 'admin',
+    password: vsconf.get('password') || '',
+    baseUrl: vsconf.get('baseUrl') || 'http://192.168.88.1',
+    apiTimeout: vsconf.get('apiTimeout') || 15,
+    sshCommand: vsconf.get('sshCommand') || 'ssh',
+    provideLspServerCredentials: vsconf.get('provideLspServerCredentials'),
+    checkCertificates: vsconf.get('checkCertificates') || false,
+  }
+}
+
+export function getConnectionUrlString(): string {
+  const settings = getSettings()
+  const url = URL.parse(settings.baseUrl)
+  if (url) {
+    url.username = settings.username
+    return `${url.protocol}//${url.username}@${url.host}`
+  }
+  else {
+    return ''
   }
 }
 
@@ -24,7 +40,7 @@ export class SecretManager {
   static readonly SECRET_KEY = 'tikbook.password.default'
   private context: ExtensionContext
   private keyname: string
-  private disposables = []
+  private disposables: Disposable[] = []
 
   private _onSecretChange = new EventEmitter<string>()
   public readonly onSecretChange: Event<string> = this._onSecretChange.event
@@ -41,13 +57,23 @@ export class SecretManager {
       if (e.key === this.keyname) await this.updatePasswordStatus()
     }))
     this.updatePasswordStatus()
+    workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('tikbook.passwordInfo')) {
+        log.debug('<SecretManager> {onDidChangeConfiguration} use edited status, should replaced')
+        this.updatePasswordStatus()
+      }
+    })
+  }
+
+  async initialize(): Promise<void> {
+    await this.updatePasswordStatus()
   }
 
   dispose() {
     this.disposables.forEach(e => e.dispose())
   }
 
-  async setPassword(back?): Promise<void> {
+  async setPassword(back?: string): Promise<void> {
     const password = await window.showInputBox({
       prompt: 'Enter password for RouterOS',
       password: true,
@@ -58,7 +84,7 @@ export class SecretManager {
     if (password) {
       await this.context.secrets.store(SecretManager.SECRET_KEY, password)
       await this.updatePasswordStatus()
-      const msg = 'TikBook saved a secret with RouterOS password'
+      const msg = 'Saved. Password using secret in SecretStore'
       window.showInformationMessage(msg)
       log.info(`<SecretManager> {setPassword} called and notified ${msg}`)
     }
@@ -68,10 +94,10 @@ export class SecretManager {
     }
   }
 
-  async clearPassword(back?): Promise<void> {
+  async clearPassword(back?: string): Promise<void> {
     await this.context.secrets.delete(SecretManager.SECRET_KEY)
     await this.updatePasswordStatus()
-    const msg = 'Secret password deleted. TikBook now using plain text RouterOS password from Settings'
+    const msg = 'Cleared. Password using plain text from Settings'
     window.showWarningMessage(msg)
     log.warn(`<SecretManager> {clearPassword} called and warned user '${msg}'`)
     if (back) {
@@ -88,14 +114,11 @@ export class SecretManager {
     const hasPassword = !!(await this.getPassword())
     await commands.executeCommand('setContext', 'tikbook.usingSecrets', hasPassword)
     // Update the readonly setting to show current status
-    await config.update('passwordInfo',
-      hasPassword ? '✓ Password using secret in SecretStore' : '⚠ Password using plain text from Settings',
-      ConfigurationTarget.Global,
-    )
-  }
-
-  async initialize(): Promise<void> {
-    // Set initial status
-    await this.updatePasswordStatus()
+    await config.update(
+      'passwordInfo',
+      hasPassword
+        ? '✓ Password using secret in SecretStore'
+        : '⚠ Password using plain text from Settings',
+      ConfigurationTarget.Global)
   }
 }

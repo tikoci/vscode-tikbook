@@ -2,23 +2,33 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "watch",
-      "dependsOn": ["lint", "compile"],
+      "label": "compile",
+      "type": "npm",
+      "script": "compile",
+      "dependsOn": [
+        "lint"
+      ],
+      "isBackground": false,
       "group": {
         "kind": "build",
         "isDefault": true
       },
       "presentation": {
         "panel": "dedicated",
-        "reveal": "silent"
-      }
+        "reveal": "silent",
+        "close": true,
+        "group": "tasks"
+      },
+      "problemMatcher": []
     },
     {
-      "label": "compile",
+      "label": "watch:node",
       "type": "npm",
-      "script": "compile",
-      "dependsOn": ["lint"],
-      "isBackground": false,
+      "script": "watch:node",
+      "dependsOn": [
+        "lint"
+      ],
+      "isBackground": true,
       "group": {
         "kind": "build",
         "isDefault": false
@@ -26,9 +36,47 @@
       "presentation": {
         "panel": "dedicated",
         "reveal": "silent",
-        "group": "watch"
+        "group": "tasks"
       },
-      "problemMatcher": []
+      "problemMatcher": [],
+    },
+    {
+      "label": "compile:test",
+      "type": "npm",
+      "script": "compile:test",
+      "dependsOn": [
+        "compile"
+      ],
+      "isBackground": false,
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "silent",
+        "group": "tasks"
+      },
+      "problemMatcher": [],
+    },
+    {
+      "label": "watch:test",
+      "type": "npm",
+      "script": "watch:test",
+      "dependsOn": [
+        "compile"
+      ],
+      "isBackground": true,
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "silent",
+        "group": "tasks"
+      },
+      "problemMatcher": [],
     },
     {
       "label": "lint",
@@ -37,10 +85,17 @@
       "isBackground": false,
       "presentation": {
         "panel": "dedicated",
+        "close": true,
         "reveal": "silent",
-        "group": "watch"
+        "group": "tasks"
       },
-      "problemMatcher": ["$eslint-stylish"]
+      "problemMatcher": [
+        "$eslint-stylish"
+      ]
+    },
+    {
+      "label": "watch:all",
+      "dependsOn": ["watch:node", "watch:test"]
     }
   ]
 }

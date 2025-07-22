@@ -1,4 +1,4 @@
-import { window, EventEmitter as VSCodeEventEmitter, Event as VSCodeEvent, LogLevel } from 'vscode'
+import { window, LogLevel } from 'vscode'
 
 export const Extension = {
   shortName: 'TikBook',
@@ -14,10 +14,11 @@ export function initializeLogging() {
   ]
 }
 
-export const EventEmitter = VSCodeEventEmitter
-export type Event<T> = VSCodeEvent<T>
+// export const EventEmitter = VSCodeEventEmitter
+// export type Event<T> = VSCodeEvent<T>
 
-export function showNotificationAndLog(level: 'warn' | 'info' | 'error', message, ...items) {
+/*
+export function showNotificationAndLog(level: 'warn' | 'info' | 'error', message: string, ...items: any[]) {
   switch (level) {
     case 'info':
       window.showInformationMessage(message, ...items)
@@ -33,28 +34,4 @@ export function showNotificationAndLog(level: 'warn' | 'info' | 'error', message
       break
   }
 }
-/*
-
-// ROUTEROS MODULE STUB FOR RUNNING WITHOUT 'vscode' IMPORT
-
-// import  { window, EventEmitter as VSCodeEventEmitter, Event as VSCodeEvent } from 'vscode';
-import * as nodeEvents from 'node:events';
-
-// avoid using vscode in routeros.ts to keep "cross platform" (i.e. outside of VSCode)
-//export const EventEmitter = VSCodeEventEmitter;
-//export type Event<T> = VSCodeEvent<T>
-export interface Disposable {
-    [Symbol.dispose](): void;
-}
-
-export type Event<T> = (listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) => Disposable;
-
-export class EventEmitter<T> {
-    event: Event<T>;
-    fire(data: T): void { }
-    dispose(): void {}
-  }
-
-export const log = console;
-log.info("Logging started");
 */
