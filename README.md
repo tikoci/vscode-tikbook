@@ -184,9 +184,9 @@ Provides access to SSH and WebFig, along with various data extracts — includin
 
 * "Launch RouterOS Web Admin" will open a new browser window and use "Base URL" to connect to WebFig
 * "Open SSH Terminal" will appear in the "Terminal" view and use the system's existing `ssh` command.  The `ssh` command to use, including any options, can be configured in settings or the "Setup Connection" menu.
-  ![ssh-terminal](./media/screenshots/panel-terminal-ssh.png)
+  ![ssh-terminal](https://tikoci.github.io/vscode-tikbook/media/screenshots/panel-terminal-ssh.png)
 * The "Show ..." options in the menu provide a read-only "virtual document" that will appear in an editor window.  Use "Save As" to be able to edit the read-only document from a "Show".  The "Refresh" button in the editor toolbar will re-fetch the virtual document from the router.
-  ![csv-example-interfaces](./media/screenshots/csv-export-interfaces.png)
+  ![csv-example-interfaces](https://tikoci.github.io/vscode-tikbook/media/screenshots/csv-export-interfaces.png)
   _with [Rainbow CSV](https://marketplace.visualstudio.com/items?itemName=mechatroner.rainbow-csv) extension installed_
 * "View and Copy Variables" displays a list of variables and their value stored in `/system/script/env`.  Selecting an item will copy the variable name to the clipboard.
 
@@ -289,9 +289,11 @@ TikBook has no built-in renderer other than the default plain text and JSON outp
 
 For example, [Data Table Renderers](https://marketplace.visualstudio.com/items?itemName=RandomFractalsInc.vscode-data-table) extension offers some "Excel-like" views of a JSON output:
 
-![fractals-rendered]()
+[![fractals-rendered](https://tikoci.github.io/vscode-tikbook/media/screenshots/notebook-data-fractal1.png)](https://marketplace.visualstudio.com/items?itemName=RandomFractalsInc.vscode-data-table)
 
-This can be used to create reports or other custom metrics from RouterOS data.
+For CSV data, other extensions like Microsoft's [Data Wrangler](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.datawrangler) and Random Fractal's [Data Preview](https://marketplace.visualstudio.com/items?itemName=RandomFractalsInc.vscode-data-preview)
+
+This can be used to create reports or other custom metrics from RouterOS data.  
 
 ### Persisted Output and Metadata Not Supported
 
@@ -357,7 +359,7 @@ By default,
 
 ![multitab-view-annotated](https://tikoci.github.io/vscode-tikbook/media/screenshots/multitab-annotated.png)
 
-Using VS Code's built "Reopen As" or "Open As" on document works with TikBook notebooks to change the presentation.  For example, a normal `.md` document using "Reopen As" will present a menu of _how_ to reopen, include as a notebook:
+Using VS Code's built "Reopen Editor As" on document works to change the presentation.  For example, a normal `.md` document using "Reopen Editor As" will present a menu of _how_ to reopen, include as a notebook:
 
 ![reopenas-on-markdown](https://tikoci.github.io/vscode-tikbook/media/screenshots/reopen-as-on-markdown.png)
 
