@@ -291,7 +291,7 @@ For example, [Data Table Renderers](https://marketplace.visualstudio.com/items?i
 
 [![fractals-rendered](https://tikoci.github.io/vscode-tikbook/media/screenshots/notebook-data-fractal1.png)](https://marketplace.visualstudio.com/items?itemName=RandomFractalsInc.vscode-data-table)
 
-For CSV data, other extensions like Microsoft's [Data Wrangler](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.datawrangler) and Random Fractal's [Data Preview](https://marketplace.visualstudio.com/items?itemName=RandomFractalsInc.vscode-data-preview)
+For CSV data, other extensions like Microsoft's [Data Wrangler](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.datawrangler), [Rainbow CSV](https://marketplace.visualstudio.com/items?itemName=mechatroner.rainbow-csv), and Random Fractal's [Data Preview](https://marketplace.visualstudio.com/items?itemName=RandomFractalsInc.vscode-data-preview) can be used.
 
 This can be used to create reports or other custom metrics from RouterOS data.  
 
