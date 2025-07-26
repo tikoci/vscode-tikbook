@@ -9,6 +9,19 @@
 
 ## Changelog
 
+### 0.3.2
+
+#### Changes
+
+* Rewritten README.md to better cover features and setup/troubleshooting
+* Add titles and corrected verbage in a few "Quick Commander" menus
+* Corrected preview/open-as icons to match between `.md` and `.rsc`
+
+#### Fixes
+* Set max value for `apiTimeout` to 60 to match RouterOS
+* Updated deps to fix npm audit issues 
+
+
 ### 0.3.1
 
 > New "TikBook" file formats.  Previous `0.3.x` and before will need to be manually updated to support the new notebook formats. _Open GitHub [issue](https://github.com/tikoci/vscode-tikbook/issues) if you need help._

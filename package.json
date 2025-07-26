@@ -3,7 +3,7 @@
   "description": "Notebook and Tools for MikroTik RouterOS",
   "author": "AmmØ",
   "license": "MIT",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "publisher": "TIKOCI",
   "categories": [
     "Notebooks",
@@ -156,7 +156,7 @@
           "scope": "application",
           "type": "number",
           "default": 30,
-          "maximum": 120,
+          "maximum": 60,
           "minimum": 5,
           "description": "How long a command sent to RouterOS waits for a response before giving up",
           "order": 6
@@ -257,7 +257,7 @@
         {
           "command": "tikbook.view.markdown",
           "group": "navigation",
-          "icon": "$(markdown)",
+          "icon": "$(open-preview)",
           "when": "notebookType == tikbook || notebookType == routeros || (resourceLangId == routeros || resourceExtname == .rsc)"
         },
         {
@@ -305,8 +305,8 @@
         {
           "command": "tikbook.notebook.markdown.preview.markdown",
           "group": "navigation",
-          "when": "notebookType == markdown-routeros && resourceScheme == file",
-          "icon": "$(markdown)"
+          "when": "notebookType == markdown-routeros && resourceScheme == file || resourceExtname == rscmd || resourceLangId == markdown-routeros",
+          "icon": "$(open-preview)"
         },
         {
           "command": "tikbook.vdoc.refresh.active",
@@ -489,15 +489,15 @@
         "title": "Open as Markdown RouterOS Notebook",
         "shortTitle": "Open as Notebook",
         "category": "Markdown",
-        "icon": "$(tikoci-tikbook)",
+        "icon": "$(markdown)",
         "when": "resourceScheme == file && (resourceLangId == markdown-routeros || resourceLangId == markdown || resourceExtname == .md || resourceExtname == .rscmd) && notebookType != markdown-routeros"
       },
       {
         "command": "tikbook.notebook.markdown.preview.markdown",
         "title": "Markdown Preview",
         "shortTitle": "Preview",
-        "when": "notebookType == markdown-routeros",
-        "icon": "$(markdown)"
+        "when": "notebookType == markdown-routeros || resourceExtname == rscmd || resourceLangId == markdown-routeros",
+        "icon": "$(open-preview)"
       },
       {
         "command": "tikbook.vdoc.clone.tikbook",
@@ -743,14 +743,14 @@
     "postinstall": ""
   },
   "dependencies": {
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "ebnf": "^1.9.1",
     "luxon": "^3.7.1"
   },
   "devDependencies": {
     "@vscode/test-cli": "^0.0.11",
     "@stylistic/eslint-plugin-js": "^4.4.1",
-    "@stylistic/eslint-plugin": "^5.2.1",
+    "@stylistic/eslint-plugin": "^5.2.2",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "esbuild": "^0.25.8",
@@ -765,9 +765,10 @@
   },
   "peerDependencies": {
     "@types/axios": "^0.14.4",
+    "@types/bun": "^1.2.19",
     "@types/luxon": "^3.6.2",
     "@types/mocha": "^10.0.10",
-    "@types/vscode": "^1.78.2"
+    "@types/vscode": "^1.101.0"
   },
   "overrides": {
     "on-headers": "^1.1.0",

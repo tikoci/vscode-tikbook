@@ -497,16 +497,16 @@ async function showRouterAdminMenu() {
       cmd: 'tikbook.new.notebook.router.scripts',
     },
     {
-      label: '$(variable-group)  View Variables (:global)',
+      label: '$(variable-group)  View and Copy Variables (:global)',
       cmd: 'tikbook.show.menu.variables.global',
     },
     {
-      label: '$(list-unordered)  Show Scripts as :global variables',
+      label: '$(list-unordered)  Show Scripts as :global functions',
       cmd: 'tikbook.open.router.scripts.globals',
     },
 
     ...quickPickBack('tikbook.show.menu.main'),
-  ])
+  ], { title: 'RouterOS Management' })
     .then((item) => {
       if (!item) return
       if (item.cmd) {
@@ -562,7 +562,7 @@ async function showScriptListMenu() {
     log.error('<menus.showScriptListMenu> {_fetchSystemScripts}')
   }
   menuitems.push(...quickPickBack('tikbook.show.menu.router.admin'))
-  window.showQuickPick<QuickPickItemEx>(menuitems, {})
+  window.showQuickPick<QuickPickItemEx>(menuitems, { title: 'Show System Script as Text Document' })
     .then((item) => {
       if (!item) return
       if (item.cmd) commands.executeCommand(item.cmd, item.label, item.id)
@@ -614,7 +614,7 @@ async function showRouterVariableGlobalForClipboard() {
   else { */
   // No editor — fallback to clipboard
   await env.clipboard.writeText(variable)
-  const msg = `Copied RouterOs ${variable} to clipboard`
+  const msg = `Copied RouterOS ${variable} to clipboard`
   window.showInformationMessage(msg)
   log.debug(`[tikbook.show.menu.variables.global] notified user '${msg}'`)
   // }
@@ -695,7 +695,7 @@ async function showHelpMenu() {
 
   menuitems.push(...quickPickBack('tikbook.show.menu.main'))
 
-  window.showQuickPick<QuickPickItemEx>(menuitems, {})
+  window.showQuickPick<QuickPickItemEx>(menuitems, { title: 'Help Resources' })
     .then((item) => {
       if (!item) return
       if (item.cmd && item.args && item.args.length) {
