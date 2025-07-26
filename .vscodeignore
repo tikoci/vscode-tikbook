@@ -35,5 +35,7 @@ media/fonticon/*.ts
 media/fonticon/*.woff
 media/tools
 media/tools/**
+media/screenshots
+media/screenshots/**
 eslint*
 cloc.*
