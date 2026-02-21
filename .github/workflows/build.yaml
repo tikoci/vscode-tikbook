@@ -7,7 +7,6 @@ on:
         default: '--pre-release'
         type: string
         description: 'Flags to provide to vsce publish, use nothing for "release" build or "--pre-release" for testing builds'
-        required: true
 
 jobs:
   build:
@@ -34,7 +33,7 @@ jobs:
           npx cloc --git HEAD
       
       - name: Build project
-        run: npm run compile
+        run: bun run compile
 
       - name: Upload JavaScript .map files for symbols
         uses: actions/upload-artifact@v4
@@ -48,7 +47,7 @@ jobs:
 
       - name: Package VSIX
         run: |
-          npm run vsix:package
+          bun run vsix:package
 
       - name: Upload VSIX artifact (node)
         uses: actions/upload-artifact@v4
