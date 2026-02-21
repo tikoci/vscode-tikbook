@@ -71,24 +71,24 @@ export async function fetchGitHubRepos(organization = 'tikoci'): Promise<GitHubR
       if (error.response) {
         // The request was made and the server responded with a status code
         // that falls out of the range of 2xx
-        throw new Error(`GitHub API error: ${error.response.status} ${error.response.statusText}`)
+        throw new Error(`GitHub API error: ${error.response.status} ${error.response.statusText}`, { cause: _error })
       }
 
       else if (error.request) {
         // The request was made but no response was received
-        throw new Error('Network error: Unable to reach GitHub API')
+        throw new Error('Network error: Unable to reach GitHub API', { cause: _error })
       }
 
       else if (error.code === 'ECONNABORTED') {
         // Request timeout
-        throw new Error('Request timeout: GitHub API is taking too long to respond')
+        throw new Error('Request timeout: GitHub API is taking too long to respond', { cause: _error })
       }
 
       else {
         // Something happened in setting up the request that triggered an Error
-        throw new Error(`Request error: ${error.message || 'Unknown error occurred'}`)
+        throw new Error(`Request error: ${error.message || 'Unknown error occurred'}`, { cause: _error })
       }
     }
-    throw Error()
+    throw new Error('Unknown error', { cause: _error })
   }
 }

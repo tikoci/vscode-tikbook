@@ -9,6 +9,16 @@
 
 ## Changelog
 
+### 0.3.3
+
+#### Changes
+
+* Updated dependencies based on `bun audit` failures
+
+#### Fixes
+
+* Minor lint fixes to provide original exception when re-throwing
+
 ### 0.3.2
 
 #### Changes

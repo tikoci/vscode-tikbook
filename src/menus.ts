@@ -519,13 +519,13 @@ async function showRouterAdminMenu() {
 // MARK: export
 
 async function showConfigurationExportMenu() {
-  let menuitems: QuickPickItemEx[] = []
+  // let menuitems: QuickPickItemEx[]
   const exportTypes = [
     ['compact', 'without defaults'],
     ['verbose', 'include defaults'],
     ['terse', '\'flattened\' without default'],
   ]
-  menuitems = exportTypes.map((type) => {
+  const menuitems: QuickPickItemEx[] = exportTypes.map((type) => {
     return {
       label: `$(export)  :export ${type[0]}`,
       description: ` ${type[1]}`,

@@ -402,8 +402,7 @@
             "filenamePattern": "*.rsc"
           }
         ],
-        "priority": "option",
-        "icon": "icon.png"
+        "priority": "option"
       },
       {
         "viewType": "markdown",
@@ -711,7 +710,11 @@
       }
     }
   },
+  "config": {
+    "releaseflag": "--pre-release"
+  },
   "scripts": {
+    "outputenv": "node -e 'console.log(process.env)' | grep npm",
     "lint": "bun audit && eslint src/*.ts src/test/*.ts",
     "clean": "rm -rf ./out/* && rm -f *.vsix",
     "compile": "bun run compile:web && bun run compile:node",
@@ -726,14 +729,14 @@
     "compile:test": "bun build src/test/*.test.ts --outdir=./out/test --external vscode --format=cjs --target=node --sourcemap",
     "vsix:package:all": "bun run vsix:package:node && && bun run vsix:package:web ",
     "vsix:package": "bun run vsix:package:node && bun run vsix:package:web",
-    "vsix:package:node": "rm -f *-node.vsix && bun run compile && npx @vscode/vsce package --no-dependencies --pre-release -o tikbook-node.vsix",
-    "vsix:package:web": "rm -f *-web.vsix && bun run compile && npx @vscode/vsce package --target web --no-dependencies --pre-release -o tikbook-web.vsix",
+    "vsix:package:node": "rm -f *-node.vsix && bun run compile && npx @vscode/vsce package --no-dependencies $npm_package_config_releaseflag -o tikbook-node.vsix",
+    "vsix:package:web": "rm -f *-web.vsix && bun run compile && npx @vscode/vsce package --target web --no-dependencies $npm_package_config_releaseflag -o tikbook-web.vsix",
     "vsix:install": "bun run vsix:remove; bun run vsix:package && code --install-extension tikbook-*.vsix",
     "vsix:remove": "code --uninstall-extension tikoci.tikbook || echo '... well if not install, cannot remove it'",
     "vscode:prepublish": "bun run lint && bun run compile",
     "ovsx:publish": "npx ovsx publish tikbook-node.vsix -p $OVSX_PAT",
-    "vsix:publish:node": "npx @vscode/vsce publish --packagePath ./tikbook-node.vsix --no-dependencies --pre-release -p $VSCE_PAT",
-    "vsix:publish:web": "npx @vscode/vsce publish --target web --packagePath ./tikbook-web.vsix --no-dependencies --pre-release -p $VSCE_PAT",
+    "vsix:publish:node": "npx @vscode/vsce publish --packagePath ./tikbook-node.vsix --no-dependencies $npm_package_config_releaseflag -p $VSCE_PAT",
+    "vsix:publish:web": "npx @vscode/vsce publish --target web --packagePath ./tikbook-web.vsix --no-dependencies $npm_package_config_releaseflag -p $VSCE_PAT",
     "watch:test": "bun build src/test/*.test.ts --outdir=./out/test --external vscode --format=cjs --target=node --sourcemap --watch",
     "watch:node": "bun build src/extension.ts --outdir=./out --entry-naming=extension-node.js --external vscode --format=cjs --target=node --sourcemap --watch",
     "pretest": "bun run compile:test",
@@ -743,37 +746,38 @@
     "postinstall": ""
   },
   "dependencies": {
-    "axios": "^1.11.0",
-    "ebnf": "^1.9.1",
-    "luxon": "^3.7.1"
+    "axios": "^1.13.5",
+    "luxon": "^3.7.2"
   },
   "devDependencies": {
-    "@vscode/test-cli": "^0.0.11",
+    "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.9.0",
     "@stylistic/eslint-plugin-js": "^4.4.1",
-    "@stylistic/eslint-plugin": "^5.2.2",
-    "@typescript-eslint/eslint-plugin": "^8.38.0",
-    "@typescript-eslint/parser": "^8.38.0",
-    "esbuild": "^0.25.8",
-    "eslint": "^9.31.0",
-    "eslint-config-prettier": "^10.1.8",
-    "hls.js": "^1.6.7",
-    "mocha": "^10.8.2",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.38.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
+    "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
-    "@vscode/test-web": "^0.0.70"
+    "@vscode/test-web": "^0.0.79",
+    "esbuild": "^0.27.3",
+    "eslint": "^10.0.1",
+    "eslint-config-prettier": "^10.1.8",
+    "hls.js": "^1.6.15",
+    "mocha": "^11.7.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.0"
   },
   "peerDependencies": {
-    "@types/axios": "^0.14.4",
-    "@types/bun": "^1.2.19",
-    "@types/luxon": "^3.6.2",
+    "@types/bun": "^1.3.9",
+    "@types/luxon": "^3.7.1",
     "@types/mocha": "^10.0.10",
-    "@types/vscode": "^1.101.0"
+    "@types/vscode": "^1.109.0"
   },
   "overrides": {
     "on-headers": "^1.1.0",
     "@eslint/plugin-kit": "^0.3.3",
-    "form-data": "^4.0.4"
+    "form-data": "^4.0.4",
+    "minimatch": "^10.2.2",
+    "diff": "^8.0.3"
   },
   "private": false
 }

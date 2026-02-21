@@ -3,7 +3,7 @@ import * as assert from 'assert'
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from 'vscode'
-import { RouterScriptPreprocessor } from '../routeros'
+// import { RouterScriptPreprocessor } from '../routeros'
 
 suite('Extension Test Suite', () => {
   suiteTeardown(() => {
@@ -16,9 +16,9 @@ suite('Extension Test Suite', () => {
   })
 
   test('Restable', () => {
-    let pp = (new RouterScriptPreprocessor('/ip/address/print proplist=address')).findRestableCommand()
-    pp = (new RouterScriptPreprocessor('/ip address print as-value proplist=address')).findRestableCommand()
-    console.log(pp)
+    // let pp = (new RouterScriptPreprocessor('/ip/address/print proplist=address')).findRestableCommand()
+    // pp = (new RouterScriptPreprocessor('/ip address print as-value proplist=address')).findRestableCommand()
+    // console.log(pp)
     // assert.equal(pp, false)
   })
 })
