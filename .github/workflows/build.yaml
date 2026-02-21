@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       releaseflags:
-        default: '--pre-release'
-        type: string
-        description: 'Flags to provide to vsce publish, use nothing for "release" build or "--pre-release" for testing builds'
+        default: false
+        type: boolean
+        description: 'Release build?'
 
 jobs:
   build:
@@ -26,7 +26,7 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm install
+        run: bun install
       
       - name: Calculate LOCs
         run: |
@@ -96,8 +96,8 @@ jobs:
       # TODO: Publish release should be it's own build task, VSCode works and Open-VSX should too
       #
       - name: Publish to VSCode Marketplace (node)
-        run: npx @vscode/vsce publish --packagePath ./tikbook-node.vsix ${{ github.event.inputs.releaseflags }} -p ${{secrets.VSCE_PAT}}
+        run: npx @vscode/vsce publish --packagePath ./tikbook-node.vsix ${{ case(github.event.inputs.releaseflags == false, '--pre-release', '') }} -p ${{secrets.VSCE_PAT}}
       - name: Publish to VSCode Marketplace (web)
-        run: npx @vscode/vsce publish --packagePath ./tikbook-web.vsix ${{ github.event.inputs.releaseflags }} -p ${{secrets.VSCE_PAT}}
+        run: npx @vscode/vsce publish --packagePath ./tikbook-web.vsix ${{ case(github.event.inputs.releaseflags == false, '--pre-release', '') }} -p ${{secrets.VSCE_PAT}}
       - name: Publish to Open-VSX too
         run: npx ovsx publish tikbook-node.vsix -p ${{secrets.OVSX_PAT}}
