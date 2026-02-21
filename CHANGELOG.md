@@ -9,6 +9,12 @@
 
 ## Changelog
 
+### 0.5.1
+
+#### Fixes
+
+* Remove `preview: true` since it global for all version.  Only use `--pre-release` flag for development/testing builds with `preview: false`
+
 ### 0.5.0
 
 _Same as 0.4.0.  To enable future development without breaking "stable".  Added "Preview" and "Pre Release" flags_
