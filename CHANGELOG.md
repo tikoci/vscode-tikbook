@@ -9,10 +9,17 @@
 
 ## Changelog
 
+### 0.5.0
+
+_Same as 0.4.0.  To enable future development without breaking "stable".  Added "Preview" and "Pre Release" flags_
+
 ### 0.4.0
 
-_Same as v0.3.3, except removed "Preview" and "Pre Release" flags in Extension Marketplace_
+_Bumped v0.3.3. Removed "Preview" and "Pre Release" flags in Extension Marketplace_
 
+#### Fixes
+
+* Minor dependancy changes, including `axios`
 
 ### 0.3.3
 
