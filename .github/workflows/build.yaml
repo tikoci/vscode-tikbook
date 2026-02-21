@@ -2,6 +2,12 @@ name: Build and Release
 
 on:
   workflow_dispatch:
+    inputs:
+      releaseflags:
+        default: '--pre-release'
+        type: string
+        description: 'Flags to provide to vsce publish, use nothing for "release" build or "--pre-release" for testing builds'
+        required: true
 
 jobs:
   build:
@@ -91,8 +97,8 @@ jobs:
       # TODO: Publish release should be it's own build task, VSCode works and Open-VSX should too
       #
       - name: Publish to VSCode Marketplace (node)
-        run: npx @vscode/vsce publish --packagePath ./tikbook-node.vsix --pre-release -p ${{secrets.VSCE_PAT}}
+        run: npx @vscode/vsce publish --packagePath ./tikbook-node.vsix ${{ github.event.inputs.releaseflags }} -p ${{secrets.VSCE_PAT}}
       - name: Publish to VSCode Marketplace (web)
-        run: npx @vscode/vsce publish --packagePath ./tikbook-web.vsix --pre-release -p ${{secrets.VSCE_PAT}}
+        run: npx @vscode/vsce publish --packagePath ./tikbook-web.vsix ${{ github.event.inputs.releaseflags }} -p ${{secrets.VSCE_PAT}}
       - name: Publish to Open-VSX too
         run: npx ovsx publish tikbook-node.vsix -p ${{secrets.OVSX_PAT}}
