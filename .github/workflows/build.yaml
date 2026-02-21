@@ -78,14 +78,19 @@ jobs:
           body: |
             **TikBook for RouterOS** (v${{steps.pkgver.outputs.version}})
 
+            In most cases, just install TikBook using "Extension" view in VSCode, or via the "Install" button in [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=TIKOCI.tikbook)
+
+            For local install, download `tikbook-node.vsix` and install use `code --install-extension tikbook-node.vsix` from your download directory.
+
+            _[RouterOS LSP](https://marketplace.visualstudio.com/items?itemName=TIKOCI.lsp-routeros-ts)_ will automatically be installed when TikBook is installed._
+
             > [!NOTE]
             >
             > "Known Issues" and "Changelog" can be found in [CHANGELOG.md](https://github.com/tikoci/vscode-tikbook/blob/main/CHANGELOG.md).
             >
-            > See [README.md](https://github.com/tikoci/vscode-tikbook/README.md) for more details about installation and usage.
+            > See [README.md](https://github.com/tikoci/vscode-tikbook/blob/main/README.md) for more details about installation and usage.
             >
 
-            Download `tikbook-node.vsix` and install use `code --install-extension tikbook-node.vsix` from your download directory.
 
           artifacts: |
             tikbook-web.vsix
