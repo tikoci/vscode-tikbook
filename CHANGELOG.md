@@ -9,6 +9,11 @@
 
 ## Changelog
 
+### 0.4.0
+
+_Same as v0.3.3, except removed "Preview" and "Pre Release" flags in Extension Marketplace_
+
+
 ### 0.3.3
 
 #### Changes

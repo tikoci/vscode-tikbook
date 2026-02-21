@@ -3,7 +3,7 @@
   "description": "Notebook and Tools for MikroTik RouterOS",
   "author": "AmmØ",
   "license": "MIT",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "publisher": "TIKOCI",
   "categories": [
     "Notebooks",
@@ -29,7 +29,7 @@
     "notebookKernelInteractiveTikbook",
     "notebookKernelRouteros"
   ],
-  "preview": true,
+  "preview": false,
   "pricing": "Free",
   "sponsor": {
     "url": "https://coff.ee/amm0"
@@ -711,7 +711,8 @@
     }
   },
   "config": {
-    "releaseflag": "--pre-release"
+    "prereleaseflag": "--pre-release",
+    "releaseflag": ""
   },
   "scripts": {
     "outputenv": "node -e 'console.log(process.env)' | grep npm",
