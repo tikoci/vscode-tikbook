@@ -3,7 +3,7 @@
   "description": "Notebook and Tools for MikroTik RouterOS",
   "author": "AmmØ",
   "license": "MIT",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "publisher": "TIKOCI",
   "categories": [
     "Notebooks",
@@ -54,6 +54,12 @@
   "extensionPack": [
     "TIKOCI.lsp-routeros-ts"
   ],
+  "enabledApiProposals": [
+    "canonicalUriProvider",
+    "chatSessionsProvider",
+    "contribEditSessions",
+    "contribShareMenu"
+  ],
   "activationEvents": [
     "onNotebook:tikbook",
     "onNotebook:markdown-routeros",
@@ -61,7 +67,8 @@
     "onNotebook:routeros",
     "onLanguage:routeros",
     "onLanguage:markdown",
-    "onFileSystem:systemscriptfs"
+    "onFileSystem:rscfile",
+    "*"
   ],
   "contributes": {
     "languages": [
@@ -253,6 +260,12 @@
           "when": "resourceScheme == rscena || resourceLangId == routeros || resourceLangId == markdown || editorLangId == routeros"
         }
       ],
+      "statusBar/remoteIndicator": [
+        {
+          "command": "tikbook.welcome.open.scriptfs",
+          "when": "true",
+          "group": "virtualfs_45_rscfile_2_web@2"
+      }],
       "editor/title": [
         {
           "command": "tikbook.view.markdown",
@@ -443,6 +456,18 @@
         "shortTitle": "Open SSH",
         "category": "RouterOS",
         "icon": "$(remote)"
+      },
+      {
+        "command": "tikbook.mount.system.scripts",
+        "title": "Mount RouterOS System Scripts",
+        "category": "RouterOS",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "tikbook.welcome.open.scriptfs",
+        "title": "Open RouterOS System Scripts",
+        "category": "RouterOS",
+        "icon": "$(plug)"
       },
       {
         "command": "tikbook.new.notebook",
@@ -670,6 +695,21 @@
         "title": "Refresh Current Virtual Document",
         "category": "TikBook",
         "icon": "$(refresh)"
+      }
+    ],
+    "viewsWelcome": [
+      {
+        "view": "explorer",
+        "contents": "\nAccess RouterOS system scripts in a workspace folder.\n[Open RouterOS Scripting FS](command:tikbook.welcome.open.scriptfs)"
+      }
+    ],
+    "continueEditSession": [
+      {
+        "command": "tikbook.welcome.open.scriptfs",
+        "when": "true",
+        "qualifiedName": "Open RouterOS Virtual Script File System",
+        "category": "Remote",
+        "remoteGroup": "virtualfs_45_rscfile_2_web@2"
       }
     ],
     "icons": {

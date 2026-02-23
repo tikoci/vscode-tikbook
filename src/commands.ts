@@ -2,6 +2,7 @@ import { CancellationTokenSource, Uri, ViewColumn, commands, env, window, worksp
 import { log } from './shared'
 import { getSettings, SecretManager } from './config'
 import { MarkdownSerializer, ScriptSerializer } from './notebook'
+import { mountScriptsToExplorer } from './scriptfs'
 
 export function initializeCommands() {
   const killswitch = new CancellationTokenSource()
@@ -93,6 +94,24 @@ export function initializeCommands() {
     }),
     commands.registerCommand('tikbook.browse.router.webfig', () => {
       env.openExternal(Uri.parse(`${getSettings().baseUrl}`))
+    }),
+    commands.registerCommand('tikbook.welcome.open.scriptfs', async () => {
+      log.trace('[tikbook.welcome.open.scriptfs] invoked')
+      try {
+        const base = getSettings().baseUrl || ''
+        if (!base) {
+          window.showErrorMessage('tikbook.baseUrl is not configured. Please set it in settings to mount router scripts.')
+          log.warn('[tikbook.welcome.open.scriptfs] baseUrl not configured')
+          return
+        }
+        const host = base.replace(/^https?:\/\//, '').replace(/\/$/, '')
+        log.info(`[tikbook.welcome.open.scriptfs] mounting router scripts from ${host}`)
+        await mountScriptsToExplorer(host)
+      }
+      catch (err) {
+        window.showErrorMessage(`Failed to mount router scripts: ${err}`)
+        log.error(`[tikbook.welcome.open.scriptfs] failed: ${err}`)
+      }
     }),
     // Experiment with File System Provider for Scripting
     // commands.registerCommand('tikbook.test.vfs.update', async () => {

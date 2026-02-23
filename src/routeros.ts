@@ -78,6 +78,17 @@ export interface RouterOSInitialization {
   apiTimeout: number
 }
 
+export interface SystemScriptItem {
+  name?: string
+  source?: string
+  comment?: string
+  owner?: string
+  policy?: string[]
+  ['dont-require-permissions']?: string
+  ['.id']?: string
+  id?: string
+}
+
 // MARK: REST lib
 
 export class RouterRestClient {
@@ -268,6 +279,65 @@ export class RouterRestClient {
 
   getSystemScript = (name: string) => {
     return this.httpClient.get(`/system/script/${encodeURIComponent(name)}`).then(resp => resp.data)
+  }
+
+  async createSystemScript(script: { name?: string, source: string, comment?: string, policy?: string[] }) {
+    log.info('<RouterRestClient> createSystemScript', script.name)
+    try {
+      const result = await this.httpClient.put('/system/script', script).then(resp => resp.data)
+      log.debug(`<RouterRestClient> createSystemScript success: ${script.name}`)
+      return result
+    }
+    catch (err) {
+      log.error(`<RouterRestClient> createSystemScript failed for '${script.name}': ${err}`)
+      throw err
+    }
+  }
+
+  async updateSystemScript(id: string, patch: Record<string, unknown>) {
+    log.info('<RouterRestClient> updateSystemScript', id)
+    try {
+      const result = await this.httpClient.patch(`/system/script/${encodeURIComponent(id)}`, patch).then(resp => resp.data)
+      log.debug(`<RouterRestClient> updateSystemScript success for ${id}`)
+      return result
+    }
+    catch (err) {
+      log.error(`<RouterRestClient> updateSystemScript failed for ${id}: ${err}`)
+      throw err
+    }
+  }
+
+  async deleteSystemScript(id: string) {
+    log.info('<RouterRestClient> deleteSystemScript', id)
+    try {
+      const result = await this.httpClient.delete(`/system/script/${encodeURIComponent(id)}`).then(resp => resp.data)
+      log.debug(`<RouterRestClient> deleteSystemScript success for ${id}`)
+      return result
+    }
+    catch (err) {
+      log.error(`<RouterRestClient> deleteSystemScript failed for ${id}: ${err}`)
+      throw err
+    }
+  }
+
+  async resolveScriptIdByName(name: string): Promise<string | undefined> {
+    log.debug(`<RouterRestClient> resolveScriptIdByName: looking up '${name}'`)
+    try {
+      const scripts = await this.systemScripts as SystemScriptItem[]
+      for (const s of scripts) {
+        const id = s['.id'] || s.id
+        if (s.name === name) {
+          log.debug(`<RouterRestClient> resolveScriptIdByName: found '${name}' -> ${id}`)
+          return id
+        }
+      }
+      log.debug(`<RouterRestClient> resolveScriptIdByName: '${name}' not found`)
+      return undefined
+    }
+    catch (err) {
+      log.error(`<RouterRestClient> resolveScriptIdByName failed for '${name}': ${err}`)
+      throw err
+    }
   }
 
   getIdentity = (): Promise<string> => {
