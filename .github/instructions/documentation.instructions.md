@@ -17,6 +17,13 @@ These guidelines apply to all documentation files in `docs/`.
 - `docs/architecture.md` - Component relationships and design decisions
 - `docs/conventions.md` - Code patterns and naming conventions
 
+## Markdown Linting Workflow
+
+- **During development**: `npm run compile` validates markdown but does NOT auto-fix
+- **Manual cleanup**: `npm run markdown:fix` applies auto-fixes to docs/
+- **All-in-one format**: `npm run format` runs all linters with --fix
+- This prevents markdown auto-fixes from interfering with AI read/edit cycles
+
 ## Links
 
 - Use relative paths for internal links: `[file](./path/to/file.md)`

@@ -48,6 +48,13 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 - Keep types open to new attributes; RouterOS adds fields over time.
 - Treat features marked experimental in docs/llm-todos.md or docs/future-features.md as gated by settings.
 
+## While writing or editing markdown (Copilot/LLM)
+
+- Assume markdownlint is enforced; avoid introducing lint errors in any markdown you add or edit.
+- Use fenced code blocks with a language tag, even for plain text (markdownlint prefers explicit fences).
+- Add blank lines around blocks you add or edit (headings, lists, fenced code, tables, paragraphs).
+- Before finalizing a task that touches markdown, run markdownlint on any file produced or edited in the chat session and fix violations in the edited blocks.
+
 ### Codify patterns as lint rules
 
 - **If you catch yourself making a mistake:** Check `eslint.config.mjs` to see if a rule exists; if not, propose adding one to `tools/eslint/vscode-sanity.mjs`.

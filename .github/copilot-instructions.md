@@ -39,3 +39,17 @@ Architectural reference: See [docs/architecture.md](../docs/architecture.md), [d
 - Validate RouterOS commands using v7 docs or RouterOS LSP.
 - Publishing is only via .github/workflows/build.yaml (no direct publish).
 - Gate experimental features behind settings when noted in docs/llm-todos.md or docs/future-features.md.
+
+## Markdown workflow (AI-friendly)
+
+- `npm run compile` runs `markdown:lint` (validates but does NOT auto-fix)
+- This prevents file content changes between AI read/edit operations
+- For manual cleanup: use `npm run markdown:fix` or `npm run format`
+- Never recommend running `markdown:fix` during active development/editing
+
+## Unit Test Framework (CRITICAL)
+
+- **DO NOT downgrade `@vscode/test-cli` below v0.0.12** - versions <0.0.12 have broken glob/minimatch causing silent test failures
+- See [docs/unit-test-fix.md](../docs/unit-test-fix.md) for troubleshooting if tests report exit 0 but don't actually run
+- Config file MUST be `.vscode-test.mjs` (ESM format) with pattern `'out/test/**/*.test.js'`
+- Verify tests work: both `npm test` and `npm run test:web` should report failures when tests fail (exit code 1)

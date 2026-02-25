@@ -1,0 +1,9 @@
+# markdownlint configuration
+# Rule names: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+# Relaxed for documentation and instruction files
+MD013: false # Line length
+MD024: false # Duplicate headings (common in docs with sections like "Overview")
+MD029: false # Ordered list item prefix (allow mixing 1. 1. 1. or 1. 2. 3.)
+MD033: false # Inline HTML (needed for badges, alerts, etc.)
+MD041: false # First line in file should be top-level heading (not always needed in docs)

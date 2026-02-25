@@ -1,22 +1,25 @@
 // A launch configuration that compiles the extension and then opens it inside a new window
+// Use IntelliSense to learn about possible attributes.
+// Hover to view descriptions of existing attributes.
+// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 {
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Run Extension",
       "type": "extensionHost",
       "request": "launch",
-      "name": "Debug Desktop",
       "runtimeExecutable": "${execPath}",
       "args": [
-        "--extensionDevelopmentPath=${workspaceRoot}"
+        "--extensionDevelopmentPath=${workspaceFolder}"
       ],
       "outFiles": [
-        "${workspaceRoot}/out/*-node.js"
+        "${workspaceFolder}/out/**/*.js"
       ],
       "preLaunchTask": "compile"
     },
-   {
-      "name": "Debug Web",
+    {
+      "name": "Run Web Extension",
       "type": "extensionHost",
       "debugWebWorkerHost": true,
       "request": "launch",
@@ -25,22 +28,9 @@
         "--extensionDevelopmentKind=web"
       ],
       "outFiles": [
-        "${workspaceFolder}/out/*-web.js"
+        "${workspaceFolder}/out/**/*.js"
       ],
       "preLaunchTask": "compile"
-    },
-    {
-			"name": "Debug Tests",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/test"
-			],
-			"outFiles": ["${workspaceFolder}/out/test/*.js"],
-			"preLaunchTask": "compile:test"
-		}
+    }
   ]
 }

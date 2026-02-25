@@ -125,14 +125,13 @@ notebook.ts lines 560-599 contain ~50 lines of alternative serialization logic w
 
 ### Notebook Cell Execution
 
-```
+```text
 User types in cell → TikBook notebook.ts → RouterRestClient → RouterOS REST API
 User executes cell → Cell code sent to RouterOS → Response parsed → Error detection → Output rendered
-```
 
 ### Credential Sync
 
-```
+```text
 User sets password in TikBook → Stored in SecretStorage
 On activation → TikBook reads secret
 Optionally → TikBook sends creds to RouterOS LSP (if setting enabled)
@@ -140,7 +139,7 @@ Optionally → TikBook sends creds to RouterOS LSP (if setting enabled)
 
 ### Virtual Docs (rscena://)
 
-```
+```text
 User selects "Show CSV" → TikBook REST call → Format to CSV → Create TextDocument via createVirtualDocument
 User selects "Refresh" → New REST call → Diff content → Update editor
 ```

@@ -19,6 +19,7 @@ vscode-tikbook-*
 *.map
 
 tests
+examples
 
 .scratch
 

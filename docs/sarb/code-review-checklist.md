@@ -188,6 +188,7 @@ This checklist guides reviewers in assessing TikBook changes for quality, consis
 ## Approval Criteria
 
 Approve if:
+
 - All type checks pass
 - Proper error handling for all failure modes
 - RouterOS compatibility clear and tested
@@ -199,6 +200,7 @@ Approve if:
 - Related documentation updated
 
 Request changes if:
+
 - Any red flags present
 - Type checking issues
 - Missing error handling
@@ -209,6 +211,7 @@ Request changes if:
 - Documentation out of sync
 
 Discuss if:
+
 - Major architectural change (should have decision-log entry)
 - Cross-extension implications
 - Significant performance impact

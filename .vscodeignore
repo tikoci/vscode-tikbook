@@ -2,6 +2,7 @@
 **/tsconfig.json
 test*
 tests
+examples
 **/tests
 icon.svg
 **/*.map
