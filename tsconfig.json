@@ -1,25 +1,18 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "es2022",
-    "lib": [
-      "ES2022",
-      "WebWorker"
-    ],
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "strict": true,
-    "outDir": "./out",
-    "rootDir": "./src",
-    "incremental": false,
-    "esModuleInterop": true
-  },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    ".vscode-test",
-    ".vscode-test-web"
-  ]
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "ES2024",
+		"lib": [
+			"ES2024"
+		],
+		"outDir": "out",
+		"sourceMap": true,
+		"rootDir": "src",
+		"strict": true,
+		"esModuleInterop": true,
+	},
+	"exclude": [
+		"node_modules",
+		".vscode-test"
+	]
 }

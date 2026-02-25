@@ -1,18 +1,19 @@
-import { commands, window, env } from 'vscode'
-import { log } from './shared'
+import type { Disposable } from 'vscode';
+import { commands, env, window } from 'vscode';
+import { log } from './shared';
 
-export function initializeConverters() {
+export function initializeConverters(): Disposable[] {
   return [
     commands.registerCommand('tikbook.fn.copyJsonAsRouterArray', async () => {
       const editor = window.activeTextEditor
       if (!editor) {
         const msg = 'JSON to RouterOS array needs a JSON document as source'
-        window.showWarningMessage(msg)
+        void window.showWarningMessage(msg)
         log.info(`[tikbook.fn.copyJsonAsRouterArray] called but found no editor, warned '${msg}'`)
         return
       }
       try {
-        env.clipboard.writeText(
+        await env.clipboard.writeText(
           routerosArrayFromJson(
             JSON.parse(
               editor.document.getText(
@@ -22,12 +23,12 @@ export function initializeConverters() {
           ),
         )
         const msg = 'RouterOS array copied to clipboard from JSON'
-        window.showInformationMessage(msg)
+        void window.showInformationMessage(msg)
         log.debug(`[tikbook.fn.copyJsonAsRouterArray] notified user '${msg}'`)
       }
       catch {
         const msg = 'Invalid JSON cannot be copied as RouterOS array'
-        window.showWarningMessage(msg)
+        void window.showWarningMessage(msg)
         log.warn(`[tikbook.fn.copyJsonAsRouterArray] warned user '${msg}'`)
       }
     }),
@@ -35,13 +36,13 @@ export function initializeConverters() {
     commands.registerCommand('tikbook.convert.escapedRouterString.clipboard', async () => {
       const editor = window.activeTextEditor
       if (!editor) {
-        const msg = 'Nothing copied. To copy an escaped RouterOS string, some document or selection is needed.'
-        window.showWarningMessage(msg)
-        log.info(`[tikbook.convert.escapedRouterString.clipboard] warned user '${msg}'`)
+        const warningMsg = 'Nothing copied. To copy an escaped RouterOS string, some document or selection is needed.'
+        void window.showWarningMessage(warningMsg)
+        log.info(`[tikbook.convert.escapedRouterString.clipboard] warned user '${warningMsg}'`)
         return
       }
       // try {
-      env.clipboard.writeText(
+      await env.clipboard.writeText(
         escapeRouterString(
           editor.document.getText(
             editor.selection.isEmpty ? undefined : editor.selection,
@@ -49,7 +50,7 @@ export function initializeConverters() {
         ),
       )
       const msg = 'RouterOS array copied to clipboard'
-      window.showInformationMessage(msg)
+      void window.showInformationMessage(msg)
       log.debug(`[tikbook.convert.escapedRouterString.clipboard] notified user '${msg}'`)
       /* }
       catch (error) {
@@ -63,7 +64,7 @@ export function initializeConverters() {
 
 // MARK: escape rsc
 
-export function escapeRouterString(text: string) {
+export function escapeRouterString(text: string): string {
   if (typeof text !== 'string') {
     throw new TypeError('Input must be a string')
   }

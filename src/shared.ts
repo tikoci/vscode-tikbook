@@ -1,14 +1,28 @@
-import { window, LogLevel } from 'vscode'
+import type { Disposable, LogOutputChannel } from 'vscode';
+import { LogLevel, window } from 'vscode';
 
 export const Extension = {
   shortName: 'TikBook',
   name: 'TikBook for RouterOS',
 }
 
-export const log = window.createOutputChannel(Extension.name, { log: true })
+/**
+ * Create output channel with logging support, falling back to regular output if unavailable
+ */
+function createLogChannel(name: string): LogOutputChannel {
+  try {
+    // Try to create with logging support (1.74.0+)
+    return window.createOutputChannel(name, { log: true })
+  } catch {
+    // Fallback for older versions - cast to LogOutputChannel for compatibility
+    return window.createOutputChannel(name) as LogOutputChannel
+  }
+}
+
+export const log = createLogChannel(Extension.name)
 log.info(`<shared> Logging started on ${log.name} at level ${log.logLevel}`)
 
-export function initializeLogging() {
+export function initializeLogging(): Disposable[] {
   return [
     log.onDidChangeLogLevel(e => log.info(`<shared> Log level changed to ${LogLevel[e]}`)),
   ]

@@ -1,13 +1,14 @@
 import * as axios from 'axios'
 // import * as vscode from 'vscode'
-import { commands, ExtensionContext, Uri, ViewColumn, window } from 'vscode'
+import type { ExtensionContext} from 'vscode';
+import { commands, Uri, ViewColumn, window } from 'vscode'
 import { log } from './shared'
 
 export class VideoViewer {
   context: ExtensionContext
 
   static videoViewer: VideoViewer
-  static default(context: ExtensionContext) {
+  static default(context: ExtensionContext): VideoViewer {
     if (VideoViewer.videoViewer) {
       log.trace('<VideoViewer> {default} accessed using cache')
       return VideoViewer.videoViewer
@@ -24,16 +25,16 @@ export class VideoViewer {
 
   // MARK: activate
 
-  activate() {
+  activate(): void {
     log.trace('<VideoViewer> [activate]')
     this.context.subscriptions.push(
       commands.registerCommand('tikbook.test.video.embedded', async (params?: { name: string, group: string, languages?: string[], chapters?: string[] | boolean, baseUrl?: string }) => {
-        const repoUrl = params?.baseUrl || 'https://tikoci.github.io/media/videos/'
-        const repoGroup = params?.group || 'test'
-        const repoLanguages = params?.languages || ['en']
-        const videoBaseName = params?.name || 'video'
-        const videoDefaultLanguage = repoLanguages[0] || ['en']
-        const videoTitle = params?.name || 'video'
+        const repoUrl = params?.baseUrl ?? 'https://tikoci.github.io/media/videos/'
+        const repoGroup = params?.group ?? 'test'
+        const repoLanguages = params?.languages ?? ['en']
+        const videoBaseName = params?.name ?? 'video'
+        const videoDefaultLanguage = repoLanguages[0] ?? 'en'
+        const videoTitle = params?.name ?? 'video'
 
         log.trace('<VideoViewer> [tikbook.test.video.embedded] start')
         const panel = window.createWebviewPanel(
@@ -47,7 +48,7 @@ export class VideoViewer {
         )
         const cspSource = panel.webview.cspSource
 
-        async function makeWebviewUrl(url: string, raw = true) {
+        async function makeWebviewUrl(url: string, raw = true): Promise<Uri> {
           if (raw) return panel.webview.asWebviewUri(Uri.parse(url))
           else {
             // unused, semi-avoided CORS, but not fully in VSCodeWeb
@@ -70,13 +71,13 @@ export class VideoViewer {
     )
   }
 
-  dispose() {
+  dispose(): void {
     log.trace('<VideoViewer> {dispose}')
   }
 
   // MARK: html
 
-  generateHtmlPage(title: string, csp: string, jsUrl: Uri, videoUrl: Uri, subtitlesUrl: Uri, chaptersUrl: Uri) {
+  generateHtmlPage(title: string, csp: string, jsUrl: Uri, videoUrl: Uri, subtitlesUrl: Uri, chaptersUrl: Uri): string {
     log.trace('<VideoViewer> {generateHtmlPage}')
     log.trace(`<VideoViewer> .csp ${csp}`)
     log.trace(`<VideoViewer> .jsUrl ${jsUrl}`)

@@ -1,97 +1,98 @@
-import { commands, EventEmitter, Disposable, TextDocumentContentProvider, Uri, ViewColumn, window, workspace, CancellationToken, CancellationTokenSource } from 'vscode'
-import { RouterOSExportType, RouterRestClient } from './routeros'
-import { log } from './shared'
-import { DateTime } from 'luxon'
-import * as path from 'path'
-import { MarkdownSerializer, ScriptSerializer } from './notebook'
+import { DateTime } from 'luxon';
+import * as path from 'path';
+import type { CancellationToken, Disposable, TextDocumentContentProvider } from 'vscode';
+import { CancellationTokenSource, commands, EventEmitter, Uri, ViewColumn, window, workspace } from 'vscode';
+import { MarkdownSerializer, ScriptSerializer } from './notebook';
+import type { RouterOSExportType } from './routeros';
+import { RouterRestClient } from './routeros';
+import { log } from './shared';
+import { getActiveNotebook } from './vscode-compat';
 
-export function initializeVirtualDocs() {
+export function initializeVirtualDocs(): Disposable[] {
   const provider = new RouterConfigProvider()
   return [
+    provider,
     workspace.registerTextDocumentContentProvider('rscena', provider),
     commands.registerCommand('tikbook.view.markdown', async () => {
-      const doc = window.activeNotebookEditor ? window.activeNotebookEditor?.notebook : window.activeTextEditor?.document
+      const activeNotebook = getActiveNotebook()
+      const doc = activeNotebook ?? window.activeTextEditor?.document
       if (!doc) {
         log.warn(`<vdoc> [tikbook.view.markdown] an active editor or notebook is required, but none was found, command aborted`)
         return
       }
       if (doc.isUntitled) {
-        window.showWarningMessage(`Untitled documents cannot previewed. Save file to enable Markdown preview.`, 'Save As...', 'Cancel')
+        void window.showWarningMessage(`Untitled documents cannot previewed. Save file to enable Markdown preview.`, 'Save As...', 'Cancel')
           .then((selection) => {
-            if (selection === 'Save As...') commands.executeCommand('workbench.action.files.save').then(e => log.info(JSON.stringify(e)))
+            if (selection === 'Save As...') void commands.executeCommand('workbench.action.files.save').then(e => log.info(JSON.stringify(e)))
           })
         return
       }
-      const frag = window.activeNotebookEditor ? 'tikbook2md' : 'rsc2md'
-      await workspace.openTextDocument(Uri.parse(`rscena:${path.posix.basename(doc.uri.path)}-view.md/?${frag}#${doc.uri}`)).then(
-        (doc) => {
-          window.showTextDocument(doc, { preview: false, preserveFocus: false, viewColumn: ViewColumn.Two })
-          // disable automatic preview of markdown HTML, just show markdown as editor text, allow user to hit preview themselves
-          // ... creates a mess of columns, would require some "preview controller" to deal with side-effects but ideally
-          // commands.executeCommand('markdown.showPreviewToSide', doc.uri)
-        })
+      const frag = activeNotebook ? 'tikbook2md' : 'rsc2md'
+      const vdoc = await workspace.openTextDocument(Uri.parse(`rscena:${path.posix.basename(doc.uri.path)}-view.md/?${frag}#${doc.uri}`))
+      await window.showTextDocument(vdoc, { preview: false, preserveFocus: false, viewColumn: ViewColumn.Two })
+      // disable automatic preview of markdown HTML, just show markdown as editor text, allow user to hit preview themselves
+      // ... creates a mess of columns, would require some "preview controller" to deal with side-effects but ideally
+      // commands.executeCommand('markdown.showPreviewToSide', doc.uri)
     }),
     commands.registerCommand('tikbook.view.script', async () => {
-      const nb = window.activeNotebookEditor?.notebook
+      const nb = getActiveNotebook()
       if (!nb) {
         log.warn(`<vdoc> [tikbook.view.script] found no active notebook`)
         return
       }
       if (nb.isUntitled) {
-        window.showWarningMessage(`Untitled notebooks cannot previewed. Save file to enable RouterOS script preview.`, 'Save As...', 'Cancel')
+        void window.showWarningMessage(`Untitled notebooks cannot previewed. Save file to enable RouterOS script preview.`, 'Save As...', 'Cancel')
           .then((selection) => {
-            if (selection === 'Save As...') commands.executeCommand('workbench.action.files.save').then(e => log.info(JSON.stringify(e)))
+            if (selection === 'Save As...') void commands.executeCommand('workbench.action.files.save').then(e => log.info(JSON.stringify(e)))
           })
         return
       }
-      await workspace.openTextDocument(Uri.parse(`rscena:${path.posix.basename(nb.uri.path)}-view.rsc/?md2rsc#${nb.uri}`)).then(
-        (doc) => {
-          window.showTextDocument(doc, { preview: false, preserveFocus: false, viewColumn: ViewColumn.Beside })
-        })
+      const vdoc = await workspace.openTextDocument(Uri.parse(`rscena:${path.posix.basename(nb.uri.path)}-view.rsc/?md2rsc#${nb.uri}`))
+      await window.showTextDocument(vdoc, { preview: false, preserveFocus: false, viewColumn: ViewColumn.Beside })
     }),
     commands.registerCommand('tikbook.open.router.export', async (type: RouterOSExportType = 'compact') => {
-      await workspace.openTextDocument(Uri.parse(`rscena:export-${type}.rsc?export#${type}`)).then(
-        doc => window.showTextDocument(doc, { preview: false }))
+      const vdoc = await workspace.openTextDocument(Uri.parse(`rscena:export-${type}.rsc?export#${type}`))
+      await window.showTextDocument(vdoc, { preview: false })
     }),
     commands.registerCommand('tikbook.open.router.script', async (name, id) => {
-      await workspace.openTextDocument(Uri.parse(`rscena:${encodeURIComponent(name)}.rsc?script#${encodeURIComponent(id)}`)).then(
-        doc => window.showTextDocument(doc, { preview: false }))
+      const vdoc = await workspace.openTextDocument(Uri.parse(`rscena:${encodeURIComponent(name)}.rsc?script#${encodeURIComponent(id)}`))
+      await window.showTextDocument(vdoc, { preview: false })
     }),
     commands.registerCommand('tikbook.open.router.scripts.globals', async () => {
-      await workspace.openTextDocument(Uri.parse(`rscena:all-script-as-globals.rsc?scripts.globals`)).then(
-        doc => window.showTextDocument(doc, { preview: false }))
+      const vdoc = await workspace.openTextDocument(Uri.parse(`rscena:all-script-as-globals.rsc?scripts.globals`))
+      await window.showTextDocument(vdoc, { preview: false })
     }),
     commands.registerCommand('tikbook.open.router.scripts.tikbook', async () => {
-      await workspace.openTextDocument(Uri.parse(`rscena:all-scripts.md.rsc?scripts.tikbook`)).then(
-        doc => window.showTextDocument(doc, { preview: false }))
+      const vdoc = await workspace.openTextDocument(Uri.parse(`rscena:all-scripts.md.rsc?scripts.tikbook`))
+      await window.showTextDocument(vdoc, { preview: false })
     }),
     commands.registerCommand('tikbook.open.router.default-configuration.script', async () => {
-      await workspace.openTextDocument(Uri.parse(`rscena:defconf.rsc?default-configuration#script`)).then(
-        doc => window.showTextDocument(doc, { preview: false }))
+      const vdoc = await workspace.openTextDocument(Uri.parse(`rscena:defconf.rsc?default-configuration#script`))
+      await window.showTextDocument(vdoc, { preview: false })
     }),
     commands.registerCommand('tikbook.open.router.default-configuration.caps-mode-script', async () => {
-      await workspace.openTextDocument(Uri.parse(`rscena:defconf-capsman.rsc?default-configuration#caps-mode-script`)).then(
-        doc => window.showTextDocument(doc, { preview: false }))
+      const vdoc = await workspace.openTextDocument(Uri.parse(`rscena:defconf-capsman.rsc?default-configuration#caps-mode-script`))
+      await window.showTextDocument(vdoc, { preview: false })
     }),
     commands.registerCommand('tikbook.open.router.default-configuration.custom-script', async () => {
-      await workspace.openTextDocument(Uri.parse(`rscena:defconf-custom.rsc?default-configuration#script`)).then(
-        doc => window.showTextDocument(doc, { preview: false }))
+      const vdoc = await workspace.openTextDocument(Uri.parse(`rscena:defconf-custom.rsc?default-configuration#script`))
+      await window.showTextDocument(vdoc, { preview: false })
     }),
     commands.registerCommand('tikbook.open.router.ip.neighbor.print.detail.csv', async () => {
-      await workspace.openTextDocument(Uri.parse(`rscena:ip-neighbor.csv?ip-neighbor#detail`)).then(
-        doc => window.showTextDocument(doc, { preview: false }))
+      const vdoc = await workspace.openTextDocument(Uri.parse(`rscena:ip-neighbor.csv?ip-neighbor#detail`))
+      await window.showTextDocument(vdoc, { preview: false })
     }),
     commands.registerCommand('tikbook.open.router.csv', async (cmd, name) => {
-      await workspace.openTextDocument(Uri.parse(`rscena:${encodeURIComponent(name)}.csv?csv#${encodeURIComponent(cmd)}`)).then(
-        doc => window.showTextDocument(doc, { preview: false }))
+      const vdoc = await workspace.openTextDocument(Uri.parse(`rscena:${encodeURIComponent(name)}.csv?csv#${encodeURIComponent(cmd)}`))
+      await window.showTextDocument(vdoc, { preview: false })
     }),
-    commands.registerCommand('tikbook.vdoc.refresh', async (uri) => {
+    commands.registerCommand('tikbook.vdoc.refresh', (uri) => {
       provider.refresh(uri)
     }),
     commands.registerCommand('tikbook.vdoc.refresh.active', () => {
       const activeEditor = window.activeTextEditor
-      if (activeEditor && activeEditor.document.uri.scheme === RouterConfigProvider.scheme) {
-        commands.executeCommand('tikbook.vdoc.refresh', activeEditor.document.uri)
+      if (activeEditor?.document.uri.scheme === RouterConfigProvider.scheme) {
+        void commands.executeCommand('tikbook.vdoc.refresh', activeEditor.document.uri)
       }
     }),
     commands.registerCommand('tikbook.vdoc.refresh.all', () => {
@@ -108,10 +109,12 @@ export class RouterConfigProvider implements TextDocumentContentProvider {
   onDidChangeEmitter = new EventEmitter<Uri>()
   readonly onDidChange = this.onDidChangeEmitter.event
   urimap = new BiMap<string, string>()
+  private isDisposed = false
 
   static readonly scheme = 'rscena'
 
   constructor() {
+    log.trace('<RouterConfigProvider> {constructor} registering listeners')
     // this.onDidChange = this.onDidChangeEmitter.event
     // if vdoc is closed, remove it from urimap as it no longer needs to be updated
     this.disposables.push(workspace.onDidCloseTextDocument(
@@ -137,11 +140,13 @@ export class RouterConfigProvider implements TextDocumentContentProvider {
       }))
   }
 
-  refresh(uri: Uri) {
+  refresh(uri: Uri): void {
+    log.trace(`<RouterConfigProvider> {refresh} uri=${uri.toString()}`)
     this.onDidChangeEmitter.fire(uri)
   }
 
-  refreshAll() {
+  refreshAll(): void {
+    log.trace('<RouterConfigProvider> {refreshAll} invoked')
     this.urimap.rawKeys.forEach((k) => {
       this.refresh(Uri.parse(k))
     })
@@ -151,92 +156,125 @@ export class RouterConfigProvider implements TextDocumentContentProvider {
 
   async provideTextDocumentContent(uri: Uri, _token: CancellationToken): Promise<string | undefined> {
     log.info(`<RouterConfigProvider> {provideTextDocumentContent} got request scheme ${uri.scheme} authority ${uri.authority} path ${uri.path} query ${uri.query} fragment ${uri.fragment}`)
+    if (this.isCanceled(_token)) return undefined
     const client = RouterRestClient.default
-    switch (uri.query) {
-      case 'tikbook2md':
-        this.urimap.set(Uri.parse(uri.fragment).toString(), uri.toString())
-        return await this.getMarkdownFromNotebook(Uri.parse(uri.fragment))
-      case 'rsc2md':
-        this.urimap.set(Uri.parse(uri.fragment).toString(), uri.toString())
-        return await this.getMarkdownFromScript(Uri.parse(uri.fragment))
-      case 'md2rsc':
-        this.urimap.set(Uri.parse(uri.fragment).toString(), uri.toString())
-        return await this.getScriptFromNotebook(Uri.parse(uri.fragment))
-      case 'export':
-        return await client.exportConfig(uri.fragment as RouterOSExportType, this.killswitch.signal)
-      case 'script':
-        return (await client.getSystemScript(uri.fragment)).source
-      case 'scripts.tikbook':
-        return (await client.systemScripts).map((script: Record<string, { 'name': string, 'comment'?: string, 'owner'?: string, 'policy'?: string[], 'dont-require-permissions'?: string }>) => {
-          return `\n#.markdown\n`
-            + `#   ### ${script.name}\n`
-            + (script.comment
-              ? `#   #### ${script.comment}\n`
-              : '')
-            + `#   * **owner** ${script.owner}\n`
-            + `#   * **dont-require-permissions** ${script['dont-require-permissions']}\n`
-            + `#   * **policy** ${script.policy}\n`
-            + `#   > _Script captured at_ ${DateTime.now().toLocaleString(DateTime.DATETIME_SHORT)}\n`
-            + `#.\n`
-            + `${script.source}\n`
-        }).join('\n#.\n')
-      case 'scripts.globals':
-        return (await client.systemScripts).map((script: Record<string, unknown>) => {
-          return `\n# ${(script.name as string).toUpperCase()} - ${script.comment}\n`
-            + `#\towner=${script.owner} ${(script['dont-require-permissions'] && script['dont-require-permissions'] === 'yes') ? `dont-require-permissions=yes` : `policy=${script.policy}`}\n`
-            + `:global "run-${script.name}" do={\n`
-            + `${(script.source as string)?.split(`\n`).join(`\n    `)}\n`
-            + `}\n`
-        }).join('\n#.\n')
-      case 'default-configuration':
-        switch (uri.fragment) {
-          case 'caps-mode-script':
-            return (await client.defaultConfiguration)['caps-mode-script']
-          case 'custom':
-            return (await client.defaultConfiguration).custom
-          default:
-            return (await client.defaultConfiguration).script
+    const cancelDisposable = _token.onCancellationRequested(() => {})
+    try {
+      switch (uri.query) {
+        case 'tikbook2md':
+          this.urimap.set(Uri.parse(uri.fragment).toString(), uri.toString())
+          return await this.getMarkdownFromNotebook(Uri.parse(uri.fragment), _token)
+        case 'rsc2md':
+          this.urimap.set(Uri.parse(uri.fragment).toString(), uri.toString())
+          return await this.getMarkdownFromScript(Uri.parse(uri.fragment), _token)
+        case 'md2rsc':
+          this.urimap.set(Uri.parse(uri.fragment).toString(), uri.toString())
+          return await this.getScriptFromNotebook(Uri.parse(uri.fragment), _token)
+        case 'export':
+          if (this.isCanceled(_token)) return undefined
+          return await client.exportConfig(uri.fragment as RouterOSExportType, this.killswitch.signal)
+        case 'script': {
+          const script = await client.getSystemScript(uri.fragment)
+          if (this.isCanceled(_token)) return undefined
+          return script.source
         }
-      case 'ip-neighbor': {
-        return await client._asCSV('/ip/neighbor/print detail')
+        case 'scripts.tikbook': {
+          const scripts = await client.systemScripts
+          if (this.isCanceled(_token)) return undefined
+          return scripts.map((script: unknown) => {
+            const s = script as Record<string, unknown>
+            return `\n#.markdown\n`
+              + `#   ### ${s.name}\n`
+              + (s.comment
+                ? `#   #### ${s.comment}\n`
+                : '')
+              + `#   * **owner** ${s.owner}\n`
+              + `#   * **dont-require-permissions** ${s['dont-require-permissions']}\n`
+              + `#   * **policy** ${s.policy}\n`
+              + `#   > _Script captured at_ ${DateTime.now().toLocaleString(DateTime.DATETIME_SHORT)}\n`
+              + `#.\n`
+              + `${s.source}\n`
+          }).join('\n#.\n')
+        }
+        case 'scripts.globals': {
+          const scripts = await client.systemScripts
+          if (this.isCanceled(_token)) return undefined
+          return scripts.map((script: unknown) => {
+            const s = script as Record<string, unknown>
+            return `\n# ${(s.name as string).toUpperCase()} - ${s.comment}\n`
+              + `#\towner=${s.owner} ${(s['dont-require-permissions'] && s['dont-require-permissions'] === 'yes') ? `dont-require-permissions=yes` : `policy=${s.policy}`}\n`
+              + `:global "run-${s.name}" do={\n`
+              + `${(s.source as string)?.split(`\n`).join(`\n    `)}\n`
+              + `}\n`
+          }).join('\n#.\n')
+        }
+        case 'default-configuration': {
+          const config = await client.defaultConfiguration
+          if (this.isCanceled(_token)) return undefined
+          switch (uri.fragment) {
+            case 'caps-mode-script':
+              return String(config?.['caps-mode-script'] ?? '')
+            case 'custom':
+              return String(config?.custom ?? '')
+            default:
+              return String(config?.script ?? '')
+          }
+        }
+        case 'ip-neighbor': {
+          return await client._asCSV('/ip/neighbor/print detail')
+        }
+        case 'csv': {
+          return await client._asCSV(uri.fragment)
+        }
       }
-      case 'csv': {
-        return await client._asCSV(uri.fragment)
-      }
+    }
+    finally {
+      cancelDisposable.dispose()
     }
   }
 
-  dispose() {
+  dispose(): void {
+    if (this.isDisposed) return
+    this.isDisposed = true
+    log.trace('<RouterConfigProvider> {dispose} invoked')
     this.disposables.forEach(e => e.dispose())
+    this.onDidChangeEmitter.dispose()
     this.killswitch.abort('killing export, disposed <RouterConfigProvider>')
   }
 
   // MARK: get md
 
-  async getMarkdownFromScript(uri: Uri) {
+  async getMarkdownFromScript(uri: Uri, token?: CancellationToken): Promise<string> {
     if (!uri) throw new Error('URI must be to a valid notebook document')
+    if (this.isCanceled(token)) throw new Error('Request cancelled')
     const killswitch = new CancellationTokenSource()
     const text = (await workspace.openTextDocument(uri)).getText()
+    if (this.isCanceled(token)) throw new Error('Request cancelled')
     const scriptSerializer = new ScriptSerializer()
     const markdownSerializer = new MarkdownSerializer()
-    return new TextDecoder().decode(await markdownSerializer.serializeNotebook(
-      await scriptSerializer.deserializeNotebook(new TextEncoder().encode(text), killswitch.token),
-      killswitch.token))
+    const notebookData = await Promise.resolve(
+      scriptSerializer.deserializeNotebook(new TextEncoder().encode(text), killswitch.token),
+    )
+    const serialized = await Promise.resolve(markdownSerializer.serializeNotebook(notebookData, killswitch.token))
+    return new TextDecoder().decode(serialized)
   }
 
-  async getMarkdownFromNotebook(uri: Uri) {
+  async getMarkdownFromNotebook(uri: Uri, token?: CancellationToken): Promise<string> {
+    if (this.isCanceled(token)) throw new Error('Request cancelled')
     const nb = await workspace.openNotebookDocument(uri)
     if (!nb) throw new Error('URI must be to a valid notebook document')
+    if (this.isCanceled(token)) throw new Error('Request cancelled')
     const killswitch = new CancellationTokenSource()
     const text = (await workspace.openTextDocument(nb.uri)).getText()
+    if (this.isCanceled(token)) throw new Error('Request cancelled')
     const scriptSerializer = new ScriptSerializer()
     const markdownSerializer = new MarkdownSerializer()
     switch (nb.notebookType) {
       case 'tikbook':
       case 'routeros':
-        return new TextDecoder().decode(await markdownSerializer.serializeNotebook(
-          await scriptSerializer.deserializeNotebook(new TextEncoder().encode(text), killswitch.token),
-          killswitch.token))
+        return new TextDecoder().decode(await Promise.resolve(markdownSerializer.serializeNotebook(
+          await Promise.resolve(scriptSerializer.deserializeNotebook(new TextEncoder().encode(text), killswitch.token)),
+          killswitch.token)))
       case 'markdown-routeros':
         return text
       default:
@@ -247,13 +285,16 @@ export class RouterConfigProvider implements TextDocumentContentProvider {
 
   // MARK: get rsc
 
-  async getScriptFromNotebook(uri: Uri) {
+  async getScriptFromNotebook(uri: Uri, token?: CancellationToken): Promise<string> {
     // const nb = window.activeNotebookEditor?.notebook
     // if (!nb) return
+    if (this.isCanceled(token)) throw new Error('Request cancelled')
     const nb = await workspace.openNotebookDocument(uri)
     if (!nb) throw new Error('URI must be to a valid notebook document')
+    if (this.isCanceled(token)) throw new Error('Request cancelled')
     const killswitch = new CancellationTokenSource()
     const text = (await workspace.openTextDocument(nb.uri)).getText()
+    if (this.isCanceled(token)) throw new Error('Request cancelled')
     const scriptSerializer = new ScriptSerializer()
     const markdownSerializer = new MarkdownSerializer()
     switch (nb.notebookType) {
@@ -261,13 +302,17 @@ export class RouterConfigProvider implements TextDocumentContentProvider {
       case 'routeros':
         return text
       case 'markdown-routeros':
-        return new TextDecoder().decode(await scriptSerializer.serializeNotebook(
-          await markdownSerializer.deserializeNotebook(new TextEncoder().encode(text), killswitch.token),
-          killswitch.token))
+        return new TextDecoder().decode(await Promise.resolve(scriptSerializer.serializeNotebook(
+          await Promise.resolve(markdownSerializer.deserializeNotebook(new TextEncoder().encode(text), killswitch.token)),
+          killswitch.token)))
       default:
         log.error(`<getScriptFromNotebook> got invalid notebookType, throwing`, uri)
         throw new Error('Notebook must be a known type.  Currently TikBook or Markdown RouterOS')
     }
+  }
+
+  private isCanceled(token?: CancellationToken): boolean {
+    return this.isDisposed || token?.isCancellationRequested === true
   }
 }
 

@@ -1,19 +1,24 @@
-import { ExtensionContext } from 'vscode'
-import { StatusWatchdog } from './watchdog'
-import { initializeNotebookEngines } from './notebook'
-import { SecretManager } from './config'
+import type { ExtensionContext } from 'vscode'
 import { MarkdownHandlers } from './codelens'
+import { initializeCommands } from './commands'
+import { SecretManager } from './config'
+import { initializeConverters } from './converters'
+import { initializeMenus } from './menus'
+import { initializeNotebookEngines } from './notebook'
+import { initializeSSH } from './remote'
+import { RouterRestClient } from './routeros'
+import { initializeSystemScriptFileSystem } from './scriptfs'
+import { initializeLogging, log } from './shared'
 import { VideoViewer } from './video'
 import { initializeVirtualDocs } from './virtualdocs'
-import { initializeSystemScriptFileSystem } from './scriptfs'
-import { initializeMenus } from './menus'
-import { initializeCommands } from './commands'
-import { log, initializeLogging } from './shared'
-import { initializeSSH } from './remote'
-import { initializeConverters } from './converters'
+import { logVersionInfo } from './vscode-compat'
+import { StatusWatchdog } from './watchdog'
 
-export function activate(context: ExtensionContext) {
+let activationSubscriptionCount = 0
+
+export function activate(context: ExtensionContext): void {
   log.info('TikBook <activate> started')
+  logVersionInfo(log)
   context.subscriptions.push(
     SecretManager.start(context),
     ...initializeLogging(),
@@ -24,10 +29,12 @@ export function activate(context: ExtensionContext) {
     ...initializeSSH(),
     ...initializeConverters(),
     ...initializeSystemScriptFileSystem(),
+    RouterRestClient.default,
     new MarkdownHandlers(context),
     new StatusWatchdog(context),
     new VideoViewer(context),
   )
+  activationSubscriptionCount = context.subscriptions.length
 
   /*
   // Auto-mount router scripts filesystem if not already mounted
@@ -50,9 +57,9 @@ export function activate(context: ExtensionContext) {
     }
   })
   */
-  log.info('TikBook <activate> ended')
+  log.info(`TikBook <activate> ended subscriptions=${activationSubscriptionCount}`)
 }
 
-export function deactivate() {
-  log.info('TikBook <deactivate> invoked')
+export function deactivate(): void {
+  log.info(`TikBook <deactivate> invoked subscriptions=${activationSubscriptionCount}`)
 }

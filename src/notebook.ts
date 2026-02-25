@@ -1,12 +1,14 @@
-import { notebooks, NotebookSerializer, CancellationToken, NotebookData, NotebookCellData, NotebookCellKind, NotebookController, NotebookCell, NotebookDocument, NotebookCellOutput, NotebookCellOutputItem, LogLevel, workspace, commands, window, Uri, ViewColumn, CancellationTokenSource } from 'vscode'
-import { log } from './shared'
-import { RouterRestClient as client } from './routeros'
+import type { CancellationToken, Disposable, NotebookCell, NotebookController, NotebookDocument, NotebookSerializer } from 'vscode';
+import { CancellationTokenSource, commands, LogLevel, NotebookCellData, NotebookCellKind, NotebookCellOutput, NotebookCellOutputItem, NotebookData, notebooks, Uri, ViewColumn, window, workspace } from 'vscode';
+import { RouterRestClient as client } from './routeros';
+import { log } from './shared';
+import { getActiveNotebook } from './vscode-compat';
 
 const encoding = 'utf-8'
 
 // MARK: init
 
-export function initializeNotebookEngines() {
+export function initializeNotebookEngines(): Disposable[] {
   const killswitch = new CancellationTokenSource()
   return [
     workspace.registerNotebookSerializer('tikbook', new ScriptSerializer(), {
@@ -41,12 +43,14 @@ export function initializeNotebookEngines() {
     new RscController(),
     new ReplController(),
     new MarkdownController(),
-    commands.registerCommand('tikbook.new.notebook.markdown', () => workspace.openNotebookDocument('markdown-routeros', new NotebookData([])).then(nb =>
-      window.showNotebookDocument(nb)),
-    ),
-    commands.registerCommand('tikbook.new.notebook', () => workspace.openNotebookDocument('tikbook', new NotebookData([])).then(nb =>
-      window.showNotebookDocument(nb)),
-    ),
+    commands.registerCommand('tikbook.new.notebook.markdown', async () => {
+      const nb = await workspace.openNotebookDocument('markdown-routeros', new NotebookData([]))
+      await window.showNotebookDocument(nb)
+    }),
+    commands.registerCommand('tikbook.new.notebook', async () => {
+      const nb = await workspace.openNotebookDocument('tikbook', new NotebookData([]))
+      await window.showNotebookDocument(nb)
+    }),
     commands.registerCommand('tikbook.new.notebook.repl', async () => {
       await commands.executeCommand('interactive.open',
         undefined,
@@ -59,7 +63,7 @@ export function initializeNotebookEngines() {
     commands.registerCommand('tikbook.notebook.clone.routeros', async (uri?) => {
       let nb
       if (uri) {
-        workspace.openNotebookDocument(
+        await workspace.openNotebookDocument(
           'tikbook',
           await commands.executeCommand(
             'vscode.executeDataToNotebook',
@@ -70,10 +74,10 @@ export function initializeNotebookEngines() {
         )
       }
       else {
-        nb = window.activeNotebookEditor?.notebook
+        nb = getActiveNotebook()
       }
       if (nb) {
-        copyNotebookAs(nb, 'tikbook')
+        void copyNotebookAs(nb, 'tikbook')
       }
       else {
         log.error(`<notebook> [tikbook.notebook.clone.routeros] got no notebook`)
@@ -82,7 +86,7 @@ export function initializeNotebookEngines() {
     commands.registerCommand('tikbook.notebook.clone.markdown', async (uri?) => {
       let nb
       if (uri) {
-        workspace.openNotebookDocument(
+        await workspace.openNotebookDocument(
           'markdown-routeros',
           await commands.executeCommand(
             'vscode.executeDataToNotebook',
@@ -93,10 +97,10 @@ export function initializeNotebookEngines() {
         )
       }
       else {
-        nb = window.activeNotebookEditor?.notebook
+        nb = getActiveNotebook()
       }
       if (nb) {
-        copyNotebookAs(nb, 'markdown-routeros')
+        void copyNotebookAs(nb, 'markdown-routeros')
       }
       else {
         log.error(`<notebook> [tikbook.notebook.clone.markdown] got no notebook`)
@@ -107,35 +111,36 @@ export function initializeNotebookEngines() {
       const textDocument = await workspace.openTextDocument(uri)
       const content = textDocument.getText()
       const buffer = new TextEncoder().encode(content)
-      const notebookData = await (new ScriptSerializer()).deserializeNotebook(buffer, killswitch.token)
-      window.showNotebookDocument((await workspace.openNotebookDocument('tikbook', notebookData)))
+      const notebookData = await Promise.resolve((new ScriptSerializer()).deserializeNotebook(buffer, killswitch.token))
+      await window.showNotebookDocument((await workspace.openNotebookDocument('tikbook', notebookData)))
     }),
-    commands.registerCommand('tikbook.notebook.markdown.preview.markdown', async (_uri?: Uri) => {
-      commands.executeCommand('markdown.showPreviewToSide', _uri)
+    commands.registerCommand('tikbook.notebook.markdown.preview.markdown', (_uri?: Uri) => {
+      void commands.executeCommand('markdown.showPreviewToSide', _uri)
     }),
     commands.registerCommand('tikbook.notebook.reopen.routeros', async (uri?: Uri) => {
       const targetUri = uri
       if (!targetUri) {
-        window.showWarningMessage('No document is found to open in [tikbook.notebook.reopen.routeros] command')
+        void window.showWarningMessage('No document is found to open in [tikbook.notebook.reopen.routeros] command')
         log.warn(`[tikbook.notebook.reopen.routeros] found no uri for vscode.openWith`)
         return
       }
-      if (window.activeNotebookEditor?.notebook.isUntitled || window.activeTextEditor?.document.isUntitled) {
-        window.showWarningMessage(`Untitled documents cannot previewed. Save file to enable RouterOS script view.`, 'Save As...', 'Cancel')
+      const activeNotebook = getActiveNotebook()
+      if (activeNotebook?.isUntitled || window.activeTextEditor?.document.isUntitled) {
+        void window.showWarningMessage(`Untitled documents cannot previewed. Save file to enable RouterOS script view.`, 'Save As...', 'Cancel')
           .then((selection) => {
             if (selection === 'Save As...') {
-              commands.executeCommand('workbench.action.files.save').then(e => log.info(JSON.stringify(e)))
+              void commands.executeCommand('workbench.action.files.save').then(e => log.info(JSON.stringify(e)))
             }
           })
         return
       }
       try {
-        commands.executeCommand('vscode.openWith', uri, 'default', ViewColumn.Beside)
+        await commands.executeCommand('vscode.openWith', uri, 'default', ViewColumn.Beside)
         log.debug(`[tikbook.notebook.reopen.routeros] vscode.openWith ${uri.toString(true)} called`)
       }
       catch (error) {
         log.warn('[tikbook.notebook.reopen.routeros] Error opening with notebook:', error)
-        window.showWarningMessage(`Exception opening text document from notebook using ${uri.toString()}`)
+        void window.showWarningMessage(`Exception opening text document from notebook using ${uri.toString()}`)
       }
     }),
     /*
@@ -161,29 +166,29 @@ export async function convertNotebookFormat(nb: NotebookDocument, newFormat: str
   const markdownSerializer = new MarkdownSerializer()
   if (nb.isDirty || nb.isUntitled) {
     const msg = 'Document must be saved before copy to new notebook format.'
-    window.showWarningMessage(msg)
+    void window.showWarningMessage(msg)
     log.info(`<notebook.convertNotebookFormat> warned '${msg}'`, nb.uri.toString(), newFormat)
     return null
   }
   const text = (await workspace.openTextDocument(nb.uri)).getText()
-  if (nb.notebookType == newFormat) return nb
-  const serializer = newFormat == 'markdown-routeros'
+  if (nb.notebookType === newFormat) return nb
+  const serializer = newFormat === 'markdown-routeros'
     ? scriptSerializer
     : markdownSerializer
   const killswitch = new CancellationTokenSource()
-  const notebookData = await serializer.deserializeNotebook(new TextEncoder().encode(text), killswitch.token)
+  const notebookData = await Promise.resolve(serializer.deserializeNotebook(new TextEncoder().encode(text), killswitch.token))
   return workspace.openNotebookDocument(newFormat, { cells: notebookData.cells, metadata: notebookData.metadata })
 }
 
-export async function copyNotebookAs(notebook: NotebookDocument, newNotebookType: string) {
-  if (notebook && notebook.notebookType) {
+export function copyNotebookAs(notebook: NotebookDocument, newNotebookType: string): void {
+  if (notebook?.notebookType) {
     log.debug('<notebook.copyNotebookAs> has notebook, prompting user to create copy', notebook.uri.toString(), newNotebookType)
-    window.showInformationMessage(`Create new copy in '${newNotebookType}' notebook format?`, { modal: true, detail: 'Note: Future changes are not synced between notebook formats.' }, 'Create Copy')
+    void window.showInformationMessage(`Create new copy in '${newNotebookType}' notebook format?`, { modal: true, detail: 'Note: Future changes are not synced between notebook formats.' }, 'Create Copy')
       .then(async (e) => {
         if (e === 'Create Copy') {
           log.debug('<notebook.copyNotebookAs> attempting file copy+show after user confirm')
           const newNotebook = await convertNotebookFormat(notebook, newNotebookType)
-          if (newNotebook) window.showNotebookDocument(newNotebook)
+          if (newNotebook) await window.showNotebookDocument(newNotebook)
         }
         else {
           log.debug('<notebook.createNotebookCopy> skipped', notebook.uri.toString(), newNotebookType)
@@ -192,7 +197,7 @@ export async function copyNotebookAs(notebook: NotebookDocument, newNotebookType
   }
   else {
     const msg = 'No notebook found to copy'
-    window.showWarningMessage(msg)
+    void window.showWarningMessage(msg)
     log.debug(`<notebook.copyNotebookAs> warned user '${msg}'`, notebook.uri.toString(), newNotebookType)
   }
 }
@@ -211,7 +216,7 @@ export class MarkdownSerializer implements NotebookSerializer {
         case NotebookCellKind.Markup: {
           const md = c.value.trim()
           if (md.match(/^[\s]+$/)) return ''
-          if (a[i - 1] && a[i - 1].kind === NotebookCellKind.Markup) {
+          if (a[i - 1]?.kind === NotebookCellKind.Markup) {
             return `[//]: #.\n\n${md}\n\n`
           }
           return `${md}\n\n`
@@ -220,20 +225,20 @@ export class MarkdownSerializer implements NotebookSerializer {
     }).join(''))
   }
 
-  async deserializeNotebook(
+  deserializeNotebook(
     content: Uint8Array,
     _token: CancellationToken,
-  ): Promise<NotebookData> {
+  ): NotebookData {
     const lines = new TextDecoder(encoding).decode(content).split('\n')
     const notebookCellData: NotebookCellData[] = []
     let pending = ''
     const metadata: { shebang: boolean | string } = { shebang: false }
-    let type = NotebookCellKind.Markup
-    const commitPending = (lang: string, cellMetadata?: Record<string, unknown>) => {
+    let cellType = NotebookCellKind.Markup
+    const commitPending = (lang: string, cellMetadata?: Record<string, unknown>): void => {
       if (pending) {
         const text = pending.trimEnd()
         if (text.length > 0) {
-          const cellData = new NotebookCellData(type, `${text}`, lang)
+          const cellData = new NotebookCellData(cellType, `${text}`, lang)
           if (cellMetadata) cellData.metadata = cellMetadata
           notebookCellData.push(cellData)
         }
@@ -244,29 +249,29 @@ export class MarkdownSerializer implements NotebookSerializer {
       c = c.trimEnd()
       const shebangParsed = c.match(/^[[][/][/][\]]: #!tikbook[ ]*(.*)$/)
       if (shebangParsed) {
-        metadata.shebang = (shebangParsed.groups?.[0]) ? shebangParsed.groups[0] : true
+        metadata.shebang = shebangParsed.groups?.[0] ?? true
         return
       }
       if (c.match(/^```routeros/)) {
         commitPending('markdown')
-        type = NotebookCellKind.Code
+        cellType = NotebookCellKind.Code
         return
       }
-      if (c.match(/^```/) && type === NotebookCellKind.Code) {
+      if (c.match(/^```/) && cellType === NotebookCellKind.Code) {
         commitPending('routeros')
-        type = NotebookCellKind.Markup
+        cellType = NotebookCellKind.Markup
         return
       }
       // uses a markdown comment hack to break markdown cells... have to find it...
       // eslint-disable-next-line no-useless-escape
       const rawMetadataParsed = c.match(/^([\[][\/][\/][\]]: #[.])([ ][(](.*)[)])?/)
-      if (rawMetadataParsed && type !== NotebookCellKind.Code) {
+      if (rawMetadataParsed && cellType !== NotebookCellKind.Code) {
         // commitPending('markdown', rawMetadataParsed.groups?.[3])
         commitPending('markdown')
       }
       pending += `${c.trimEnd()}\n`
     })
-    commitPending(type === NotebookCellKind.Markup ? 'markdown' : 'routeros')
+    commitPending(cellType === NotebookCellKind.Markup ? 'markdown' : 'routeros')
     const notebookData = new NotebookData(notebookCellData)
     notebookData.metadata = metadata
     return notebookData
@@ -283,7 +288,7 @@ export class ScriptSerializer implements NotebookSerializer {
       }
       switch (V.kind) {
         case NotebookCellKind.Code: {
-          if (A[I - 1] && A[I - 1].kind === NotebookCellKind.Code) {
+          if (A[I - 1]?.kind === NotebookCellKind.Code) {
             M += '#.\n\n'
           }
           return `${M}${V.value.trim()}\n\n`
@@ -301,12 +306,12 @@ export class ScriptSerializer implements NotebookSerializer {
     const lines = new TextDecoder(encoding).decode(content).split('\n')
     const notebookCellData: NotebookCellData[] = []
     let pending = ''
-    let type: number = NotebookCellKind.Code
-    const commitPending = (type: NotebookCellKind) => {
+    let cellKind: NotebookCellKind = NotebookCellKind.Code
+    const commitPending = (pendingKind: NotebookCellKind): void => {
       if (pending) {
         const text = pending.trim()
         if (text.length > 0) {
-          notebookCellData.push(new NotebookCellData(type, `${text}`, type === NotebookCellKind.Markup ? 'markdown' : 'routeros'))
+          notebookCellData.push(new NotebookCellData(pendingKind, `${text}`, pendingKind === NotebookCellKind.Markup ? 'markdown' : 'routeros'))
         }
         pending = ''
       }
@@ -318,18 +323,18 @@ export class ScriptSerializer implements NotebookSerializer {
         return
       }
       if (c.match(/^#.markdown/)) {
-        commitPending(type)
-        type = NotebookCellKind.Markup
+        commitPending(cellKind)
+        cellKind = NotebookCellKind.Markup
         return
       }
       if (c.match(/^#[.]/)) {
-        commitPending(type)
-        type = NotebookCellKind.Code
+        commitPending(cellKind)
+        cellKind = NotebookCellKind.Code
         return
       }
-      pending += type === NotebookCellKind.Markup ? `${c.substring(3).trimEnd()}\n` : `${c.trimEnd()}\n`
+      pending += cellKind === NotebookCellKind.Markup ? `${c.substring(3).trimEnd()}\n` : `${c.trimEnd()}\n`
     })
-    commitPending(type)
+    commitPending(cellKind)
     return new NotebookData(notebookCellData)
   }
 }
@@ -344,7 +349,7 @@ export abstract class TikbookControllerBase {
 
   private readonly _controller: NotebookController
   private _executionOrder = 0
-  dispose() {
+  dispose(): void {
     this._controller.dispose()
   }
 
@@ -368,7 +373,7 @@ export abstract class TikbookControllerBase {
     cells: NotebookCell[],
     _notebook: NotebookDocument,
     _controller: NotebookController,
-  ) {
+  ): Promise<void> {
     let hasError = false
     for (const cell of cells) {
       if (hasError) {
@@ -436,7 +441,7 @@ export abstract class TikbookControllerBase {
       execution.token.onCancellationRequested((e) => {
         killswitch.abort(e)
         aborted = true
-        execution.replaceOutput([
+        void execution.replaceOutput([
           new NotebookCellOutput([
             log.logLevel === LogLevel.Trace ? NotebookCellOutputItem.error(Error(e)) : NotebookCellOutputItem.stderr('request cancelled'),
           ]),
@@ -470,10 +475,10 @@ export abstract class TikbookControllerBase {
         }
       }
       if (outputItems.length > 0) {
-        execution.replaceOutput(new NotebookCellOutput(outputItems))
+        await execution.replaceOutput(new NotebookCellOutput(outputItems))
       }
       else {
-        execution.clearOutput()
+        await execution.clearOutput()
       }
       let success = true
       if (outputItems.filter(e => e.mime.match(/application\/vnd.code.notebook.(stderr|error)/g)).length > 0) {
@@ -484,7 +489,7 @@ export abstract class TikbookControllerBase {
     }
     catch (error) {
       log.error(`<TikbookControllerBase> {_doExecution} got exception`, error)
-      execution.replaceOutput([
+      await execution.replaceOutput([
         new NotebookCellOutput([
           NotebookCellOutputItem.error(error as Error),
         ]),

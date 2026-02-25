@@ -1,9 +1,10 @@
-import { commands, ExtensionContext, extensions, MarkdownString, StatusBarAlignment, StatusBarItem, ThemeColor, window, workspace } from 'vscode'
-import { RouterRestClient } from './routeros'
-import { DateTime, Duration } from 'luxon'
-import { log } from './shared'
-import { getConnectionUrlString, getSettings, SecretManager } from './config'
-import { AxiosError } from 'axios'
+import type { AxiosError } from 'axios';
+import { DateTime, Duration } from 'luxon';
+import type { Disposable, ExtensionContext, StatusBarItem } from 'vscode';
+import { commands, extensions, MarkdownString, StatusBarAlignment, ThemeColor, window, workspace } from 'vscode';
+import { getConnectionUrlString, getSettings, SecretManager } from './config';
+import { RouterRestClient } from './routeros';
+import { log } from './shared';
 
 type StatusStates = 'none' | 'error' | 'http error' | 'inflight' | 'normal'
 export class StatusWatchdog {
@@ -56,17 +57,17 @@ export class StatusWatchdog {
       RouterRestClient.default.onHttpResponseSuccess(e => this.triggerUpdate('normal', e.statusText)),
     )
     this.triggerUpdate('none', 'Initializing...')
-    setTimeout(() => this.checkRouter(), 1000)
+    setTimeout(() => { void this.checkRouter() }, 1000)
 
     // MARK: polling loop
     this.pollInterval = setInterval(() => {
-      if (this.state != 'normal') this.checkRouter()
+      if (this.state !== 'normal') void this.checkRouter()
       // if okay check at twice the timeout, if error polling happens same as timeout ms
-      if (this.lastUpdate.diffNow() > Duration.fromMillis(0 - (getSettings().apiTimeout * 1000 * 2 + 1000))) this.checkRouter()
+      if (this.lastUpdate.diffNow() > Duration.fromMillis(0 - (getSettings().apiTimeout * 1000 * 2 + 1000))) void this.checkRouter()
     }, (getSettings().apiTimeout * 1000) + 1000)
   }
 
-  dispose() {
+  dispose(): void {
     // this.client.dispose();
     this.statusConnectedRouter.dispose()
     this.pollInterval.close()
@@ -74,33 +75,33 @@ export class StatusWatchdog {
 
   // MARK: config chg
 
-  onConfigurationChange() {
+  onConfigurationChange(): Disposable {
     return workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('tikbook')) {
         log.info('<StatusWatchdog> relevant config change received')
         if (e.affectsConfiguration('tikbook.provideLspServerCredentials')) {
           if (workspace.getConfiguration('tikbook').get('provideLspServerCredentials') === false) {
-            commands.executeCommand<boolean>('routeroslsp.server.clearConnectionUrl').then(
+            void commands.executeCommand<boolean>('routeroslsp.server.clearConnectionUrl').then(
               dirty => log.info(`<StatusWatchdog> sent LSP [routeroslsp.server.clearConnectionUrl] successfully (dirty=${dirty})`),
               error => log.warn(`<StatusWatchdog> {onConfigurationChange} calling [routeroslsp.server.clearConnectionUrl] got exception`, error),
             )
           }
         }
-        this.checkRouter()
+        void this.checkRouter()
       }
     })
   }
 
   // MARK: status bar
 
-  triggerUpdate(state: StatusStates, msg: string | AxiosError) {
+  triggerUpdate(state: StatusStates, msg: string | AxiosError): void {
     this.state = state
     if (typeof msg === 'object') msg = getTextFromError(msg)
     if (msg) this.lastStatusMessage = msg
     this.setStatusBar(this.toolTipStyles[state])
   }
 
-  setStatusBar(style: { color?: ThemeColor, backgroundColor?: ThemeColor }) {
+  setStatusBar(style: { color?: ThemeColor, backgroundColor?: ThemeColor }): void {
     this.lastUpdate = DateTime.now()
     this.statusConnectedRouter.text = `$(mikrotik-icon-line) ${this.lastRouterName} `
     this.statusConnectedRouter.tooltip = this.getStatusMarkdown() // new MarkdownString(`__status__ **${statusText}**\n\n__check__ ${this.lastUpdate.toLocaleString(DateTime.DATETIME_SHORT)}\n\n__url__ \`${this.client.settings.baseUrl}\` `, true);
@@ -109,7 +110,7 @@ export class StatusWatchdog {
     this.statusConnectedRouter.show()
   };
 
-  getStatusMarkdown() {
+  getStatusMarkdown(): MarkdownString {
     let mdStatus = ''
     mdStatus += `## RouterOS \`${this.lastRouterName}\`\n`
     const url = getConnectionUrlString()
@@ -122,7 +123,7 @@ export class StatusWatchdog {
       if (this.lastRouterResources) {
         mdStatus += `### System Resources\n`
         mdStatus += `| | |\n| ---: | :--- |\n`
-        Object.keys(this.lastRouterResources!)
+        Object.keys(this.lastRouterResources)
           .map(e => `| **${e}**: | ${this.lastRouterResources![e]}|`)
           .forEach(t => mdStatus += `${t}\n`)
       }
@@ -141,18 +142,18 @@ export class StatusWatchdog {
     return new MarkdownString(mdStatus)
   }
 
-  async onClick() {
-    this.checkRouter()
-    if (this.state == 'normal') commands.executeCommand('tikbook.show.menu.main')
-    else commands.executeCommand('tikbook.show.menu.setup')
+  async onClick(): Promise<void> {
+    await this.checkRouter()
+    if (this.state === 'normal') void commands.executeCommand('tikbook.show.menu.main')
+    else void commands.executeCommand('tikbook.show.menu.setup')
   }
 
   // MARK: sync
 
-  async updateLspConnectionUrl() {
+  updateLspConnectionUrl(): void {
     const routeroslspExtension = extensions.getExtension('TIKOCI.lsp-routeros-ts')
     if (routeroslspExtension) {
-      commands.executeCommand('routeroslsp.server.getConnectionUrl').then(
+      void commands.executeCommand('routeroslsp.server.getConnectionUrl').then(
         urlString => this.lastLspConnectionUrl = urlString as string,
         error => log.warn(`<StatusWatchdog> {getLspConnectionurl} failed: ${error}`),
       )
@@ -170,7 +171,7 @@ export class StatusWatchdog {
             'TikBook',
             baseUrl,
             username,
-            (await SecretManager.default.getPassword()) || password,
+            (await SecretManager.default.getPassword()) ?? password,
             apiTimeout,
             checkCertificates)
         }
@@ -187,18 +188,18 @@ export class StatusWatchdog {
 
   // MARK: check
 
-  async checkRouter() {
+  async checkRouter(): Promise<void> {
     log.debug('<StatusWatchdog> checking router...')
     this.lastUpdate = DateTime.now()
     try {
-      this.updateLspConnectionUrl() // background
+      void this.updateLspConnectionUrl() // background
       const axiosResponse = await this.client.getRawIdentity()
       this.lastRouterName = axiosResponse.data?.name
       if (this.lastRouterName !== null) {
         this.lastRouterResources = await this.client.getSystemResources() as Record<string, unknown>
         this.triggerUpdate('normal', 'Router connection check successful')
         if (await this.syncLspConnectionUrl()) {
-          commands.executeCommand('routeroslsp.cmd.testConnection')
+          void commands.executeCommand('routeroslsp.cmd.testConnection')
         }
         log.info('<StatusWatchdog> check was successful for ', this.lastRouterName)
       }
@@ -214,7 +215,7 @@ export class StatusWatchdog {
   }
 }
 
-export function getTextFromError(error: { code?: string, message?: string, status?: number, name?: string, toString?: () => string }) {
+export function getTextFromError(error: { code?: string, message?: string, status?: number, name?: string, toString?: () => string }): string {
   let errText = ''
   if (error.code && error.message) {
     switch (error.code) {

@@ -1,9 +1,12 @@
-import { commands, ConfigurationTarget, env, IconPath, LogLevel, ProgressLocation, QuickInputButton, QuickPickItem, QuickPickItemKind, Uri, window, workspace } from 'vscode'
-import { log } from './shared'
-import { MarkdownHandlers } from './codelens'
-import { getSettings, SecretManager } from './config'
-import { RouterRestClient } from './routeros'
-import { fetchGitHubRepos, GitHubRepo } from './remote'
+import type { Disposable, IconPath, QuickInputButton, QuickPickItem } from 'vscode';
+import { commands, ConfigurationTarget, env, LogLevel, ProgressLocation, QuickPickItemKind, Uri, window, workspace } from 'vscode';
+import { MarkdownHandlers } from './codelens';
+import { getSettings, SecretManager } from './config';
+import type { GitHubRepo } from './remote';
+import { fetchGitHubRepos } from './remote';
+import type { SystemScriptItem } from './routeros';
+import { RouterRestClient } from './routeros';
+import { log } from './shared';
 
 // MARK: types
 
@@ -23,7 +26,7 @@ interface QuickPickItemEx extends QuickPickItem {
   action?: (params: QuickPickItemEx) => QuickPickItemEx
 }
 
-function quickPickBack(where: string) {
+function quickPickBack(where: string): QuickPickItemEx[] {
   return [
     {
       label: '',
@@ -38,7 +41,7 @@ function quickPickBack(where: string) {
 
 // MARK: init
 
-export function initializeMenus() {
+export function initializeMenus(): Disposable[] {
   return [
     commands.registerCommand('tikbook.show.menu.main', () => showMenuMain()),
     commands.registerCommand('tikbook.show.menu.new', () => showMenuNew()),
@@ -59,7 +62,7 @@ export function initializeMenus() {
 
 // MARK: main menu
 
-async function showMenuMain() {
+async function showMenuMain(): Promise<void> {
   return window.showQuickPick<QuickPickItemEx>([{
     label: '$(mikrotik-icon-line)  New RouterOS Document',
     cmd: 'tikbook.show.menu.new',
@@ -84,14 +87,14 @@ async function showMenuMain() {
   ], {
     title: 'RouterOS TikBook',
   }).then((pickedItem) => {
-    if (pickedItem?.cmd) commands.executeCommand(pickedItem.cmd)
+    if (pickedItem?.cmd) void commands.executeCommand(pickedItem.cmd)
     else log.debug('<menus.showMenuMain> Main menu has no command to run')
   })
 };
 
 // MARK: new doc
 
-async function showMenuNew() {
+async function showMenuNew(): Promise<void> {
   return window.showQuickPick<QuickPickItemEx>(
     [
       {
@@ -121,16 +124,18 @@ async function showMenuNew() {
     ], { title: 'New RouterOS Document' })
     .then((item) => {
       if (!item) return
-      if (item.cmd) commands.executeCommand(item.cmd)
+      if (item.cmd) void commands.executeCommand(item.cmd)
       switch (item.id) {
         case 'tikbook':
-          workspace.openNotebookDocument('tikbook').then(e => window.showNotebookDocument(e))
+          void workspace.openNotebookDocument('tikbook').then(e => window.showNotebookDocument(e))
           break
         case 'routeros':
-          commands.executeCommand('workbench.action.files.newUntitledFile', { languageId: 'routeros' }) // .then(e => window.showTextDocument(e))
+          void commands.executeCommand('workbench.action.files.newUntitledFile', { languageId: 'routeros' }) // .then(e => window.showTextDocument(e))
           break
         case 'markdown-routeros':
-          workspace.openNotebookDocument('markdown-routeros').then(e => window.showNotebookDocument(e))
+          void workspace.openNotebookDocument('markdown-routeros').then(e => window.showNotebookDocument(e))
+          break
+        case undefined:
           break
         default:
           log.warn('<menus.showMenuNew> no command found to run')
@@ -140,9 +145,9 @@ async function showMenuNew() {
 
 // MARK: topsetep
 
-function showMenuConnection() {
+function showMenuConnection(): Promise<void> {
   const settings = getSettings()
-  window.showQuickPick<QuickPickItemEx>(
+  return window.showQuickPick<QuickPickItemEx>(
     [
       {
         label: 'Authentication',
@@ -203,14 +208,14 @@ function showMenuConnection() {
       ...quickPickBack('tikbook.show.menu.main'),
     ], { title: 'RouterOS Connection Settings' })
     .then((item) => {
-      if (item?.cmd) commands.executeCommand(item.cmd, (item.args && item.args.length > 0) ? item.args[0] : 'tikbook.show.menu.setup')
-    })
+      if (item?.cmd) void commands.executeCommand(item.cmd, (item.args && item.args.length > 0) ? item.args[0] : 'tikbook.show.menu.setup')
+    }) as Promise<void>
 }
 
 // MARK: baseUrl
 
-async function showSetupBaseUrl(back?: string) {
-  const input = window.showInputBox({
+async function showSetupBaseUrl(back?: string): Promise<string | undefined> {
+  const input = await window.showInputBox({
     value: getSettings().baseUrl,
     // valueSelection: [2, 4],
     title: 'RouterOS Connection URL',
@@ -221,77 +226,83 @@ async function showSetupBaseUrl(back?: string) {
       if (!URL.canParse(text)) {
         return 'Must be a valid URL, like https://192.168.88.1'
       }
-      const url = new URL(text)
-      if (!url) return 'Must be a valid URL, like https://192.168.88.1'
-      log.trace(`<MinuteNumbers.showSetupBaseUrl> found url`, url)
+      const parsedUrl = new URL(text)
+      if (!parsedUrl) return 'Must be a valid URL, like https://192.168.88.1'
+      log.trace(`<MinuteNumbers.showSetupBaseUrl> found url`, parsedUrl)
       const allowedProtocols = ['https:', 'http:']
-      if (!allowedProtocols.includes(url.protocol)) return `Protocol must be ${allowedProtocols.join(' or ')}`
-      if (!url.host) return `Host must be valid DNS or IP address`
-      if (url.pathname.match(/\/rest([/].*)?$/)) return `Do not include /rest in URL`
-      if (url.pathname.length > 1) return 'Do not include a path as /rest added automatically'
+      if (!allowedProtocols.includes(parsedUrl.protocol)) return `Protocol must be ${allowedProtocols.join(' or ')}`
+      if (!parsedUrl.host) return `Host must be valid DNS or IP address`
+      if (parsedUrl.pathname.match(/\/rest([/].*)?$/)) return `Do not include /rest in URL`
+      if (parsedUrl.pathname.length > 1) return 'Do not include a path as /rest added automatically'
       return null
     },
-  }).then((urlString) => {
-    if (!urlString) return
-    if (!URL.canParse(urlString)) {
-      log.info(`<menus.showSetupBaseUrl> got bad url after validation using '${urlString}', user likely cancelled`)
-      window.showWarningMessage(` Nothing updated.  URL '${urlString}' is not valid.`)
-      return
-    }
-    const conf = workspace.getConfiguration('tikbook', null)
-    const url = URL.parse(urlString)
-    if (!url) return
-    const newSettings: { baseUrl?: string, username?: string, password?: string } = {}
-    if (conf.get('baseUrl') !== newSettings.baseUrl) newSettings.baseUrl = `${url.protocol}//${url.host}`
-    if (conf.get('username') !== newSettings.username && url.username.length > 0) newSettings.username = url.username
-    if (conf.get('password') !== SecretManager.default.getPassword() && url.password.length > 0) newSettings.password = url.password
-
-    const updatedAttributes = []
-    if (newSettings.baseUrl) updatedAttributes.push('baseUrl')
-    if (newSettings.username) updatedAttributes.push('username')
-    if (newSettings.password) updatedAttributes.push('password')
-
-    let msg: string
-    const updateSettings = (settingName: string, msg?: string) => {
-      return conf.update(settingName, newSettings[settingName as keyof typeof newSettings], ConfigurationTarget.Global).then(() => {
-        if (msg) {
-          window.showInformationMessage(msg)
-          log.debug(`<menus.showSetupBaseUrl> notified: ${msg}`)
-        }
-      })
-    }
-
-    if (updatedAttributes.length > 0) {
-      if (newSettings.baseUrl) {
-        msg = `TikBook using RouterOS connection URL: ${newSettings.baseUrl}`
-        updateSettings('baseUrl', msg).then(() => {
-          if (updatedAttributes.length === 1) {
-            if (back) commands.executeCommand(back)
-          }
-        })
-      }
-      if (newSettings.username) {
-        msg = `Updated TikBook's RouterOS username to '${newSettings.username}'`
-        updateSettings('username').then(async () => {
-          if (newSettings.password) {
-            await SecretManager.default.setPassword(newSettings.password)
-            msg = msg + ' and password'
-          }
-          window.showInformationMessage(msg)
-          log.debug(`<menus.showSetupBaseUrl> notified: ${msg}`)
-          if (back) commands.executeCommand(back)
-        })
-      }
-    }
   })
-  if (!input && back) commands.executeCommand(back)
+
+  if (!input) {
+    if (back) void commands.executeCommand(back)
+    return input
+  }
+  if (!URL.canParse(input)) {
+    log.info(`<menus.showSetupBaseUrl> got bad url after validation using '${input}', user likely cancelled`)
+    void window.showWarningMessage(` Nothing updated.  URL '${input}' is not valid.`)
+    if (back) void commands.executeCommand(back)
+    return input
+  }
+  const conf = workspace.getConfiguration('tikbook', null)
+  const url = URL.parse(input)
+  if (!url) {
+    if (back) void commands.executeCommand(back)
+    return input
+  }
+  const newSettings: { baseUrl?: string, username?: string, password?: string } = {}
+  const nextBaseUrl = `${url.protocol}//${url.host}`
+  if (conf.get('baseUrl') !== nextBaseUrl) newSettings.baseUrl = nextBaseUrl
+  if (conf.get('username') !== url.username && url.username.length > 0) newSettings.username = url.username
+  const secretPassword = await SecretManager.default.getPassword()
+  if (conf.get('password') !== secretPassword && url.password.length > 0) newSettings.password = url.password
+
+  const updatedAttributes = []
+  if (newSettings.baseUrl) updatedAttributes.push('baseUrl')
+  if (newSettings.username) updatedAttributes.push('username')
+  if (newSettings.password) updatedAttributes.push('password')
+
+  let msg: string
+  const updateSettings = async (settingName: string, notice?: string): Promise<void> => {
+    await conf.update(settingName, newSettings[settingName as keyof typeof newSettings], ConfigurationTarget.Global)
+    if (notice) {
+      void window.showInformationMessage(notice)
+      log.debug(`<menus.showSetupBaseUrl> notified: ${notice}`)
+    }
+  }
+
+  if (updatedAttributes.length > 0) {
+    if (newSettings.baseUrl) {
+      msg = `TikBook using RouterOS connection URL: ${newSettings.baseUrl}`
+      await updateSettings('baseUrl', msg)
+      if (updatedAttributes.length === 1 && back) {
+        void commands.executeCommand(back)
+      }
+    }
+    if (newSettings.username) {
+      msg = `Updated TikBook's RouterOS username to '${newSettings.username}'`
+      await updateSettings('username')
+      if (newSettings.password) {
+        await SecretManager.default.setPassword(newSettings.password)
+        msg = msg + ' and password'
+      }
+      void window.showInformationMessage(msg)
+      log.debug(`<menus.showSetupBaseUrl> notified: ${msg}`)
+      if (back) void commands.executeCommand(back)
+    }
+  }
+
   return input
 }
 
 // MARK: username
 
-async function showSetupUsername(back?: string) {
-  const input = window.showInputBox({
+async function showSetupUsername(back?: string): Promise<string | undefined> {
+  const input = await window.showInputBox({
     value: getSettings().username,
     // valueSelection: [2, 4],
     title: 'RouterOS Username',
@@ -302,31 +313,28 @@ async function showSetupUsername(back?: string) {
       if (text.match(/^[A-Za-z0-9-.]{1,64}$/)) return null
       else return `The provided username does not appear to be valid.`
     },
-  }).then((username) => {
-    let msg: string
-    const conf = workspace.getConfiguration('tikbook', null)
-    if (conf.get('username') !== username && username && username.length > 0) {
-      conf.update('username', username, ConfigurationTarget.Global).then(() => {
-        msg = `Updated TikBook's RouterOS username: ${username}`
-        window.showInformationMessage(msg)
-        log.debug(`<menus.showSetupUsername> notified: ${msg}`)
-        if (back) commands.executeCommand(back)
-      })
-    }
-    else {
-      msg = `Nothing to update for TikBook's RouterOS credentials`
-      window.showInformationMessage(msg)
-      log.debug(`<menus.showSetupUsername> showed: ${msg}`)
-      if (back) commands.executeCommand(back)
-    }
   })
-  if (!input && back) commands.executeCommand(back)
+  let msg: string
+  const conf = workspace.getConfiguration('tikbook', null)
+  if (input && input.length > 0 && conf.get('username') !== input) {
+    await conf.update('username', input, ConfigurationTarget.Global)
+    msg = `Updated TikBook's RouterOS username: ${input}`
+    void window.showInformationMessage(msg)
+    log.debug(`<menus.showSetupUsername> notified: ${msg}`)
+    if (back) void commands.executeCommand(back)
+  }
+  else {
+    msg = `Nothing to update for TikBook's RouterOS credentials`
+    void window.showInformationMessage(msg)
+    log.debug(`<menus.showSetupUsername> showed: ${msg}`)
+    if (back) void commands.executeCommand(back)
+  }
   return input
 }
 
 // MARK: apiTimeout
 
-async function showSetupApiTimeout(back?: string) {
+async function showSetupApiTimeout(back?: string): Promise<string | undefined> {
   const input = await window.showInputBox({
     value: getSettings().apiTimeout.toString(10),
     // valueSelection: [2, 4],
@@ -341,22 +349,24 @@ async function showSetupApiTimeout(back?: string) {
       if (num > 120) return 'Must be less than 120 seconds'
       if (num <= 0) return 'No time traveling allowed.  Must be > 0 seconds.'
     },
-  }).then((timeout) => {
-    workspace.getConfiguration('tikbook', null).update('apiTimeout', Number(timeout), ConfigurationTarget.Global)
-      .then(() => {
-        const msg = `Updated timeout to ${Number(timeout).toPrecision(1)}s when connecting to RouterOS`
-        window.showInformationMessage(msg)
-        log.debug(`<menus.showSetupBaseUrl> notified: ${msg}`)
-        if (back) commands.executeCommand(back)
-      })
   })
+  if (input) {
+    await workspace.getConfiguration('tikbook', null).update('apiTimeout', Number(input), ConfigurationTarget.Global)
+    const msg = `Updated timeout to ${Number(input).toPrecision(1)}s when connecting to RouterOS`
+    void window.showInformationMessage(msg)
+    log.debug(`<menus.showSetupBaseUrl> notified: ${msg}`)
+    if (back) void commands.executeCommand(back)
+  }
+  else if (back) {
+    void commands.executeCommand(back)
+  }
   // if (back) commands.executeCommand(back)
   return input
 }
 
 // MARK: ssh
 
-async function showSetupSshCommand(back?: string) {
+async function showSetupSshCommand(back?: string): Promise<string | undefined> {
   const input = await window.showInputBox({
     value: getSettings().sshCommand,
     // valueSelection: [2, 4],
@@ -368,23 +378,25 @@ async function showSetupSshCommand(back?: string) {
       if (!text) return `SSH command cannot be empty.  Use 'ssh' if unsure.`
       if (text.length > 128) return 'SSH command must be less than 128 characters'
     },
-  }).then((text) => {
-    workspace.getConfiguration('tikbook', null).update('sshCommand', text, ConfigurationTarget.Global)
-      .then(() => {
-        const msg = `Updated SSH command used in Terminal to '${text}'`
-        window.showInformationMessage(msg)
-        log.debug(`<menus.showSetupBaseUrl> notified: ${msg}`)
-        if (back) commands.executeCommand(back)
-      })
   })
+  if (input) {
+    await workspace.getConfiguration('tikbook', null).update('sshCommand', input, ConfigurationTarget.Global)
+    const msg = `Updated SSH command used in Terminal to '${input}'`
+    void window.showInformationMessage(msg)
+    log.debug(`<menus.showSetupBaseUrl> notified: ${msg}`)
+    if (back) void commands.executeCommand(back)
+  }
+  else if (back) {
+    void commands.executeCommand(back)
+  }
   // if (!input && back) commands.executeCommand(back)
   return input
 }
 
 // MARK: logs
 
-function showMenuOutputs() {
-  window.showQuickPick<QuickPickItemEx>(
+function showMenuOutputs(): Promise<void> {
+  return window.showQuickPick<QuickPickItemEx>(
     [
       {
         label: '$(tikoci-tikbook) TikBook Logs',
@@ -409,7 +421,7 @@ function showMenuOutputs() {
     ], { title: 'Show TikBook Logs (Outputs)' })
     .then((item) => {
       if (!item) return
-      if (item.cmd) commands.executeCommand(item.cmd)
+      if (item.cmd) void commands.executeCommand(item.cmd)
       switch (item.id) {
         case 'tikbook':
           log.show()
@@ -418,18 +430,20 @@ function showMenuOutputs() {
           MarkdownHandlers.log.show()
           break
         case 'routeroslsp':
-          window.showWarningMessage('Unimplemented: cannot show RouterOS LSP logs yet.')
+          void window.showWarningMessage('Unimplemented: cannot show RouterOS LSP logs yet.')
           log.debug('<menus.showMenuOutput> warned user about unimplemented show RouterOS LSP logs')
+          break
+        case undefined:
           break
         default:
           log.error('<menus.showMenuOutput> show output menu has no command to run')
       }
-    })
+    }) as Promise<void>
 }
 
 // MARK:  topadmin
 
-async function showRouterAdminMenu() {
+async function showRouterAdminMenu(): Promise<void> {
   return window.showQuickPick<QuickPickItemEx>([
     {
       label: 'Admin Tools',
@@ -510,15 +524,15 @@ async function showRouterAdminMenu() {
     .then((item) => {
       if (!item) return
       if (item.cmd) {
-        if (item.args && item.args.length > 0) commands.executeCommand(item.cmd, ...item.args)
-        else commands.executeCommand(item.cmd)
+        if (item.args && item.args.length > 0) void commands.executeCommand(item.cmd, ...item.args)
+        else void commands.executeCommand(item.cmd)
       }
     })
 }
 
 // MARK: export
 
-async function showConfigurationExportMenu() {
+async function showConfigurationExportMenu(): Promise<void> {
   // let menuitems: QuickPickItemEx[]
   const exportTypes = [
     ['compact', 'without defaults'],
@@ -535,25 +549,26 @@ async function showConfigurationExportMenu() {
   })
   menuitems.push(...quickPickBack('tikbook.show.menu.router.admin'))
 
-  window.showQuickPick<QuickPickItemEx>(menuitems, {})
+  return window.showQuickPick<QuickPickItemEx>(menuitems, {})
     .then((item) => {
       if (!item) return
-      if (item.cmd) commands.executeCommand(item.cmd, ...(item.args ?? []))
+      if (item.cmd) void commands.executeCommand(item.cmd, ...(item.args ?? []))
     })
 }
 
 // MARK: scriptlist
 
-async function showScriptListMenu() {
+async function showScriptListMenu(): Promise<void> {
   const scripts = await RouterRestClient.default.systemScripts
   let menuitems: QuickPickItemEx[] = []
 
-  if (scripts) {
-    menuitems = scripts.map((item: { [x: string]: string, name: string, comment: string }) => {
+  if (Array.isArray(scripts)) {
+    menuitems = (scripts as unknown[]).map((item: unknown) => {
+      const script = item as SystemScriptItem
       return {
-        label: `${item.name}`,
-        id: `${item['.id']}`,
-        description: ` ${item.comment}`,
+        label: `${script.name ?? ''}`,
+        id: `${script['.id'] ?? ''}`,
+        description: ` ${script.comment ?? ''}`,
         cmd: 'tikbook.open.router.script',
       }
     })
@@ -562,21 +577,21 @@ async function showScriptListMenu() {
     log.error('<menus.showScriptListMenu> {_fetchSystemScripts}')
   }
   menuitems.push(...quickPickBack('tikbook.show.menu.router.admin'))
-  window.showQuickPick<QuickPickItemEx>(menuitems, { title: 'Show System Script as Text Document' })
+  void window.showQuickPick<QuickPickItemEx>(menuitems, { title: 'Show System Script as Text Document' })
     .then((item) => {
       if (!item) return
-      if (item.cmd) commands.executeCommand(item.cmd, item.label, item.id)
+      if (item.cmd) void commands.executeCommand(item.cmd, item.label, item.id)
     })
 }
 
 // MARK: vars
 
-async function showRouterVariableGlobalForClipboard() {
+async function showRouterVariableGlobalForClipboard(): Promise<void> {
   const keyValues = await RouterRestClient.default.scriptEnvironment()
-  if (!keyValues || typeof keyValues !== 'object') {
-    const msg = 'No RouterOS variables found to insert'
-    window.showWarningMessage(msg)
-    log.info(`[tikbook.show.menu.variables.global] warned '${msg}`)
+  if (!Array.isArray(keyValues)) {
+    const noVarsMsg = 'No RouterOS variables found to insert'
+    void window.showWarningMessage(noVarsMsg)
+    log.info(`[tikbook.show.menu.variables.global] warned '${noVarsMsg}`)
     return
   }
 
@@ -615,14 +630,14 @@ async function showRouterVariableGlobalForClipboard() {
   // No editor — fallback to clipboard
   await env.clipboard.writeText(variable)
   const msg = `Copied RouterOS ${variable} to clipboard`
-  window.showInformationMessage(msg)
+  void window.showInformationMessage(msg)
   log.debug(`[tikbook.show.menu.variables.global] notified user '${msg}'`)
   // }
 }
 
 // MARK: tophelp
 
-async function showHelpMenu() {
+async function showHelpMenu(): Promise<void> {
   const menuitems: QuickPickItemEx[] = []
   const mikrotikUrls = [
     ['https://forum.mikrotik.com', 'MikroTik Forum', 'comment-discussion'],
@@ -656,7 +671,7 @@ async function showHelpMenu() {
     return {
       label: `$(${item[2]}) Browse ${item[1]}`,
       url: item[0],
-      description: item[3] || undefined,
+      description: item[3] ?? undefined,
     }
   }))
   menuitems.push({ kind: QuickPickItemKind.Separator, label: 'TikTube Videos' })
@@ -695,27 +710,36 @@ async function showHelpMenu() {
 
   menuitems.push(...quickPickBack('tikbook.show.menu.main'))
 
-  window.showQuickPick<QuickPickItemEx>(menuitems, { title: 'Help Resources' })
-    .then((item) => {
+  return window.showQuickPick<QuickPickItemEx>(menuitems, { title: 'Help Resources' })
+    .then(async (item) => {
       if (!item) return
-      if (item.cmd && item.args && item.args.length) {
-        return commands.executeCommand(item.cmd, ...item.args)
+      if (item.cmd && item.args?.length) {
+        await commands.executeCommand(item.cmd, ...item.args)
+        return
       }
       else {
-        if (item.cmd) return commands.executeCommand(item.cmd, item.args)
+        if (item.cmd) {
+          await commands.executeCommand(item.cmd, item.args)
+          return
+        }
       }
-      if (item.url) return env.openExternal(Uri.parse(item.url))
+      if (item.url) {
+        await env.openExternal(Uri.parse(item.url))
+        return
+      }
       switch (item.id) {
         case 'gitclone': {
-          commands.executeCommand('tikbook.menu.showTikociRepoPicker', 'tikbook.browse.mikrotik.help', false).then((e) => {
+          void commands.executeCommand('tikbook.menu.showTikociRepoPicker', 'tikbook.browse.mikrotik.help', false).then((e) => {
             if (e && typeof e === 'object' && 'git_url' in e) {
-              commands.executeCommand('git.clone', (e as { git_url: string }).git_url)
+              void commands.executeCommand('git.clone', (e as { git_url: string }).git_url)
             }
           })
           break
         }
         case 'gitbrowse':
-          commands.executeCommand('tikbook.menu.showTikociRepoPicker', 'tikbook.browse.mikrotik.help', true)
+          void commands.executeCommand('tikbook.menu.showTikociRepoPicker', 'tikbook.browse.mikrotik.help', true)
+          break
+        case undefined:
           break
         default:
       }
@@ -724,7 +748,7 @@ async function showHelpMenu() {
 
 // MARK: github
 
-async function showTikociRepoPicker(back: string, browse = true) {
+async function showTikociRepoPicker(back: string, browse = true): Promise<GitHubRepo | undefined> {
   const organization = 'tikoci'
 
   try {
@@ -738,7 +762,7 @@ async function showTikociRepoPicker(back: string, browse = true) {
 
         if (repos.length === 0) {
           const msg = `No public repositories found for organization: ${organization}`
-          window.showWarningMessage(msg)
+          void window.showWarningMessage(msg)
           log.debug(`[tikbook.menu.showTikociRepoPicker] warned user ${msg}`)
           return
         }
@@ -746,7 +770,7 @@ async function showTikociRepoPicker(back: string, browse = true) {
         const options: (QuickPickItemEx & { repo?: GitHubRepo })[] = repos.map(repo => ({
           label: `${repo.name}`,
           description: repo.language ? `${repo.language} • ⭐ ${repo.stargazers_count}` : `⭐ ${repo.stargazers_count}`,
-          detail: repo.description || 'No description available',
+          detail: repo.description ?? 'No description available',
           repo: repo,
         }))
 
@@ -757,21 +781,24 @@ async function showTikociRepoPicker(back: string, browse = true) {
           matchOnDetail: true,
         })
         if (selected) {
-          if (selected.cmd) return commands.executeCommand(selected.cmd)
+          if (selected.cmd) {
+            await commands.executeCommand(selected.cmd)
+            return
+          }
           const selectedRepo = selected.repo
-          if (browse && selectedRepo) env.openExternal(Uri.parse(selectedRepo.html_url))
+          if (browse && selectedRepo) await env.openExternal(Uri.parse(selectedRepo.html_url))
           return selectedRepo
         }
       }
       catch (error) {
         const msg = `Menu skipped, failed to fetch repositories to show`
-        window.showWarningMessage(msg)
+        void window.showWarningMessage(msg)
         log.warn(`[tikbook.menu.showTikociRepoPicker] warned user ${msg}`, error)
       }
     })
   }
   catch (error) {
     log.warn(`[tikbook.menu.showTikociRepoPicker] got exception`, error)
-    window.showWarningMessage(`Got an unexpected error trying to show menu. Check logs`)
+    void window.showWarningMessage(`Got an unexpected error trying to show menu. Check logs`)
   }
 }

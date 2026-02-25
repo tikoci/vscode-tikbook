@@ -1,11 +1,13 @@
-import axios, { AxiosError, AxiosResponse, GenericAbortSignal, InternalAxiosRequestConfig, isAxiosError } from 'axios'
-import { log } from './shared'
-import { getSettings, SecretManager } from './config'
-import { EventEmitter, Event, env, UIKind } from 'vscode'
+import type { AxiosError, AxiosInstance, AxiosResponse, GenericAbortSignal, InternalAxiosRequestConfig } from 'axios';
+import axios, { isAxiosError } from 'axios';
+import type { Event } from 'vscode';
+import { env, EventEmitter, UIKind } from 'vscode';
+import { getSettings, SecretManager } from './config';
+import { log } from './shared';
 
-import * as https from 'https'
+import * as https from 'https';
 let _httpsNoCheckCertificates: https.Agent
-export function getHttpsAgent() {
+export function getHttpsAgent(): https.Agent | undefined {
   const shouldCheckCertificates = getSettings().checkCertificates
   if (env.uiKind === UIKind.Web) return undefined
   if (shouldCheckCertificates) return undefined
@@ -78,15 +80,25 @@ export interface RouterOSInitialization {
   apiTimeout: number
 }
 
-export interface SystemScriptItem {
+/**
+ * Base interface for RouterOS API items.
+ * 
+ * Supports:
+ * - Standard properties via Record<string, unknown>
+ * - Dotted properties like '.id' via index signature
+ * - Future API extensibility without needing 'any'
+ */
+export interface RouterOSItem extends Record<string, unknown> {
+  '.id'?: string
+}
+
+export interface SystemScriptItem extends RouterOSItem {
   name?: string
   source?: string
   comment?: string
   owner?: string
   policy?: string[]
   ['dont-require-permissions']?: string
-  ['.id']?: string
-  id?: string
 }
 
 // MARK: REST lib
@@ -98,7 +110,7 @@ export class RouterRestClient {
   // }
 
   static #default: RouterRestClient | undefined = undefined
-  static get default() {
+  static get default(): RouterRestClient {
     log.trace('<RouterRestClient> {{get default}}')
     if (RouterRestClient.#default) {
       return RouterRestClient.#default
@@ -123,7 +135,7 @@ export class RouterRestClient {
     log.trace('<RouterRestClient> {constructor} noop')
   }
 
-  public dispose() {
+  public dispose(): void {
     log.info('<RouterRestClient> {dispose} invoked')
     this._onHttpResponseError.dispose()
     this._onHttpResponseSuccess.dispose()
@@ -133,7 +145,7 @@ export class RouterRestClient {
 
   // MARK: client
 
-  get httpClient() {
+  get httpClient(): AxiosInstance {
     log.trace('<RouterRestClient> {httpClient}')
     // const settings = getSettings()
     const client = axios.create({
@@ -147,7 +159,7 @@ export class RouterRestClient {
       const settings = getSettings()
       req.auth = {
         username: settings.username,
-        password: password || settings.password || '',
+        password: password ?? settings.password ?? '',
       }
       req.baseURL = `${settings.baseUrl}/rest`
       req.timeout = settings.apiTimeout * 1000
@@ -166,14 +178,14 @@ export class RouterRestClient {
     return client
   }
 
-  private pipelineRequestSuccess(req: InternalAxiosRequestConfig) {
+  private pipelineRequestSuccess(req: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
     log.info('<RouterRestClient> request incoming', req.method, req.url)
     this._onHttpRequestSuccess.fire(req)
     return req
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private pipelineRequestError(error: any) {
+   
+  private pipelineRequestError(error: unknown): Promise<never> {
     if (isAxiosError(error)) {
       log.warn('<RouterRestClient> axios error _before_ sending', `${error.config?.url} ${error.code} '${error.message}' baseUrl ${error.config?.baseURL} user ${error.config?.auth?.username}`)
       this._onHttpRequestError.fire(error as AxiosError)
@@ -185,14 +197,14 @@ export class RouterRestClient {
     // return Promise.reject(error);
   }
 
-  private pipelineResponseSuccess(resp: AxiosResponse) {
+  private pipelineResponseSuccess(resp: AxiosResponse): AxiosResponse {
     log.info('<RouterRestClient> done successfully', resp.config.url)
     this._onHttpResponseSuccess.fire(resp)
     return resp
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private pipelineResponseError(error: any) {
+   
+  private pipelineResponseError(error: unknown): Promise<never> {
     if (isAxiosError(error)) {
       log.warn('<RouterRestClient> axios error _before_ sending', `${error.config?.url} ${error.code} '${error.message}' baseUrl ${error.config?.baseURL} user ${error.config?.auth?.username}`)
       this._onHttpRequestError.fire(error as AxiosError)
@@ -205,13 +217,13 @@ export class RouterRestClient {
 
   // MARK: wrappers
 
-  async _execute(cmd: string, signal?: GenericAbortSignal) {
+  async _execute(cmd: string, signal?: GenericAbortSignal): Promise<string> {
     log.trace('<RouterRestClient> [_execute] ')
-    return await this.httpClient.post<WrappedExecuteResponse>(
+    return this.httpClient.post<WrappedExecuteResponse>(
       '/execute', {
         'as-string': true,
         'script': cmd,
-      }, signal ? { signal: signal } : {}).then(resp => resp?.data?.ret)
+      }, signal ? { signal: signal } : {}).then(resp => resp.data?.ret ?? '')
   }
 
   async _asCSV(cmd: string, signal?: GenericAbortSignal, _options?: string[]): Promise<string> {
@@ -227,14 +239,14 @@ export class RouterRestClient {
   }
 
   // async execute(cmd: string, wrapperType: "json"|"csv"|"rest"|undefined){}
-  async _inspect<T>(request: string, input: string, path?: string) {
+  async _inspect<T>(request: string, input: string, path?: string): Promise<T[]> {
     log.trace('<RouterRestClient> [_inspect] ')
-    return await this.httpClient.post<T[]>(
+    return this.httpClient.post<T[]>(
       '/console/inspect', {
         request: request,
         input: input,
         path: path,
-      }).then(resp => resp?.data)
+      }).then(resp => resp.data)
   }
 
   // MARK: methods
@@ -243,45 +255,45 @@ export class RouterRestClient {
     return this._execute(cmd, signal)
   }
 
-  inspectHighligh = (input: string, path?: string) => {
+  inspectHighligh = (input: string, path?: string): Promise<HighlightInspectResponseItem[]> => {
     return this._inspect<HighlightInspectResponseItem>('highlight', (new RouterScriptPreprocessor(input)).unicodeCharReplace('_'), path)
   }
 
-  inspectSyntax = (input: string, path?: string) => {
+  inspectSyntax = (input: string, path?: string): Promise<SyntaxInspectResponseItem[]> => {
     return this._inspect<SyntaxInspectResponseItem>('syntax', input, path)
   }
 
-  inspectCompletion = (input: string, path?: string) => {
+  inspectCompletion = (input: string, path?: string): Promise<CompletionInspectResponseItem[]> => {
     return this._inspect<CompletionInspectResponseItem>('completion', input, path)
   }
 
-  inspectChild = (input: string, path?: string) => {
+  inspectChild = (input: string, path?: string): Promise<ChildInspectResponseItem[]> => {
     return this._inspect<ChildInspectResponseItem>('child', input, path)
   }
 
-  exportConfig = (type: RouterOSExportType, token: GenericAbortSignal) => {
+  exportConfig = (type: RouterOSExportType, token: GenericAbortSignal): Promise<string> => {
     // return this.run(`:put [:execute script=":export ${type || ''}" as-value]`, token)
     log.info(`<RouterRestClient> [exportConfig] ${type}`)
     return this.run(`:export ${type}`, token)
   }
 
-  scriptEnvironment = () => {
+  scriptEnvironment = (): Promise<unknown> => {
     return this.httpClient.post('/system/script/environment/print', {}).then(resp => resp.data)
   }
 
-  get systemScripts() {
-    return this.httpClient.post('/system/script/print', {}).then(resp => resp.data)
+  get systemScripts(): Promise<SystemScriptItem[]> {
+    return this.httpClient.post('/system/script/print', {}).then(resp => resp.data as SystemScriptItem[])
   }
 
-  get defaultConfiguration() {
-    return this.httpClient.post('/system/default-configuration/print', {}).then(resp => resp.data?.[0])
+  get defaultConfiguration(): Promise<Record<string, unknown> | undefined> {
+    return this.httpClient.post('/system/default-configuration/print', {}).then(resp => resp.data?.[0] as Record<string, unknown> | undefined)
   }
 
-  getSystemScript = (name: string) => {
+  getSystemScript = (name: string): Promise<SystemScriptItem> => {
     return this.httpClient.get(`/system/script/${encodeURIComponent(name)}`).then(resp => resp.data)
   }
 
-  async createSystemScript(script: { name?: string, source: string, comment?: string, policy?: string[] }) {
+  async createSystemScript(script: { name?: string, source: string, comment?: string, policy?: string[] }): Promise<unknown> {
     log.info('<RouterRestClient> createSystemScript', script.name)
     try {
       const result = await this.httpClient.put('/system/script', script).then(resp => resp.data)
@@ -294,7 +306,7 @@ export class RouterRestClient {
     }
   }
 
-  async updateSystemScript(id: string, patch: Record<string, unknown>) {
+  async updateSystemScript(id: string, patch: Record<string, unknown>): Promise<unknown> {
     log.info('<RouterRestClient> updateSystemScript', id)
     try {
       const result = await this.httpClient.patch(`/system/script/${encodeURIComponent(id)}`, patch).then(resp => resp.data)
@@ -307,7 +319,7 @@ export class RouterRestClient {
     }
   }
 
-  async deleteSystemScript(id: string) {
+  async deleteSystemScript(id: string): Promise<unknown> {
     log.info('<RouterRestClient> deleteSystemScript', id)
     try {
       const result = await this.httpClient.delete(`/system/script/${encodeURIComponent(id)}`).then(resp => resp.data)
@@ -323,9 +335,9 @@ export class RouterRestClient {
   async resolveScriptIdByName(name: string): Promise<string | undefined> {
     log.debug(`<RouterRestClient> resolveScriptIdByName: looking up '${name}'`)
     try {
-      const scripts = await this.systemScripts as SystemScriptItem[]
+      const scripts = await this.systemScripts
       for (const s of scripts) {
-        const id = s['.id'] || s.id
+        const id = (s['.id'] ?? s.id) as string | undefined
         if (s.name === name) {
           log.debug(`<RouterRestClient> resolveScriptIdByName: found '${name}' -> ${id}`)
           return id
@@ -340,11 +352,119 @@ export class RouterRestClient {
     }
   }
 
-  getIdentity = (): Promise<string> => {
-    return this.httpClient.get('/system/identity').then(resp => resp.data?.name)
+  // Generic REST helpers to support schema-driven filesystem mapping
+  async list<T = unknown>(path: string, body?: object): Promise<T[]> {
+    log.debug(`<RouterRestClient.list> POST ${path}/print with body: ${JSON.stringify(body)}`)
+    try {
+      const resp = await this.httpClient.post<T[]>(`${path}/print`, body ?? {})
+      log.debug(`<RouterRestClient.list> SUCCESS: got ${Array.isArray(resp.data) ? resp.data.length : '?'} items`)
+      return resp.data
+    }
+    catch (err) {
+      log.error(`<RouterRestClient.list> FAILED for ${path}: ${err instanceof Error ? err.message : String(err)}`)
+      throw err
+    }
   }
 
-  getRawIdentity = () => {
+  async get(path: string, idOrName: string): Promise<unknown> {
+    log.debug(`<RouterRestClient.get> GET ${path}/${encodeURIComponent(idOrName)}`)
+    try {
+      const resp = await this.httpClient.get(`${path}/${encodeURIComponent(idOrName)}`)
+      log.debug(`<RouterRestClient.get> SUCCESS: ${typeof resp.data}`)
+      return resp.data
+    }
+    catch (err) {
+      log.error(`<RouterRestClient.get> FAILED for ${path}/${idOrName}: ${err instanceof Error ? err.message : String(err)}`)
+      throw err
+    }
+  }
+
+  async create(path: string, payload: object): Promise<unknown> {
+    log.debug(`<RouterRestClient.create> PUT ${path} with payload: ${JSON.stringify(payload)}`)
+    try {
+      const resp = await this.httpClient.put(path, payload)
+      log.debug(`<RouterRestClient.create> SUCCESS: got response`)
+      return resp.data
+    }
+    catch (err) {
+      log.error(`<RouterRestClient.create> FAILED for ${path}: ${err instanceof Error ? err.message : String(err)}`)
+      throw err
+    }
+  }
+
+  async update(path: string, id: string, patch: object): Promise<unknown> {
+    log.debug(`<RouterRestClient.update> PATCH ${path}/${encodeURIComponent(id)} with patch: ${JSON.stringify(patch)}`)
+    try {
+      const resp = await this.httpClient.patch(`${path}/${encodeURIComponent(id)}`, patch)
+      log.debug(`<RouterRestClient.update> SUCCESS: got response`)
+      return resp.data
+    }
+    catch (err) {
+      log.error(`<RouterRestClient.update> FAILED for ${path}/${id}: ${err instanceof Error ? err.message : String(err)}`)
+      throw err
+    }
+  }
+
+  async remove(path: string, id: string): Promise<unknown> {
+    log.debug(`<RouterRestClient.remove> DELETE ${path}/${encodeURIComponent(id)}`)
+    try {
+      const resp = await this.httpClient.delete(`${path}/${encodeURIComponent(id)}`)
+      log.debug(`<RouterRestClient.remove> SUCCESS: got response`)
+      return resp.data
+    }
+    catch (err) {
+      log.error(`<RouterRestClient.remove> FAILED for ${path}/${id}: ${err instanceof Error ? err.message : String(err)}`)
+      throw err
+    }
+  }
+
+  async post(path: string, body?: object): Promise<unknown> {
+    log.debug(`<RouterRestClient.post> POST ${path} with body: ${JSON.stringify(body)}`)
+    try {
+      const resp = await this.httpClient.post(path, body ?? {})
+      log.debug(`<RouterRestClient.post> SUCCESS: got response`)
+      return resp.data
+    }
+    catch (err) {
+      log.error(`<RouterRestClient.post> FAILED for ${path}: ${err instanceof Error ? err.message : String(err)}`)
+      throw err
+    }
+  }
+
+  async patch(path: string, patch: object): Promise<unknown> {
+    log.debug(`<RouterRestClient.patch> PATCH ${path} with patch: ${JSON.stringify(patch)}`)
+    try {
+      const resp = await this.httpClient.patch(path, patch)
+      log.debug(`<RouterRestClient.patch> SUCCESS: got response`)
+      return resp.data
+    }
+    catch (err) {
+      log.error(`<RouterRestClient.patch> FAILED for ${path}: ${err instanceof Error ? err.message : String(err)}`)
+      throw err
+    }
+  }
+
+  async resolveIdByName(path: string, name: string, nameAttr = 'name'): Promise<string | undefined> {
+    log.debug(`<RouterRestClient> resolveIdByName: ${path} -> '${name}'`)
+    try {
+      const items = await this.list<RouterOSItem>(path)
+      for (const item of items) {
+        const id = item['.id'] ?? (item as Record<string, unknown>).id
+        if (item[nameAttr] === name) return id as string | undefined
+      }
+      return undefined
+    }
+    catch (err) {
+      log.error(`<RouterRestClient> resolveIdByName failed for '${path}'/'${name}': ${err}`)
+      throw err
+    }
+  }
+
+  getIdentity = (): Promise<string> => {
+    return this.httpClient.get('/system/identity').then(resp => resp.data?.name ?? '')
+  }
+
+  getRawIdentity = (): Promise<AxiosResponse<SystemIdentityGetResponse>> => {
     return this.httpClient.get<SystemIdentityGetResponse>('/system/identity')
   }
 
@@ -352,7 +472,7 @@ export class RouterRestClient {
     return this.httpClient.get('/system/resource').then(resp => resp.data)
   }
 
-  getNeighbors(format = 'csv') {
+  getNeighbors(format = 'csv'): Promise<string> {
     if (format !== 'csv') throw new Error('not implemented')
     return this._asCSV('/ip/neighbor print detail')
   }

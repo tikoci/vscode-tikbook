@@ -1,25 +1,26 @@
 /* GitHub Repo Fetch */
 
 import * as axios from 'axios'
+import type { Disposable} from 'vscode';
 import { commands, ThemeIcon, window } from 'vscode'
 import { getSettings } from './config'
 import { log } from './shared'
 
 // MARK: ssh
 
-export function initializeSSH() {
+export function initializeSSH(): Disposable[] {
   log.debug(`<SSH> {initalizeSSH}`)
   return [
     commands.registerCommand('tikbook.open.terminal.router', () => openTerminalRouter()),
   ]
 }
 
-export function openTerminalRouter() {
+export function openTerminalRouter(): void {
   const settings = getSettings()
   const url = URL.parse(settings.baseUrl)
   if (!url) {
     log.error(`<openTerminalRouter> got no URL`)
-    window.showWarningMessage(`Could not open SSH terminal.  TikBook 'Base URL' setting is invalid.`)
+    void window.showWarningMessage(`Could not open SSH terminal.  TikBook 'Base URL' setting is invalid.`)
     return
   }
   const connuri = `${settings.username}@${url.hostname}`

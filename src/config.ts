@@ -1,5 +1,6 @@
-import { commands, Disposable, ConfigurationTarget, ExtensionContext, EventEmitter, Event, window, workspace } from 'vscode'
-import { log } from './shared'
+import type { Disposable, Event, ExtensionContext } from 'vscode';
+import { commands, ConfigurationTarget, EventEmitter, window, workspace } from 'vscode';
+import { log } from './shared';
 
 interface TikbookSettings {
   username: string
@@ -14,13 +15,13 @@ interface TikbookSettings {
 export function getSettings(): TikbookSettings {
   const vsconf = workspace.getConfiguration('tikbook', null)
   return {
-    username: vsconf.get('username') || 'admin',
-    password: vsconf.get('password') || '',
-    baseUrl: vsconf.get('baseUrl') || 'http://192.168.88.1',
-    apiTimeout: vsconf.get('apiTimeout') || 15,
-    sshCommand: vsconf.get('sshCommand') || 'ssh',
+    username: vsconf.get('username') ?? 'admin',
+    password: vsconf.get('password') ?? '',
+    baseUrl: vsconf.get('baseUrl') ?? 'http://192.168.88.1',
+    apiTimeout: vsconf.get('apiTimeout') ?? 15,
+    sshCommand: vsconf.get('sshCommand') ?? 'ssh',
     provideLspServerCredentials: vsconf.get('provideLspServerCredentials'),
-    checkCertificates: vsconf.get('checkCertificates') || false,
+    checkCertificates: vsconf.get('checkCertificates') ?? false,
   }
 }
 
@@ -46,31 +47,34 @@ export class SecretManager {
   public readonly onSecretChange: Event<string> = this._onSecretChange.event
 
   static default: SecretManager
-  static start(context: ExtensionContext) {
+  static start(context: ExtensionContext): SecretManager {
     return SecretManager.default = new SecretManager(context, SecretManager.SECRET_KEY)
   }
 
   constructor(context: ExtensionContext, keyname: string) {
     this.context = context
     this.keyname = keyname
+    log.trace('<SecretManager> {constructor} registering listeners')
     this.disposables.push(this.context.secrets.onDidChange(async (e) => {
       if (e.key === this.keyname) await this.updatePasswordStatus()
     }))
-    this.updatePasswordStatus()
-    workspace.onDidChangeConfiguration((e) => {
+    void this.updatePasswordStatus()
+    this.disposables.push(workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('tikbook.passwordInfo')) {
         log.debug('<SecretManager> {onDidChangeConfiguration} use edited status, should replaced')
-        this.updatePasswordStatus()
+        void this.updatePasswordStatus()
       }
-    })
+    }))
   }
 
   async initialize(): Promise<void> {
     await this.updatePasswordStatus()
   }
 
-  dispose() {
+  dispose(): void {
+    log.trace('<SecretManager> {dispose} invoked')
     this.disposables.forEach(e => e.dispose())
+    this._onSecretChange.dispose()
   }
 
   async setPassword(back?: string): Promise<void> {
@@ -85,12 +89,12 @@ export class SecretManager {
       await this.context.secrets.store(SecretManager.SECRET_KEY, password)
       await this.updatePasswordStatus()
       const msg = 'Saved. Password using secret in SecretStore'
-      window.showInformationMessage(msg)
+      void window.showInformationMessage(msg)
       log.info(`<SecretManager> {setPassword} called and notified ${msg}`)
     }
     if (back) {
       log.trace('<SecretManager> returning back to menu', back)
-      commands.executeCommand(back)
+      void commands.executeCommand(back)
     }
   }
 
@@ -98,15 +102,15 @@ export class SecretManager {
     await this.context.secrets.delete(SecretManager.SECRET_KEY)
     await this.updatePasswordStatus()
     const msg = 'Cleared. Password using plain text from Settings'
-    window.showWarningMessage(msg)
+    void window.showWarningMessage(msg)
     log.warn(`<SecretManager> {clearPassword} called and warned user '${msg}'`)
     if (back) {
-      commands.executeCommand(back)
+      void commands.executeCommand(back)
     }
   }
 
   async getPassword(): Promise<string | undefined> {
-    return await this.context.secrets.get(SecretManager.SECRET_KEY)
+    return this.context.secrets.get(SecretManager.SECRET_KEY)
   }
 
   private async updatePasswordStatus(): Promise<void> {

@@ -21,6 +21,31 @@ The [RouterOS LSP](https://marketplace.visualstudio.com/items?itemName=TIKOCI.ls
 
 > To install using a `.vsix` file, download from the project's GitHub [Releases](https://github.com/tikoci/vscode-tikbook/releases/latest).  _TikBook for RouterOS_ is also available on [Open-VSIX](https://open-vsx.org/extension/TIKOCI/tikbook) repository for installing into "forked" versions for VS Code.
 
+## Copilot (Contributors)
+
+This repo is designed as a best-practices example for agentic development with Copilot. Repository instructions are automatically applied when you open this workspace in VS Code.
+
+**How it works:**
+
+- `.github/copilot-instructions.md` - Always-on main entry point (all chat requests)
+- `.github/instructions/` - Context-specific rules that apply based on files being edited
+  - `vscode-extension.instructions.md` - Extension TypeScript code
+  - `testing.instructions.md` - Test files
+  - `documentation.instructions.md` - Markdown documentation
+  - `eslint-rules.instructions.md` - Linting and configuration
+- `docs/architecture.md` - Design decisions and component relationships
+- `docs/conventions.md` - Code patterns and naming conventions
+
+**To use AI effectively in this project:**
+
+1. Open Copilot Chat (⌃⌘I or ⌘I).
+2. Type `/init` to review custom instructions for the workspace.
+3. For setup and settings, see [docs/copilot-setup.md](docs/copilot-setup.md).
+4. For task tracking, check [docs/llm-todos.md](docs/llm-todos.md) and [docs/future-features.md](docs/future-features.md).
+5. For detailed guidance, refer to [docs/sarb-instructions.md](docs/sarb-instructions.md).
+
+**Verification:** Right-click in the Chat view and select "Diagnostics" to see which instruction files are loaded.
+
 ## Setup
 
 Like RouterOS LSP, TikBook **requires a _REST_ _API_ connection to a RouterOS device** running version 7.12 or higher.  Some features, like CSV views, may require version 7.18 or higher.  TikBook supports both `http` and `https` connections, but requires a valid user and password for access that **must be configured**.  
@@ -182,13 +207,13 @@ Provides access to SSH and WebFig, along with various data extracts — includin
 
 ![palette-mgmt](https://tikoci.github.io/vscode-tikbook/media/screenshots/palette-mgmt.png)
 
-* "Launch RouterOS Web Admin" will open a new browser window and use "Base URL" to connect to WebFig
-* "Open SSH Terminal" will appear in the "Terminal" view and use the system's existing `ssh` command.  The `ssh` command to use, including any options, can be configured in settings or the "Setup Connection" menu.
+- "Launch RouterOS Web Admin" will open a new browser window and use "Base URL" to connect to WebFig
+- "Open SSH Terminal" will appear in the "Terminal" view and use the system's existing `ssh` command.  The `ssh` command to use, including any options, can be configured in settings or the "Setup Connection" menu.
   ![ssh-terminal](https://tikoci.github.io/vscode-tikbook/media/screenshots/panel-terminal-ssh.png)
-* The "Show ..." options in the menu provide a read-only "virtual document" that will appear in an editor window.  Use "Save As" to be able to edit the read-only document from a "Show".  The "Refresh" button in the editor toolbar will re-fetch the virtual document from the router.
+- The "Show ..." options in the menu provide a read-only "virtual document" that will appear in an editor window.  Use "Save As" to be able to edit the read-only document from a "Show".  The "Refresh" button in the editor toolbar will re-fetch the virtual document from the router.
   ![csv-example-interfaces](https://tikoci.github.io/vscode-tikbook/media/screenshots/csv-export-interfaces.png)
   _with [Rainbow CSV](https://marketplace.visualstudio.com/items?itemName=mechatroner.rainbow-csv) extension installed_
-* "View and Copy Variables" displays a list of variables and their value stored in `/system/script/env`.  Selecting an item will copy the variable name to the clipboard.
+- "View and Copy Variables" displays a list of variables and their value stored in `/system/script/env`.  Selecting an item will copy the variable name to the clipboard.
 
 > #### Interactions with `/system/script` is a WIP
 >
@@ -203,9 +228,9 @@ Provides access to SSH and WebFig, along with various data extracts — includin
 
 Essentially, "bookmarks" to various other web content with information about RouterOS scripting.  All items that start with "Browse" will open a new web browser with the selected page.  For example, you can access MikroTik documentation and the forum from the menu.  Other options include:
 
-* [TIKOCI](https://tikoci.github.io) has other projects than TikBook, including containers.  _Browser TIKOCI Projects_ will show another menu that lists TIKOCI projects, and allows navigation directly to the GitHub page for a selected project.  The _Git Clone_ will show the same list, but "copy" (`git clone`) any TIKOCI project as a local `git` repo on a computer running VS Code that can be modified as desired.
-* _Browser RouterOS Schema Tools_ opens a browser to a [web tool](https://tikoci.github.io/restraml/) to "diff" commands and arguments between different versions, and allows download of RAML and OpenAPI schemas for RouterOS's REST API.
-* Selected "TikTube" videos about scripting topics that play inside of VS Code. _Experimental, see below_
+- [TIKOCI](https://tikoci.github.io) has other projects than TikBook, including containers.  _Browser TIKOCI Projects_ will show another menu that lists TIKOCI projects, and allows navigation directly to the GitHub page for a selected project.  The _Git Clone_ will show the same list, but "copy" (`git clone`) any TIKOCI project as a local `git` repo on a computer running VS Code that can be modified as desired.
+- _Browser RouterOS Schema Tools_ opens a browser to a [web tool](https://tikoci.github.io/restraml/) to "diff" commands and arguments between different versions, and allows download of RAML and OpenAPI schemas for RouterOS's REST API.
+- Selected "TikTube" videos about scripting topics that play inside of VS Code. _Experimental, see below_
 
 > #### Video Playback is Experimental
 >
@@ -225,11 +250,11 @@ Allows quick access to the Output panel selected for the right log.  Also, the l
 
 TikBook supports two notebook formats, and indicated in the top right corner of the notebook:
 
-* **"RouterOS TikBook" Notebook** (`*.md.rsc` _or_ `*.tikbook`) - stored as regular RouterOS script text file with `#.markdown` and `#.` comments to denote Markdown _markup cells_
+- **"RouterOS TikBook" Notebook** (`*.md.rsc` _or_ `*.tikbook`) - stored as regular RouterOS script text file with `#.markdown` and `#.` comments to denote Markdown _markup cells_
 
   ![kernel-select-tikbook](https://tikoci.github.io/vscode-tikbook/media/screenshots/kernel-select-tikbook.png)
 
-* **"Markdown RouterOS" Notebook** (`*.rsc.md` _or_ `*.rscmd`) - stored as a regular Markdown text file with ` ```routeros ` code blocks to denote RouterOS _code cells_
+- **"Markdown RouterOS" Notebook** (`*.rsc.md` _or_ `*.rscmd`) - stored as a regular Markdown text file with ` ```routeros ` code blocks to denote RouterOS _code cells_
 
   ![kernel-select-markdown](https://tikoci.github.io/vscode-tikbook/media/screenshots/kernel-select-markdown.png)
 
@@ -250,9 +275,9 @@ The cell types appear in the notebook toolbar:
 
 In the notebook interface, you can choose what cells to "run".  For example,
 
-* **Run All Cells** is shown in the toolbar and runs all "code" cells in the notebook, sequentially in order shown.  If an error occurs, execution stops, and the "Go To" button will appear in the toolbar, which jumps to the cell with the error.
-* **Run Cell** is the "play" button next to each code cell in the stop book.  It runs just that cell with the output shown below the cell.
-* **Run Cell in Section** is based on **"markup"** cells heading level in Markdown.  In the upper right of markup cells with headers, a "play" button appears that will expand the "section".  This is tricky at first to understand.  But using `# headers` in the markup will "group" code cells below, until another markup cell with the same heading level appears to "close" the section.  Essentially, this creates "run groups" within the notebook so "parts" of the notebook can be run without using either "all" or "cell" run option.  The Markdown-created section hierarchy can be multiple levels.  Unlike "Run All Cells", a section run will stop at the end of the section, not the end of the document.
+- **Run All Cells** is shown in the toolbar and runs all "code" cells in the notebook, sequentially in order shown.  If an error occurs, execution stops, and the "Go To" button will appear in the toolbar, which jumps to the cell with the error.
+- **Run Cell** is the "play" button next to each code cell in the stop book.  It runs just that cell with the output shown below the cell.
+- **Run Cell in Section** is based on **"markup"** cells heading level in Markdown.  In the upper right of markup cells with headers, a "play" button appears that will expand the "section".  This is tricky at first to understand.  But using `# headers` in the markup will "group" code cells below, until another markup cell with the same heading level appears to "close" the section.  Essentially, this creates "run groups" within the notebook so "parts" of the notebook can be run without using either "all" or "cell" run option.  The Markdown-created section hierarchy can be multiple levels.  Unlike "Run All Cells", a section run will stop at the end of the section, not the end of the document.
 
 > **TIP**
 > In a longer notebook, sections can be collapsed to "hide" internal functions so the notebook is "more presentable".  Note that collapsed sections will still run as part of "Run All Cells," and a section still runs even if collapsed – so collapsed sections are just for presentation and do not affect execution.  _Also, currently, the notebook does not save the "collapsed state"_
@@ -325,10 +350,10 @@ In any `JSON` file, a button will appear in the editor's toolbar, and an option 
 
 Some notes:
 
-* Only strings and numbers are supported for conversion currently
-* No RouterOS connection is needed for the conversion
-* When using a selection, the selected text must be valid JSON as selected; otherwise, it cannot be converted.  For example, you need to select an entire subtree, not just elements within a block.
-* Conversion **to JSON** is one-way.  There is **no** RouterOS Array to JSON.  However, you can get JSON from RouterOS using `[:serialize to=json]` from a notebook that is more exact and consistent.  
+- Only strings and numbers are supported for conversion currently
+- No RouterOS connection is needed for the conversion
+- When using a selection, the selected text must be valid JSON as selected; otherwise, it cannot be converted.  For example, you need to select an entire subtree, not just elements within a block.
+- Conversion **to JSON** is one-way.  There is **no** RouterOS Array to JSON.  However, you can get JSON from RouterOS using `[:serialize to=json]` from a notebook that is more exact and consistent.  
 
 > **TIP** This command is useful with `/tool/fetch`, as it is often easier to _modify_ a RouterOS array than using string interpolation to produce JSON for a REST call.  Web service APIs specs are often shown in JSON, and may involve some calculation in a RouterOS script to produce.  But building a RouterOS array "from scratch" is work.  So you can take some example JSON and use the _JSON to RouterOS Array_ to start with some array in your script to modify for an API call.
 
@@ -350,12 +375,12 @@ In VS Code, file extensions are associated with a default language and view.  Bu
 
 By default,
 
-* **`.rsc`** will open as a text document, with the option to "Open As" a RouterOS TikBook Notebook and Preview as Markdown
-* **`.md`** will open as a text document, with the option to "Open As" a Markdown RouterOS Notebook and Preview as RouterOS Script, as well as the default Markdown Preview too
-* **`.md.rsc`** will open as RouterOS TikBook Notebook (Script-first), with the option to "Open As" an editable text document with the RouterOS script.  Changes are synced between any "Open As" documents when either document is saved.  "Copy As Markdown RouterOS" is available to convert the notebook to the Markdown-first format.
-* **`.tikbook`** same as `.md.rsc`
-* **`.rsc.md`** will open as RouterOS TikBook Notebook (Script-first), with the option to "Open As" an editable text document with the RouterOS script.  Changes are synced between any "Open As" documents when either document is saved.  "Copy As Markdown RouterOS" is available to convert the notebook to the Markdown-first format.
-* **`.rscmd`** same as `.rsc.md`
+- **`.rsc`** will open as a text document, with the option to "Open As" a RouterOS TikBook Notebook and Preview as Markdown
+- **`.md`** will open as a text document, with the option to "Open As" a Markdown RouterOS Notebook and Preview as RouterOS Script, as well as the default Markdown Preview too
+- **`.md.rsc`** will open as RouterOS TikBook Notebook (Script-first), with the option to "Open As" an editable text document with the RouterOS script.  Changes are synced between any "Open As" documents when either document is saved.  "Copy As Markdown RouterOS" is available to convert the notebook to the Markdown-first format.
+- **`.tikbook`** same as `.md.rsc`
+- **`.rsc.md`** will open as RouterOS TikBook Notebook (Script-first), with the option to "Open As" an editable text document with the RouterOS script.  Changes are synced between any "Open As" documents when either document is saved.  "Copy As Markdown RouterOS" is available to convert the notebook to the Markdown-first format.
+- **`.rscmd`** same as `.rsc.md`
 
 ![multitab-view-annotated](https://tikoci.github.io/vscode-tikbook/media/screenshots/multitab-annotated.png)
 
@@ -375,18 +400,18 @@ Virtual documents have a "Refresh" option in the toolbar that will re-fetch the 
 
  Various "Open As" options allow easy switching between "text editor" and "notebook" views – or even using multiple views open at the same time.  Since TikBook adds "notebook views", the need to "switch views" comes up.  Several ways to do this:
 
-* VS Code's context menu for a file, or in Command Palette, use the "Reopen with" or "Open with" option.  For example, if you have a `some.md` file, it will by default open in the text editor with Markdown as the language.  But you can just use "Reopen with" and select "Markdown RouterOS" to view/edit it using the TikBook notebook interface
+- VS Code's context menu for a file, or in Command Palette, use the "Reopen with" or "Open with" option.  For example, if you have a `some.md` file, it will by default open in the text editor with Markdown as the language.  But you can just use "Reopen with" and select "Markdown RouterOS" to view/edit it using the TikBook notebook interface
 
-* From within a TikBook notebook, you can use buttons in the tab bar to take actions to view the notebook it it's text equivalent (_i.e._ RouterOS TikBook allows Open As to RouterOS script text, while Markdown RouterOS notebook allows Open As to Markdown text).  
+- From within a TikBook notebook, you can use buttons in the tab bar to take actions to view the notebook it it's text equivalent (_i.e._ RouterOS TikBook allows Open As to RouterOS script text, while Markdown RouterOS notebook allows Open As to Markdown text).  
 
-* With text documnents of either `.md` or `.rsc` type, a TikBook icon will appear that allow reopening as a notebook, respective of format:
+- With text documnents of either `.md` or `.rsc` type, a TikBook icon will appear that allow reopening as a notebook, respective of format:
   
   ![toolbar-openas-tikbook](https://tikoci.github.io/vscode-tikbook/media/screenshots/toolbar-openas-tikbook.png)
   
-* Changing the file extension will change the default view used.  Since TikBook files are still just `md` or `rsc` files, you can remove the TikBook-specific endings:
-  * `*.md.rsc` or `*.tikbook` can be just `*.rsc` to use a normal text editor by default.  Or any `rsc` file can be renamed to the `*.tikbook` extension to use the notebook interface as the default.
-  * Similar for Markdown, just using `.rscmd` to indicate to use the TikBook Markdown Notebook view as default.
-  * **Cannot** convert between Markdown and RouterOS notebook file types by simply changing the file extension.  _To convert between `md` and `rsc` formats, there is a command "Copy As" for notebooks, see the next section_
+- Changing the file extension will change the default view used.  Since TikBook files are still just `md` or `rsc` files, you can remove the TikBook-specific endings:
+  - `*.md.rsc` or `*.tikbook` can be just `*.rsc` to use a normal text editor by default.  Or any `rsc` file can be renamed to the `*.tikbook` extension to use the notebook interface as the default.
+  - Similar for Markdown, just using `.rscmd` to indicate to use the TikBook Markdown Notebook view as default.
+  - **Cannot** convert between Markdown and RouterOS notebook file types by simply changing the file extension.  _To convert between `md` and `rsc` formats, there is a command "Copy As" for notebooks, see the next section_
 
 ### "Copy as" - Converting notebook formats
 

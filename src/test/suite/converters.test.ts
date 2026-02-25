@@ -1,5 +1,5 @@
 import { strict as assert } from 'assert'
-import { escapeRouterString } from '../converters' // Adjust this path
+import { escapeRouterString } from '../../converters'
 
 suite('Basic escaping', () => {
   test('should escape double quotes', () => {

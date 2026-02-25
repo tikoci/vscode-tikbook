@@ -1,7 +1,8 @@
-import { CancellationToken, CodeLens, CodeLensProvider, commands, ExtensionContext, languages, OutputChannel, ProviderResult, Range, TextDocument, window } from 'vscode'
-import { RouterRestClient } from './routeros'
-import { DateTime } from 'luxon'
-import { log } from './shared'
+import { DateTime } from 'luxon';
+import type { CancellationToken, CodeLensProvider, ExtensionContext, OutputChannel, ProviderResult, TextDocument } from 'vscode';
+import { CodeLens, commands, languages, Range, window } from 'vscode';
+import { RouterRestClient } from './routeros';
+import { log } from './shared';
 
 export class MarkdownHandlers {
   static log: OutputChannel
@@ -26,7 +27,7 @@ export class MarkdownHandlers {
         this.output.appendLine(`\`\`\`routeros`)
         this.output.appendLine(`${codeContent}`)
         this.output.appendLine(`\`\`\``)
-        function timeTaken() {
+        function timeTaken(): string {
           return DateTime.now().diff(startTime).toHuman({ unit: 'seconds', unitDisplay: 'short' })
         }
         try {
@@ -55,7 +56,8 @@ export class MarkdownHandlers {
     )
   }
 
-  dispose() {
+  dispose(): void {
+    log.trace('<MarkdownHandlers> {dispose} invoked')
     this.killswitch.abort()
   }
 }
