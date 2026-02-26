@@ -28,7 +28,8 @@ These rules apply to test files and one-off validation code.
 
 ## Before Committing Test Code
 
-- Run tests to pass
+- Run tests to pass using `npm test` (VS Code extension)
+- Keep tests lint-clean; fix warnings as well as errors
 - Document what assumption is being tested
 - Move validated logic to main code and remove test file
 
@@ -43,11 +44,13 @@ These rules apply to test files and one-off validation code.
 
 ## Test Configuration Requirements
 
-- Config file: `.vscode-test.mjs` (ESM format, not .js)
-- File pattern: `'out/test/**/*.test.js'` (explicit .test.js suffix)
-- Test files must use `.test.ts` extension in src/test/
-- Both `npm test` (desktop) and `npm run test:web` must work
-- **ONLY ONE** config file should exist (delete `.vscode-test.js` if it exists)
+- Config file: `.vscode-test.mjs` (ESM format)
+- File pattern: `files: 'out/test/suite/**/*.test.js'` (glob pattern matching all test files)
+  - **GUI (Extension Test Runner)**: Parses compiled `.test.js` files directly to discover `suite()` and `test()` calls
+  - **CLI (vscode-test-cli)**: Loads all matching files into Mocha for execution
+- Individual test files: `src/test/suite/*.test.ts` (each with `suite()` and `test()` calls)
+- Both `npm test` (desktop) and `npm run test:web` (browser) work with the same config
+- GUI Debug: Use the "Debug" button in the test tree to step through tests
 
 ## Verifying Test Changes
 
@@ -59,3 +62,8 @@ These rules apply to test files and one-off validation code.
 4. Remove failing test → both should pass (exit code 0)
 
 If either shows exit code 0 with a failing test, the test runner is broken.
+
+## Third-Party Tooling Issues
+
+- Always suggest to user filing an upstream issue when functionality is lost or the workaround is ugly; include repro steps and versions.  ideally offer to agentically to the report after user review and confirm.  so sub-goal is make sure upstream library help us avoid ugly or potentially fragile code
+- Keep notes concise and actionable so future contributors can decide whether to upgrade, pin, or patch.  this is important especially when changes in package version are needed for a code change or fix. 

@@ -39,6 +39,7 @@ Architectural reference: See [docs/architecture.md](../docs/architecture.md), [d
 - Validate RouterOS commands using v7 docs or RouterOS LSP.
 - Publishing is only via .github/workflows/build.yaml (no direct publish).
 - Gate experimental features behind settings when noted in docs/llm-todos.md or docs/future-features.md.
+- If third-party test tooling is buggy, document it in docs/interop-issues.md and consider filing an upstream issue.
 
 ## Markdown workflow (AI-friendly)
 

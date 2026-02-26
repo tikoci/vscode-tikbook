@@ -17,6 +17,7 @@ export default [
 	{
 		// Global ignores
 		ignores: [
+			'.vscode-test.mjs',
 			'.vscode-test.js',
 			'dist',
 			'out',

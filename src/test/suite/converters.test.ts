@@ -1,5 +1,5 @@
 import { strict as assert } from 'assert'
-import { escapeRouterString } from '../../converters'
+import { escapeRouterString, routerosArrayFromJson } from '../../converters'
 
 suite('Basic escaping', () => {
   test('should escape double quotes', () => {
@@ -52,5 +52,42 @@ suite('Edge cases', () => {
 
   test('should escape only backslashes', () => {
     assert.equal(escapeRouterString('\\\\\\\\'), '\\\\\\\\\\\\\\\\')
+  })
+
+  test('should escape non-printable characters', () => {
+    const input = `A${String.fromCharCode(1)}B`
+    const expected = 'A\\01B'
+    assert.equal(escapeRouterString(input), expected)
+  })
+})
+
+suite('JSON to RouterOS array', () => {
+  test('should map null and undefined to :nothing', () => {
+    assert.equal(routerosArrayFromJson(null as unknown as object), '[:nothing]')
+    assert.equal(routerosArrayFromJson(undefined as unknown as object), '[:nothing]')
+  })
+
+  test('should handle strings and booleans', () => {
+    assert.equal(routerosArrayFromJson('hello'), '"hello"')
+    assert.equal(routerosArrayFromJson(true), 'true')
+    assert.equal(routerosArrayFromJson(false), 'false')
+  })
+
+  test('should handle numbers with RouterOS rules', () => {
+    assert.equal(routerosArrayFromJson(5), '5')
+    assert.equal(routerosArrayFromJson(0), '"0"')
+    assert.equal(routerosArrayFromJson(-2), '"-2"')
+    assert.equal(routerosArrayFromJson(1.5), '"1.5"')
+  })
+
+  test('should handle arrays', () => {
+    const input = [1, 'a', true]
+    assert.equal(routerosArrayFromJson(input), '{1;"a";true}')
+  })
+
+  test('should handle empty and nested objects', () => {
+    assert.equal(routerosArrayFromJson({}), '[:toarray ""]')
+    const input = { name: 'eth0', config: { enabled: true } }
+    assert.equal(routerosArrayFromJson(input), '{"name"="eth0";"config"={"enabled"=true}}')
   })
 })

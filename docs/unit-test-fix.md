@@ -85,6 +85,10 @@ Your unit tests stopped working with `npm run test` due to a **critical bug in v
 - **Web Tests**: `npm run test:web`
 - **Debug Extension**: Use "Run Extension" or "Run Web Extension" from VS Code's Run and Debug panel
 
+### GUI Runner Interop Notes
+
+If the VS Code Extension Test Runner shows "Test process exited unexpectedly" for "Run Test" but "Debug Test" works, see [testing-extension-test-runner-interop.md](./testing-extension-test-runner-interop.md) for details, workarounds, and upstream fix ideas.
+
 ### Verifying Tests Actually Run
 
 **CRITICAL**: After any changes to `.vscode-test.mjs`, verify BOTH desktop and web tests catch failures:

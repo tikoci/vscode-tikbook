@@ -646,6 +646,30 @@ Commented code suggests an alternative that only quotes keys with special charac
 {name="test";count=5;"ip-address"="192.168.1.1"}
 ```
 
+---
+
+## Developer Tooling
+
+### VS Code Log Extraction Helper
+
+**Context:** Troubleshooting VS Code extension issues often requires output from UI channels (Output panel, Testing view, etc.).
+
+**Problem:** Today, this requires manual copy/paste of logs from VS Code UI into chat. This slows down debugging and is error-prone.
+
+**Idea:** Provide a helper command or lightweight companion extension/MCP tool that can collect selected VS Code logs and share them with Copilot on request.
+
+**Decision Needed:** Determine whether to implement as:
+
+- A TikBook command that reads VS Code output channels
+- A small separate debug extension
+- An MCP tool that exposes VS Code log access
+
+**Considerations:**
+
+- VS Code API access constraints (OutputChannel APIs vs. internal logs)
+- Security and privacy (avoid leaking secrets)
+- User consent and scope of logs collected
+
 **Better Approach:** This should be part of broader "RouterOS Code Style" settings that coordinate between TikBook and RouterOS LSP (both from same author, designed to work together).
 
 **Implementation Strategy:**

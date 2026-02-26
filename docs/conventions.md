@@ -261,6 +261,12 @@ import type { RouterOsItem } from './types';
 - Test uncertain behavior and edge cases
 - Validate assumptions about RouterOS API before committing
 
+### Third-Party Tooling Issues
+
+- If tooling or libraries misbehaves or requires a workaround, capture it in `docs/interop-issues.md`.
+- File an upstream issue when functionality is lost or behavior is misleading.
+- Keep notes actionable: repro steps, versions, and observed vs expected results.
+
 **Example:**
 
 ```typescript

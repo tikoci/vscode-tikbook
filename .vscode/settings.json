@@ -22,7 +22,8 @@
         "bun": true,
         "timeout": true,
         "true": true,
-        "npm": true
+        "npm": true,
+        "npx tsc": true
     },
     
     // ============================================
@@ -68,6 +69,13 @@
         "editor.codeActionsOnSave": {
             "source.fixAll.eslint": "explicit"
         }
+    },
+
+    // Extension Test Runner discovery configuration
+    "extension-test-runner.extractSettings": {
+        "extractWith": "syntax",
+        "suite": ["describe", "suite"],
+        "test": ["it", "test"]
     },
     
     // Capture deprecation warnings and other issues
