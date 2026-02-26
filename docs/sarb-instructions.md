@@ -1,4 +1,3 @@
-
 # System Architecture Review Board (SARB)
 
 This document captures the expectations SARB uses when reviewing agentic work for this VS Code extension. Treat these as must-follow unless they conflict with user intent.
@@ -10,7 +9,7 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 - This is a VS Code extension. The runtime is the VS Code extension host, not Node.js. Some Node APIs are unavailable, especially in web.
 - The extension integrates with MikroTik RouterOS and adds tools for RouterOS admins, including notebooks and virtual files.
 - The RouterOS LSP extension is a separate project. TikBook fills in VS Code-specific features. If a task belongs in the LSP instead, suggest it.
-- SARB reviews work using guidance in this file and files under docs/sarb.
+- SARB reviews work using guidance in this file and files under docs.
 - Minimum supported RouterOS is 7.10 (REST API). Target is 7.20.2+ (v7 LTS).
 - If unsure about a VS Code API, check for proposed vs stable APIs: <https://code.visualstudio.com/api/advanced-topics/using-proposed-api>
 
@@ -47,6 +46,7 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 - Avoid Node-specific APIs in extension code. Tools scripts may use Node, but prefer portable options.
 - Keep types open to new attributes; RouterOS adds fields over time.
 - Treat features marked experimental in docs/llm-todos.md or docs/future-features.md as gated by settings.
+- Check for any relevent `docs/*-patterns.md` when implementing code.
 
 ## While writing or editing markdown (Copilot/LLM)
 
@@ -99,9 +99,119 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 
 - Verify package.json version follows the versioning scheme.
 - Publishing is via GitHub Actions in .github/workflows/build.yaml only. Do not publish directly.
+- There should always be a CHANGELOG.md entry for each published build, or whenever the package version changes.  
 
 ## Versioning scheme
 
 - Version should be newer than any published release or pre-release unless it is a patch.
 - Major version stays at 0 for now.
+- Minor version use a scheme where even number build are "release"/stable builds.  Test builds use an odd number version to indicate the `--pre-release` flag is used.  This allow end-users of TikBook to "try" a new version, but downgrade.  
+- If you find a security issue, please suggest creating a patch for the previous stable version (e.g. an even number build).  
 - Never change package.json version without asking the user.
+
+## Unit testing strategy
+
+**CRITICAL: Do NOT mock vscode.* APIs**
+- **Anti-pattern:** Using mocking libraries (sinon, jest mocks) for vscode.* objects
+- **Why it's bad:** Maintenance burden, doesn't catch real API changes, false confidence
+- **Preferred approach:** Tests run in VS Code extension host via @vscode/test-cli → use real APIs
+- **Only mock:** External services (RouterOS REST, file systems outside workspace, network calls)
+
+**Test as you develop:**
+- Tests run in VS Code extension host → provides real vscode.* API context (no mocks needed)
+- Use tests to explore uncertain API behavior (real APIs reveal actual constraints)
+- Write failing test first, implement until green (TDD)
+
+**When tests are required:**
+- **New features:** Test happy path + edge cases before considering work complete
+- **Bug fixes:** Add regression test that would have caught the bug (test should fail on old code, pass on fix)
+- **API integrations:** Use real VS Code APIs; mock only external dependencies (REST, network)
+- **Refactoring:** Ensure existing tests still pass; add tests for newly exposed behavior
+
+**Web + Desktop compatibility testing:**
+- **Test both modes:** Run `npm test` (desktop) AND `npm run test:web` (browser) before completing work
+- **Platform detection:** Use `vscode.env.uiKind === vscode.UIKind.Desktop` to check mode in runtime code
+- **Avoid Node APIs:** Don't use `fs`, `path`, `os` directly; use vscode.workspace.fs + vscode.Uri instead
+- **Gate desktop-only features:** If feature requires desktop (e.g., terminal commands), skip test in web mode
+- **Test platform-specific behavior:** If code has conditional logic for web vs desktop, verify both paths
+
+**Test types:**
+- **Feature tests:** `src/test/suite/*.test.ts` → compile to `out/test/suite/*.test.js`
+- **Experiments:** `src/test/llm-experiments.test.ts` for one-off validation during development
+- **Integration tests:** Test with real VS Code APIs when mocking is too complex (preferred over mocks)
+
+**VS Code test context benefits:**
+- Access to vscode.workspace, vscode.window, vscode.commands during test execution (NO MOCKING)
+- Validate extension activation and deactivation behavior
+- Test notebook providers, virtual documents, language clients in realistic environment
+- Catch web vs desktop incompatibilities early (run `npm run test:web`)
+- Real API usage reveals version incompatibilities and missing features
+
+**Example: Testing without mocks (PREFERRED)**
+```typescript
+import * as vscode from 'vscode';
+import * as assert from 'assert';
+
+suite('Virtual Document Provider', () => {
+    test('should register rtsc scheme', async () => {
+        // Real vscode.workspace API - no mocking
+        const doc = await vscode.workspace.openTextDocument(
+            vscode.Uri.parse('rtsc://device/config')
+        );
+        assert.ok(doc);
+        assert.strictEqual(doc.uri.scheme, 'rtsc');
+    });
+
+    test('should work in web mode', async function() {
+        if (vscode.env.uiKind !== vscode.UIKind.Web) {
+            this.skip(); // Skip in desktop mode
+        }
+        // Test web-specific behavior
+        const uri = vscode.Uri.parse('vscode-vfs://router/config.rtsc');
+        const result = await someWebCompatibleFunction(uri);
+        assert.ok(result);
+    });
+});
+```
+
+**Example: When to mock (external services ONLY)**
+```typescript
+import * as sinon from 'sinon';
+import axios from 'axios';
+
+suite('RouterOS REST Client', () => {
+    let axiosStub: sinon.SinonStub;
+
+    setup(() => {
+        // Mock external REST API, NOT vscode
+        axiosStub = sinon.stub(axios, 'get');
+    });
+
+    teardown(() => {
+        axiosStub.restore();
+    });
+
+    test('should handle network errors', async () => {
+        axiosStub.rejects(new Error('Connection refused'));
+        
+        // vscode.window.showErrorMessage is real API - no mock needed
+        const client = new RouterOSClient();
+        await assert.rejects(client.fetchData());
+        
+        // Verify error was shown to user (real VS Code API)
+        // Note: In real tests, you might check error handler was called
+    });
+});
+```
+
+**When NOT to test:**
+- Pure UI interactions that require manual verification (consider integration test instead)
+- Code that directly wraps VS Code APIs without logic (test the caller instead)
+- One-time migration scripts (though llm-experiments.test.js can validate logic)
+
+**Web compatibility checklist:**
+- [ ] Test passes in both `npm test` and `npm run test:web`
+- [ ] No Node API usage (fs, path, os, child_process) without vscode.env.uiKind gates
+- [ ] URI handling uses vscode.Uri.parse/file, not string concatenation
+- [ ] File I/O uses vscode.workspace.fs, not Node fs module
+- [ ] Desktop-only features are gated and tests skip appropriately
