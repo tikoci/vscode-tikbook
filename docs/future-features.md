@@ -653,6 +653,7 @@ These features have interdependencies or potential conflicts that need coordinat
 - restraml schema is generated from `/console/inspect` and is convenience-focused, not strict validation
 - OAS2 is available; OAS3 conversion currently fails validation (but may still load in some tools)
 - Prefer RAML where supported, use OAS2 when needed
+- Internal research: [docs/research/restraml-integration-notes.md](./research/restraml-integration-notes.md)
 **Reference:** <https://tikoci.github.io/restraml>
 
 ## Cross-Extension Integration

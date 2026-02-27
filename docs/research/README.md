@@ -211,6 +211,9 @@ How to deploy certificates to end-user devices from TikBook?
 | Document | Status | Related Spec |
 |----------|--------|--------------|
 | [findings-on-vscode-container-vm-routeros-chr.md](./findings-on-vscode-container-vm-routeros-chr.md) | complete (initial survey) + experiments in progress | _TBD_ |
+| [restraml-integration-notes.md](./restraml-integration-notes.md) | complete | [scriptfs-completion.md](../specs/scriptfs-completion.md) |
+| [console-inspect-api-patterns.md](./console-inspect-api-patterns.md) | complete | [scriptfs-completion.md](../specs/scriptfs-completion.md) |
+| [scriptfs-gate1-progress.md](./scriptfs-gate1-progress.md) | in-progress | [scriptfs-completion.md](../specs/scriptfs-completion.md) |
 
 Add entries here as research documents are created.
 

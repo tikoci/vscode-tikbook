@@ -1,11 +1,11 @@
 # ScriptFS Feature Completion
 
-> **Status:** `draft`  
+> **Status:** `ready-for-implementation`  
 > **Priority:** `high`  
-> **Effort Estimate:** TBD (pending spec completion)  
+> **Effort Estimate:** 3-5 hours (Gate 0 locked, implementation scoped)  
 > **Created:** 2026-02-26  
-> **Last Updated:** 2026-02-26  
-> **Owner:** Needs user input to define complete requirements
+> **Last Updated:** 2026-02-27  
+> **Owner:** Requirements locked, ready for development
 
 **Related:**
 
@@ -13,16 +13,176 @@
 - Issue: N/A
 - Docs: architecture.md (mentions ScriptFS as work-in-progress)
 - Code: src/scriptfs.ts, src/scriptfs-schema.ts
+- Research: [restraml-integration-notes.md](../research/restraml-integration-notes.md)
 
 ---
 
+## Requirements-First Process (Keep This On Track)
+
+### Gate 0: Requirement Lock ✅ LOCKED (2026-02-27)
+
+**All 5 requirements locked and documented below:**
+
+1. ✅ URL scheme contract locked (see Locked Requirements section)
+2. ✅ Hierarchy contract locked (mirror RouterOS paths exactly, schema-supported only)
+3. ✅ File identity contract locked (one file = one attribute, multi-file per item)
+4. ✅ Create semantics locked (initial: /system/script + /system/scheduler only)
+5. ✅ ScriptFS vs virtualdocs boundary locked (use case drives protocol choice)
+
+**Status:** Ready to proceed to Gate 1 implementation
+
+### Gate 1: Scoped Implementation Slice 🔧 (Foundation Work Started - 2026-02-27)
+
+**Foundation Changes Completed:**
+- ✅ Fixed TextEncoder/TextDecoder for web compatibility (src/scriptfs.ts)
+- ✅ Updated schema: `/system/script` and `/system/scheduler` now use `multiFilePerItem: true`
+- ✅ Output channels consolidated (verified `getVirtualFileSystemChannel()` in use)
+- ✅ Verified mtime handling correct (advances on every write)
+- ✅ `/console/inspect` API patterns documented and applied
+
+**Progress Tracking:** See [docs/research/scriptfs-gate1-progress.md](../research/scriptfs-gate1-progress.md)
+
+**Remaining Gate 1 Work:**
+- Validate path structure changes work with router (RouterOS test needed)
+- Extend schema to remaining supported paths (use same multiFilePerItem pattern)
+- Add validation that create operations only allowed for `/system/script` and `/system/scheduler`
+- Remove or adapt `/system/script` special-case code (now handled by schema-driven logic)
+
+### Gate 2: Validation
+
+- Add acceptance tests for URL parsing, path rendering, and attribute filename mapping
+- Verify create/update/delete behavior per-path against live RouterOS behavior
+- Document unsupported paths explicitly in this spec and user docs
+
+### Gate 3: Broader Expansion Design (future)
+
+- Plan migration from “ScriptFS” to broader RouterOS virtual filesystem concept
+- Include `/file`-style non-script resources only after URL and identity contracts are stable
+
+---
+## Locked Requirements (Gate 0 Complete - 2026-02-27)
+
+### 1. URL Contract ✅
+
+**Path Structure:**
+```
+rscfile://<authority>/<routeros-path>/<item-key>/<attribute-name>
+```
+
+**Decisions:**
+- **Authority:** IP:port format (e.g., `192.168.88.1` or `192.168.88.1:8728`)
+- **Path segments:** Match RouterOS CLI paths exactly (case-sensitive)
+- **Item-key:** Prefer display name (name/interface/host from schema), fallback to `.id` if not available
+- **Attribute-name:** Exact RouterOS attribute name (no modifications)
+- **Extensions:** NO synthetic extensions (no `.rsc` suffix)
+- **Encoding:** Standard URI segment encoding only
+
+**Examples:**
+- `rscfile://192.168.88.1/system/script/backup/source`
+- `rscfile://192.168.88.1/system/scheduler/daily-backup/on-event`
+- `rscfile://192.168.88.1/tool/netwatch/google-dns/on-up`
+
+**Future Research Items:**
+- Support default router syntax: `rscfile:///system` (no explicit authority)
+- Research how other VS Code extensions handle server/authority in URLs (remote-ssh, ftp, etc.)
+- Document behavior when connected router changes
+- Canonical URL patterns for multi-router mount scenarios
+
+### 2. Hierarchy Contract ✅
+
+**Decisions:**
+- VS Code Explorer paths **mirror RouterOS CLI paths exactly** (case-sensitive)
+- Only show paths currently defined in `src/scriptfs-schema.ts` (20+ supported paths)
+- Do not expose unsupported RouterOS paths in Explorer
+- Folder hierarchy matches RouterOS structure
+
+**Benefit:** Users see familiar RouterOS structure, clear boundaries on what's supported.
+
+### 3. File Identity Contract ✅
+
+**Core Rule:** One ScriptFS file = exactly one RouterOS attribute value
+
+**Decisions:**
+- Filename = RouterOS attribute name (e.g., `source`, `on-event`, `on-up`)
+- Folder name = item key (name/interface/host, or `.id` fallback)
+- No synthetic file extensions
+- Multi-script items = multiple files in same folder
+
+**Examples:**
+
+Single-script item (`/system/script`):
+```
+/system/script/backup/source
+```
+
+Multi-script item (`/system/routerboard`):
+```
+/system/routerboard/
+  mode-button
+  reset-button
+  wps-button
+```
+
+### 4. Create Semantics ✅
+
+**Decisions:**
+- **Initial support:** File creation ONLY for `/system/script` and `/system/scheduler`
+- **Other paths:** Show info message: "Only script and scheduler items can be added via ScriptFS"
+- **Multi-attribute required:** Reject with error: "Cannot create [path] - multiple attributes required. Use RouterOS CLI or REST API."
+- **Detection method:** Query `/console/inspect` at mount/initialization (cached, not per-operation)
+- **Error handling:** Always graceful - no crashes, no data loss conditions
+
+**Rationale:** Conservative approach focusing on most important paths first, explicit about limitations.
+
+### 5. ScriptFS vs VirtualDocs Boundary ✅
+
+**Architectural Principles (use case drives protocol choice):**
+
+**`rscfile://` (ScriptFS):**
+- Read/write persistent editing surface
+- Syncs to RouterOS
+- Use when: Content should be editable and saved to router
+
+**`rscena://` (virtualdocs):**
+- Read-only generated views/transforms
+- Like SQL database views - derived from complex queries
+- "Glue" for RouterOS-specific things and custom views
+- Designed for easy Copilot/end-user consumption
+- Use when: Providing context, previews, or derived views
+
+**Design Intent:**
+- No current Copilot support for end-users (should be added)
+- Keep flexible for future scenarios
+- Separation based on architectural principles, not ownership
+- virtualdocs should not duplicate ScriptFS editable resources
+
+---
 ## Overview
 
 ### What This Feature Does
 
-ScriptFS provides a **virtual filesystem** (`rscfile://` protocol) that maps RouterOS script-containing paths to VS Code's Explorer. Users can browse, edit, create, and delete RouterOS scripts directly from VS Code without manual cut-and-paste.
+ScriptFS provides a **virtual filesystem** (`rscfile://` protocol) that maps RouterOS script-containing paths to VS Code Explorer. Users can browse, edit, create, and delete script-bearing RouterOS attributes directly from VS Code.
 
-**Key value:** Enables end-users to edit scripts stored in `/system/script` and other RouterOS script attributes (schedulers, DHCP clients, logging actions, etc.) with full RouterOS LSP support directly on the router.
+**Key value:** Enables end-users to edit RouterOS script attributes (for example `/system/script source`, `/system/scheduler on-event`, netwatch scripts) with RouterOS LSP support directly on the router.
+
+### Core Data Model (Locked Theory)
+
+- A ScriptFS file represents exactly one RouterOS attribute value.
+- File names are attribute names (for example `source`, `on-event`, `on-up`).
+- Folder hierarchy mirrors RouterOS path hierarchy.
+- Explorer only shows paths and attributes currently supported in `src/scriptfs-schema.ts`.
+
+Example target shape:
+
+- `rscfile://<router>/system/script/<item-key>/source`
+- `rscfile://<router>/system/scheduler/<item-key>/on-event`
+- `rscfile://<router>/tool/netwatch/<item-key>/on-up`
+
+(`item-key` is name/interface/host or id fallback depending on schema entry)
+
+### Relationship to Broader Feature (Future)
+
+ScriptFS is treated as **Phase 1** of a broader RouterOS virtual filesystem concept that may later include non-script resources (for example RouterOS `/file` paths and other typed resources). The `rscfile://` URL contract must therefore remain stable and extensible.
 
 ### Why We Need It
 
@@ -117,6 +277,20 @@ Supports 20+ RouterOS paths including:
    - Both `scriptfs.ts` and `schema-mapper.ts` use "RouterOS Virtual FileSystem"
    - Should rename one to avoid confusion
 
+### External Schema Context (restraml)
+
+`tikoci/restraml` is relevant to ScriptFS and broader VFS planning:
+
+- It publishes per-version `inspect.json` artifacts derived from RouterOS `/console/inspect`
+- It also produces RAML/OAS/HTML from that intermediate data
+- Its own README documents an important caveat: generated schema is convenience-oriented and not strict validation
+
+Implication for ScriptFS:
+
+- Use `inspect.json` as a discovery/coverage aid, not as sole truth for create/update correctness
+- Keep runtime behavior grounded in RouterOS live responses and explicit per-path support rules
+- Use restraml diffs to identify potential path/attribute additions for future schema expansion
+
 ### Files Affected
 
 - `src/scriptfs.ts` - Main FileSystemProvider implementation
@@ -129,37 +303,48 @@ Supports 20+ RouterOS paths including:
 
 ## Design Questions
 
-### Question 1: File Path Structure
+### Question 1: File Path Structure (URL Contract)
 
 **Context:** How should the virtual filesystem paths map to RouterOS CLI paths?
 
-**Current Behavior:** Paths like `rscfile://router.local/system/script/my-script.rsc`
+**Current Behavior:** Paths currently vary by schema template (for example `rscfile://router.local/system/script/my-script.rsc`).
 
 **User Requirement:** "file structure shown in vscode should match/mimic routeros CLI paths, at least for items we want shown in vscode"
 
-**Questions:**
+**Proposed Contract (for lock):**
 
-- Should paths match REST API paths (`/system/script`) or CLI paths (`/system script`)?
-- Should file extensions be added (`.rsc`) or use raw attribute names?
-- How to handle nested paths (e.g., `/ip/dhcp-server/*/alert`)?
+- Scheme: `rscfile://`
+- Authority: Router target key (IP/DNS/connection key)
+- Path segments: canonical RouterOS path segments + item-key + attribute-name
+- Encoding: URI segment encoding only (no ad-hoc escaping)
+- Extensions: no synthetic `.rsc` suffix required for canonical attribute files
 
-**Decision:** TBD - User needs to specify exact path structure expectations
+**Questions remaining to lock:**
 
-### Question 2: Filename Templates
+- Should item-key prefer display name then fallback to id, or always be id?
+- How should singleton resources map (for example `/system/routerboard`)?
+- How should nested paths be rendered for parent/child resources?
+
+### Question 2: Filename Templates (Attribute-Named Files)
 
 **Context:** What should filenames be in the virtual filesystem?
 
-**Current Behavior:** Uses `filenameTemplate` in schema (e.g., `${name}.rsc`)
+**Current Behavior:** Uses `filenameTemplate` in schema (for example `${name}.rsc`, `${interface}`, `${host}`).
 
-**User Requirement:** "file name which cooresponse with the 'on-event=' (or whatever script attribute)"
+**User Requirement:** “file name corresponds to the script attribute (`on-event`, `source`, etc.)”
 
-**Examples to clarify:**
+**Working model to lock:**
 
-- `/system/script` item with name="backup" → Filename should be `backup` or `backup.rsc`?
-- `/system/scheduler` item with name="daily-backup", on-event="..." → Filename should be `daily-backup` or `on-event` or `daily-backup.on-event`?
-- `/system/routerboard` with multiple script attrs (mode-button, reset-button, wps-button) → How to represent?
+- Item folder name = item-key
+- Leaf file name = attribute name
 
-**Decision:** TBD - User needs to provide examples of desired filename structure
+Examples:
+
+- `/system/script/<name>/source`
+- `/system/scheduler/<name>/on-event`
+- `/system/routerboard/<singleton>/mode-button`
+
+**Decision status:** Pending full lock across all existing schema entries.
 
 ### Question 3: File Creation Requirements
 
@@ -207,7 +392,32 @@ Supports 20+ RouterOS paths including:
 - **Single-file:** Concatenate all attributes into one file (current for some items)
   - `/system/routerboard.rsc` with all scripts inside
 
-**Decision:** TBD - User preference?
+**Decision direction:** Prefer multi-file-per-attribute model for consistency with “file = attribute” rule. Keep this as a compatibility migration topic for currently single-file schema entries.
+
+### Question 6: ScriptFS vs VirtualDocs Boundary
+
+**Context:** `rscfile://` and `rscena://` both represent RouterOS content but have different goals.
+
+**Proposed boundary:**
+
+- `rscfile://` (`scriptfs.ts`): read/write, persistent editing surface for RouterOS attributes
+- `rscena://` (`virtualdocs.ts`): read-only/generated views and transforms (preview/export/context)
+
+**Future intent:** `virtualdocs` may become context material for Copilot/agentic workflows; it should not duplicate ScriptFS ownership of editable resource identity.
+
+**Decision status:** Needs explicit architecture note in docs and implementation guardrails.
+
+### Question 7: Broader RouterOS VFS Expansion
+
+**Context:** Future feature may cover broader RouterOS resources (for example `/file` and other non-script paths).
+
+**Design requirement now:**
+
+- Keep URL contract generic enough for non-script resources
+- Do not hardcode script-specific assumptions into URI parsing primitives
+- Keep ScriptFS UI limited to currently supported schema entries until expansion spec is written
+
+**Decision status:** Defer implementation, but lock naming/URL constraints now.
 
 ---
 
@@ -380,6 +590,51 @@ VS Code File Operation → SystemScriptFS → SchemaMapper → RouterRestClient 
 
 ### Technical Approach
 
+**Critical Implementation Constraints (from API research):**
+
+See [docs/research/console-inspect-api-patterns.md](../research/console-inspect-api-patterns.md) for detailed findings.
+
+**MUST-HAVE Implementation Details:**
+
+1. **FileStat.mtime MUST ADVANCE ON EVERY WRITE** (VS Code optimization dependency)
+   - When file content changes, mtime must be newer than previous value
+   - Incorrect mtime handling causes VS Code to not detect content updates
+   - Set `mtime: Date.now()` on every write operation
+
+2. **/console/inspect Caching Strategy**
+   - Query at mount time to validate schema paths exist on router
+   - Cache directory listings per connection (invalidate on reconnect)
+   - Do NOT query per-file-operation - use cached schema
+   - Handle RouterOS version differences gracefully
+
+3. **Character Encoding**
+   - Apply non-ASCII → underscore replacement when querying paths/attributes
+   - Non-ASCII can appear in file content (script text) but not schema elements
+   - Original file content never modified during round-trip
+
+4. **Input Size Limits**
+   - RouterOS has ~32KB limit on `/console/inspect` input size
+   - Large scripts (>32KB) require special handling or streaming
+   - Consider earlier detection for unsupported large files
+
+5. **Error Handling**
+   - Use axios interceptors for consistent error capturing
+   - Distinguish network errors from RouterOS API errors
+   - Always log HTTP details (status, timing, payload size)
+   - Fail gracefully with clear user messages
+
+**Test Experiments (before implementation):**
+
+The following quick experiments validate API contracts before coding starts:
+
+- [ ] Query `/console/inspect` for each schema path (/system/script, /system/scheduler, /tool/netwatch)
+- [ ] Verify add operations for required attributes (what fields must be set?)
+- [ ] Test character encoding round-trip (non-ASCII in names, content, paths)
+- [ ] Test large file handling (>32KB script write/read)
+- [ ] Verify mtime behavior in VS Code FileSystemProvider
+
+---
+
 **Phase 1: Fix Critical Issues (2-3 hours)**
 
 1. Fix TextEncoder/TextDecoder for web compatibility
@@ -442,16 +697,24 @@ async writeFile(uri: Uri, content: Uint8Array, options: { create: boolean }): Pr
 
 ### Dependencies
 
+**Research & Patterns:**
+
+- [x] `/console/inspect` API patterns documented ([docs/research/console-inspect-api-patterns.md](../research/console-inspect-api-patterns.md))
+- [x] VS Code FileSystemProvider requirements clarified
+- [x] Error handling strategies defined
+- [x] Caching strategies documented
+
 **Required Before Implementation:**
 
 - [x] Experimental features system (see experimental-features.md)
-- [ ] User specification of path/filename structure
-- [ ] User specification of creation requirements per path
-- [ ] Testing on RouterOS devices to verify add/update operations
+- [x] User specification of path/filename structure (locked)
+- [x] User specification of creation requirements per path (locked)
+- [ ] Quick RouterOS experiments (validate /console/inspect schema for our paths)
+- [ ] Test add operations to document required attributes per path
 
 **Nice to Have:**
 
-- [ ] RouterOS inspect endpoint to query required attributes
+- [ ] Batch operations for performance
 - [ ] UI for multi-attribute item creation
 
 ---

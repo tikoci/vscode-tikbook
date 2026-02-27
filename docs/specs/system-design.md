@@ -109,7 +109,7 @@ docs/
 | Code cleanup pass | llm-todos.md | Straightforward work |
 | SSH Transport | future-features.md | 6+ months, blocking |
 | Experimental Features Gating | specs/experimental-features.md | Ready to implement now |
-| ScriptFS Completion | specs/scriptfs-completion.md | 70% done, user input pending |
+| ScriptFS Completion | specs/scriptfs-completion.md | 70% done, requirements locked (ready-for-implementation) |
 | CertificateUX | specs/certificate-ux.md (draft) | Will implement soon, needs design |
 | TIKOCI Tool Integrations | future-features.md | Exploratory, depends on tools |
 | Docker Dev Container | future-features.md | Strategic, long lead time |

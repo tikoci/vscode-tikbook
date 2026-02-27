@@ -1,4 +1,3 @@
-import { TextDecoder, TextEncoder } from 'util';
 import type { Disposable, FileChangeEvent, FileStat, FileSystemProvider } from 'vscode';
 import { commands, EventEmitter, FileChangeType, FileSystemError, FileType, languages, Uri, window, workspace } from 'vscode';
 import { getSettings } from './config';
@@ -342,16 +341,7 @@ export class SystemScriptFS implements FileSystemProvider {
     const parts = uri.path.split('/').filter(Boolean)
     getVirtualFileSystemChannel().debug(`<SystemScriptFS.readDirectory> uri=${uri.path}, parts=[${parts.join(', ')}]`)
 
-    // special-case for /system/script to show actual script items from RouterOS
-    if (parts.length === 2 && parts[0] === 'system' && parts[1] === 'script') {
-      const client = RouterRestClient.default
-      const scripts = await client.systemScripts
-      this.scriptsDirMtime = Date.now()
-      this.scriptsDirNames = new Set(scripts.map(s => String(s.name)).filter(Boolean))
-      return scripts.map(s => [String(s.name), FileType.File])
-    }
-
-    // For any other path, check if there's a matching schema entry and show its items
+    // Use schema-driven logic for all paths (including /system/script which now uses multiFilePerItem)
     const schemaMatch = findSchemaForParts(parts)
     if (schemaMatch) {
       const { schema, relParts } = schemaMatch
@@ -442,35 +432,7 @@ export class SystemScriptFS implements FileSystemProvider {
   async readFile(uri: Uri): Promise<Uint8Array> {
     const parts = uri.path.split('/').filter(Boolean)
 
-    // system/script special-case
-    if (parts.length >= 3 && parts[0] === 'system' && parts[1] === 'script') {
-      const rawName = parts.slice(2).join('/')
-      const name = decodeURIComponent(rawName)
-
-      // Reject files that start with dot (hidden files like .vscode, .kilocode, etc.)
-      if (name.startsWith('.')) {
-        throw FileSystemError.FileNotFound(uri)
-      }
-
-      const client = RouterRestClient.default
-      try {
-        const script = await client.getSystemScript(name)
-        const source = script?.source ?? ''
-        const key = uri.toString()
-        const existing = this.openFiles.get(key)
-        const mtime = existing?.mtime ?? Date.now()
-        this.scriptsDirNames.add(name)
-        this.openFiles.set(key, { id: (script['.id'] ?? script.id) as string | undefined, original: source, mtime })
-        return new TextEncoder().encode(source)
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      catch (err) {
-        // If the script doesn't exist or there's an error fetching it, return FileNotFound
-        throw FileSystemError.FileNotFound(uri)
-      }
-    }
-
-    // schema-driven files
+    // Use schema-driven logic for all paths (including /system/script with multiFilePerItem)
     const schemaMatch = findSchemaForParts(parts)
     if (!schemaMatch) throw FileSystemError.FileNotFound(uri)
     const { schema, relParts } = schemaMatch
@@ -541,47 +503,10 @@ export class SystemScriptFS implements FileSystemProvider {
   }
 
   async writeFile(uri: Uri, content: Uint8Array, options: { create: boolean, overwrite: boolean }): Promise<void> {
+
     const parts = uri.path.split('/').filter(Boolean)
     const newSource = new TextDecoder().decode(content)
     getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> uri=${uri.path}, create=${options.create}, overwrite=${options.overwrite}`)
-
-    // system/script special-case
-    if (parts.length >= 3 && parts[0] === 'system' && parts[1] === 'script') {
-      const rawName = parts.slice(2).join('/')
-      const name = decodeURIComponent(rawName)
-      // Reject files that start with dot
-      if (name.startsWith('.')) {
-        throw FileSystemError.NoPermissions('Cannot write to hidden files')
-      }
-      const client = RouterRestClient.default
-
-      const existingId = await client.resolveScriptIdByName(name)
-      if (!existingId) {
-        if (!options.create) throw FileSystemError.FileNotFound(uri)
-        await client.createSystemScript({ name, source: newSource })
-        this.scriptsDirNames.add(name)
-        this.openFiles.set(uri.toString(), { original: newSource, mtime: Date.now() })
-        this.onDidChangeEmitter.fire([{ type: FileChangeType.Created, uri }])
-        return
-      }
-
-      const tracked = this.openFiles.get(uri.toString())
-      getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> system/script tracked=${tracked ? 'yes' : 'no'} trackedLen=${tracked?.original?.length ?? -1}`)
-      if (tracked?.original !== undefined) {
-        const remote = await client.getSystemScript(name)
-        const remoteSource = remote?.source ?? ''
-        if (remoteSource !== tracked.original) {
-          logCompareMismatch(`system/script ${name}`, tracked.original, remoteSource)
-          throw new Error('Remote file changed since opened - aborting save')
-        }
-      }
-
-      await client.updateSystemScript(existingId, { source: newSource })
-      this.scriptsDirNames.add(name)
-      this.openFiles.set(uri.toString(), { id: existingId, original: newSource, mtime: Date.now() })
-      this.onDidChangeEmitter.fire([{ type: FileChangeType.Changed, uri }])
-      return
-    }
 
     // schema-driven write
     const schemaMatch = findSchemaForParts(parts)
@@ -589,6 +514,11 @@ export class SystemScriptFS implements FileSystemProvider {
     const { schema, relParts } = schemaMatch
     const mapper = new SchemaMapper(RouterRestClient.default, schema)
     getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> schema=${schema.path}, relParts=[${relParts.join(', ')}]`)
+
+    // CREATE GUARD: Only allow create for /system/script and /system/scheduler
+    if (options.create && schema.path !== '/system/script' && schema.path !== '/system/scheduler') {
+      throw FileSystemError.NoPermissions('Only script and scheduler items can be added via ScriptFS')
+    }
 
     if (schema.singleton && schema.multiFilePerItem) {
       if (relParts.length >= 2) {
@@ -729,31 +659,6 @@ export class SystemScriptFS implements FileSystemProvider {
   async rename(oldUri: Uri, newUri: Uri, options: { overwrite: boolean }): Promise<void> {
     const oldParts = oldUri.path.split('/').filter(Boolean)
     const newParts = newUri.path.split('/').filter(Boolean)
-    // system/script special-case
-    if (oldParts.length >= 3 && oldParts[0] === 'system' && oldParts[1] === 'script') {
-      const oldName = decodeURIComponent(oldParts.slice(2).join('/'))
-      const newName = decodeURIComponent(newParts.slice(2).join('/'))
-      // Reject hidden files
-      if (oldName.startsWith('.') || newName.startsWith('.')) {
-        throw FileSystemError.NoPermissions('Cannot rename hidden files')
-      }
-      if (!(newParts.length >= 3 && newParts[0] === 'system' && newParts[1] === 'script')) throw FileSystemError.FileNotADirectory(newUri)
-      const client = RouterRestClient.default
-      const targetId = await client.resolveScriptIdByName(newName)
-      if (targetId && !options.overwrite) throw FileSystemError.FileExists(newUri)
-      const oldId = await client.resolveScriptIdByName(oldName)
-      if (!oldId) throw FileSystemError.FileNotFound(oldUri)
-      const script = await client.getSystemScript(oldName)
-      const source = script?.source ?? ''
-      await client.createSystemScript({ name: newName, source })
-      await client.deleteSystemScript(oldId)
-      this.scriptsDirNames.delete(oldName)
-      this.scriptsDirNames.add(newName)
-      this.openFiles.delete(oldUri.toString())
-      this.openFiles.set(newUri.toString(), { id: (script['.id'] ?? script.id) as string | undefined, original: source, mtime: Date.now() })
-      this.onDidChangeEmitter.fire([{ type: FileChangeType.Deleted, uri: oldUri }, { type: FileChangeType.Created, uri: newUri }])
-      return
-    }
 
     // schema-driven rename: create new then delete old
     const oldMatch = findSchemaForParts(oldParts)
@@ -812,23 +717,6 @@ export class SystemScriptFS implements FileSystemProvider {
 
   async delete(uri: Uri): Promise<void> {
     const parts = uri.path.split('/').filter(Boolean)
-    // system/script special-case
-    if (parts.length >= 3 && parts[0] === 'system' && parts[1] === 'script') {
-      const rawName = parts.slice(2).join('/')
-      const name = decodeURIComponent(rawName)
-      // Reject files that start with dot
-      if (name.startsWith('.')) {
-        throw FileSystemError.NoPermissions('Cannot delete hidden files')
-      }
-      const client = RouterRestClient.default
-      const id = await client.resolveScriptIdByName(name)
-      if (!id) throw FileSystemError.FileNotFound(uri)
-      await client.deleteSystemScript(id)
-      this.scriptsDirNames.delete(name)
-      this.openFiles.delete(uri.toString())
-      this.onDidChangeEmitter.fire([{ type: FileChangeType.Deleted, uri }])
-      return
-    }
 
     // schema-driven delete
     const schemaMatch = findSchemaForParts(parts)

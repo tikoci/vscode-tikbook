@@ -56,11 +56,17 @@ RouterOS can be reached via REST API, SSH, or native API. Currently only REST is
 
 Three ways to view/edit RouterOS content in VS Code:
 
-1. **rscena://** (virtual docs) - Read-only preview of exported data (CSV, global functions, etc.)
-2. **rscfile://** (scriptfs) - Read-write filesystem for `/system/script` (experimental, auto-mount commented out)
+1. **rscena://** (virtualdocs) - Read-only generated views/transforms for context and previews (CSV exports, global functions, etc.)
+2. **rscfile://** (scriptfs) - Read-write filesystem for RouterOS script attributes (experimental, requirements locked 2026-02-27)
 3. **Notebooks** - Cell-based execution and documentation
 
-**Potential conflict:** Users may be confused by 3 different views of RouterOS content. Consider consolidating or clarifying use cases.
+**Protocol Choice Principles (architectural guidance):**
+
+- **Use `rscfile://` when:** Content should be editable and synced to RouterOS (persistent editing surface)
+- **Use `rscena://` when:** Providing read-only views, derived content, or Copilot context (like SQL database views)
+- **Use notebooks when:** Mixed documentation + execution workflow, teaching, or exploratory work
+
+**Design intent:** Use case drives protocol choice. `rscena://` is "glue" for RouterOS-specific things and custom views designed for easy Copilot/end-user consumption. ScriptFS owns the editable resource identity for RouterOS attributes.
 
 ### Notebook Serialization
 

@@ -316,15 +316,37 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 
 ### SystemScriptFS Completion and Organization → MOVED TO SPEC
 
-**Status:** Detailed spec created (draft), awaiting user input
+**Status:** ✅ Requirements locked (2026-02-27), Gate 1 foundation work started (2026-02-27)
 **Spec:** [docs/specs/scriptfs-completion.md](./specs/scriptfs-completion.md)
-**Reason for Draft:** Feature is ~70% complete but needs user specification of:
+**Progress:** [docs/research/scriptfs-gate1-progress.md](./research/scriptfs-gate1-progress.md)
 
-- Exact file/path structure expectations
-- Filename templates per schema entry
-- Multi-file vs single-file preference
-- RouterOS add operation requirements
-**Next Step:** User fills in spec requirements, then change to ready-for-implementation
+**Gate 0 - Requirements LOCKED:**
+
+1. ✅ URL contract locked (prefer display name, no extensions, IP:port authority)
+2. ✅ Hierarchy locked (mirror RouterOS CLI, schema-supported paths only)
+3. ✅ File identity locked (one file = one attribute, multi-file per item)
+4. ✅ Create semantics locked (initial: /system/script + /system/scheduler only)
+5. ✅ ScriptFS vs virtualdocs boundary locked (use case drives protocol choice)
+
+**Gate 1 - Foundation Work (In Progress):**
+
+1. ✅ TextEncoder/TextDecoder fixed for web compatibility
+2. ✅ Schema updated: /system/script and /system/scheduler use multiFilePerItem: true
+3. ✅ mtime handling verified (advances on every write, critical for VS Code)
+4. ✅ /console/inspect patterns documented and applied
+
+**Gate 1 - Remaining:**
+- [ ] Quick RouterOS test: validate add operations for /system/script and /system/scheduler
+- [ ] Extend schema updates to remaining supported paths
+- [ ] Add create operation guards (only /system/script and /system/scheduler)
+- [ ] Remove/adapt /system/script special-case code
+
+**Supporting research:**
+- [docs/research/restraml-integration-notes.md](./research/restraml-integration-notes.md) - RouterOS schema
+- [docs/research/console-inspect-api-patterns.md](./research/console-inspect-api-patterns.md) - Implementation patterns
+- [docs/research/scriptfs-gate1-progress.md](./research/scriptfs-gate1-progress.md) - Foundation work tracking
+
+**Next Step:** Extend Gate 1 work with RouterOS testing and schema path extensions
 
 ### Video Player and Teaching Features
 
