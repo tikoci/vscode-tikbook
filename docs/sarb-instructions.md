@@ -50,12 +50,19 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 
 ## While writing or editing markdown (Copilot/LLM)
 
-- Assume markdownlint is enforced; avoid introducing lint errors in any markdown you add or edit.
-- Use fenced code blocks with a language tag, even for plain text (markdownlint prefers explicit fences).
-- Add blank lines around blocks you add or edit (headings, lists, fenced code, tables, paragraphs).
-- Before finalizing a task that touches markdown, run markdownlint on any file produced or edited in the chat session and fix violations in the edited blocks.
-- Public docs: `npm run markdown:lint:public` (README.md, CHANGELOG.md)
-- Internal docs/instructions: `npm run markdown:lint:agentic` (docs/ and Copilot instructions)
+**Public docs (README.md, CHANGELOG.md):**
+
+- Enforce strict markdown formatting; `npm run markdown:lint:public` must pass
+- Use fenced code blocks with language tags
+- Add blank lines around blocks you add or edit
+- Before finalizing, fix all violations reported by `npm run markdown:lint:public`
+
+**Internal docs (docs/, instructions, DEVELOPMENT.md):**
+
+- Relax markdown enforcement; agentic rules intentionally disable MD036/MD040
+- Don't spend time on markdown formatting—focus on content quality
+- `npm run markdown:lint:agentic` expects zero violations (real issues only, no false positives)
+- Only fix if linting reports genuine issues (unclosed blocks, HTML errors, etc.)
 
 ### Codify patterns as lint rules
 

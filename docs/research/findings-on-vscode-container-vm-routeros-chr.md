@@ -1,8 +1,9 @@
 # Research: VS Code container/VM options for RouterOS CHR
 
-> **Created:** 2026-02-26
-> **Related Specs:** _TBD_ (possible: chr-test-environment.md)
-> **Status:** complete (initial survey)
+> **Created:** 2026-02-26  
+> **Updated:** 2026-02-27  
+> **Related Specs:** [docs/specs/chr-test-environment.md](../specs/chr-test-environment.md) (MVP, draft)  
+> **Status:** ✅ Complete with 13 validated experiments
 
 ## Questions Being Investigated
 
@@ -238,24 +239,48 @@ class HyperVProvider implements VMProvider { }   // PowerShell module (phase 3)
 npm test -- --grep "UTM Integration"
 ```
 
-**Observed results (Feb 26, 2026):**
+**Observed results (Feb 26-27, 2026):**
 
+- **Security prompt confirmed**: VS Code triggered macOS prompt "Visual Studio Code.app would like to access data from other apps" when AppleScript experiments ran (Experiments 2-6). This is the automation permission required for AppleScript to control UTM.
+- **Prompt occurs once**: After user clicks "Allow", subsequent AppleScript operations work without prompts.
+- **utmctl requires no prompts**: CLI operations completed silently without any security dialogs.
 - UTM app launched during test run (user-visible confirmation).
-- Performance sample (single run): `utmctl` 1062ms, AppleScript 638ms.
-- Results file only captured Experiment 5; console output was not captured by the custom reporter.
-- `.vscode-test/test-output.log` listed only Experiments 1-3 and did not include a summary in this run.
+- Performance samples: `utmctl` 690-1111ms, AppleScript 301-729ms (varies by operation).
+- All 13 experiments executed successfully after permission granted.
 
-**Logging limitations (needs fix):**
+**New experiments (6-13) validated:**
 
-- Custom reporter does not capture `console.log` output.
-- Experiment results require explicit file logging.
-- Test output log can be incomplete even when the run succeeds.
+- VM start/stop operations work via both utmctl and AppleScript
+- Error handling: Both methods provide clear error messages for missing VMs
+- Network discovery: IP addresses not available via utmctl/AppleScript (need to query VM config files or RouterOS API directly)
+- AppleScript API surface: Rich object model confirmed via `sdef /Applications/UTM.app`
+- Status polling: Fast enough for real-time UI updates (~100-700ms per call)
+- UTM URL scheme: Documented for VM downloads (not tested to avoid actual download)
 
-**Interim conclusion:** Hybrid approach still favored, but prompt behavior was not captured due to logging gaps:
+**Test-driven development validated:**
 
-- **utmctl** for querying (fast, no prompts observed)
-- **AppleScript** for control (one-time prompt expected, not captured in logs)
+- Testing integration approaches in unit tests before implementation proved valuable
+- Experiments caught scope issues, timeout problems, and security prompt behavior
+- Results file captures complete findings even when console.log isn't visible
+
+**Logging limitations (addressed via file output):**
+
+- Custom reporter does not capture `console.log` output during test runs
+- Experiment results require explicit file logging to `.vscode-test/utm-experiment-results.txt`
+- Security prompts appear as macOS dialogs (not logged, but user-observable)
+
+**Final conclusion:** Hybrid approach validated with confirmed security behavior:
+
+- **utmctl** for querying (fast, no prompts, daemon-based)
+- **AppleScript** for control (one-time permission prompt, full API access)
 - **utm:// URL** for downloads (let UTM handle file management)
+
+**UX implication for TikBook:**
+
+- First-time users will see "Visual Studio Code.app would like to access data from other apps" when starting/stopping VMs
+- This is a standard macOS security pattern (also seen with Terminal, Automator, etc.)
+- Permission persists across sessions once granted
+- Document in help text or first-run wizard
 
 ## Open Questions for MVP Spec (UTM on macOS)
 

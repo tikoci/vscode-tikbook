@@ -92,6 +92,7 @@ See [_TEMPLATE.md](./_TEMPLATE.md) for the specification template. Copy it when 
 
 | Spec | Feature | Status | Priority | Effort |
 |------|---------|--------|----------|--------|
+| [chr-test-environment.md](./chr-test-environment.md) | CHR Test Environment (UTM/VM Integration) | draft | High | 40-60 hours |
 | [scriptfs-completion.md](./scriptfs-completion.md) | ScriptFS Feature Completion | draft | High | TBD |
 | [app-yaml-schema.md](./app-yaml-schema.md) | RouterOS /app YAML Schema | draft | Medium | TBD |
 | [certificate-ux.md](./certificate-ux.md) | Certificate Management UX | draft | Medium | TBD |

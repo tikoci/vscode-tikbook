@@ -1,26 +1,14 @@
 import { TextDecoder, TextEncoder } from 'util';
-import type { Disposable, FileChangeEvent, FileStat, FileSystemProvider, LogOutputChannel } from 'vscode';
+import type { Disposable, FileChangeEvent, FileStat, FileSystemProvider } from 'vscode';
 import { commands, EventEmitter, FileChangeType, FileSystemError, FileType, languages, Uri, window, workspace } from 'vscode';
 import { getSettings } from './config';
+import { getVirtualFileSystemChannel } from './output-channels';
 import { RouterRestClient } from './routeros';
 import SchemaMapper from './schema-mapper';
 import type { SchemaEntry } from './scriptfs-schema';
 import scriptfsSchema from './scriptfs-schema';
 
 const SCHEME = 'rscfile'
-let outputChannel: LogOutputChannel | null = null
-
-function getOutputChannel(): LogOutputChannel {
-  if (!outputChannel) {
-    try {
-      outputChannel = window.createOutputChannel('RouterOS Virtual FileSystem', { log: true })
-    } catch {
-      // Fallback for older versions
-      outputChannel = window.createOutputChannel('RouterOS Virtual FileSystem') as LogOutputChannel
-    }
-  }
-  return outputChannel
-}
 
 class InMemoryStat implements FileStat {
   constructor(public type: FileType, public ctime: number, public mtime: number, public size: number) {}
@@ -144,7 +132,7 @@ function hashString(value: string): string {
 }
 
 function logCompareMismatch(label: string, tracked: string, remote: string): void {
-  getOutputChannel().debug(
+  getVirtualFileSystemChannel().debug(
     `<SystemScriptFS.writeFile> compare-mismatch ${label} trackedLen=${tracked.length} remoteLen=${remote.length} trackedHash=${hashString(tracked)} remoteHash=${hashString(remote)}`,
   )
 }
@@ -198,7 +186,7 @@ export class SystemScriptFS implements FileSystemProvider {
   private itemsCacheTimeout = 10 * 1000 // 10 seconds for item cache
 
   constructor() {
-    getOutputChannel().trace('<SystemScriptFS> {constructor} initialized')
+    getVirtualFileSystemChannel().trace('<SystemScriptFS> {constructor} initialized')
   }
 
   watch(_uri: Uri, _options: { recursive: boolean, excludes: string[] }): Disposable { return { dispose: () => { } } }
@@ -264,42 +252,42 @@ export class SystemScriptFS implements FileSystemProvider {
 
   stat(uri: Uri): FileStat | Thenable<FileStat> {
     const parts = uri.path.split('/').filter(Boolean)
-    getOutputChannel().debug(`<SystemScriptFS.stat> uri=${uri.path}, parts=[${parts.join(', ')}]`)
+    getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> uri=${uri.path}, parts=[${parts.join(', ')}]`)
 
     // Root directory
     if (parts.length === 0) {
-      getOutputChannel().debug(`<SystemScriptFS.stat> ROOT -> Directory`)
+      getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> ROOT -> Directory`)
       return new InMemoryStat(FileType.Directory, 0, 0, 0)
     }
 
     // system/script special case
     if (parts.length >= 2 && parts[0] === 'system' && parts[1] === 'script') {
       if (parts.length === 2) {
-        getOutputChannel().debug(`<SystemScriptFS.stat> /system/script -> Directory`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> /system/script -> Directory`)
         return new InMemoryStat(FileType.Directory, 0, this.scriptsDirMtime, 0)
       }
       // file under /system/script
       const rawName = parts.slice(2).join('/')
       const name = decodeURIComponent(rawName)
       if (name.startsWith('.')) {
-        getOutputChannel().debug(`<SystemScriptFS.stat> /system/script/${name} -> FileNotFound (hidden)`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> /system/script/${name} -> FileNotFound (hidden)`)
         throw FileSystemError.FileNotFound(uri)
       }
       const key = uri.toString()
       let entry = this.openFiles.get(key)
       if (!entry && !this.scriptsDirNames.has(name)) {
-        getOutputChannel().debug(`<SystemScriptFS.stat> /system/script/${name} -> FileNotFound (not listed)`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> /system/script/${name} -> FileNotFound (not listed)`)
         throw FileSystemError.FileNotFound(uri)
       }
       if (!entry) {
         entry = { mtime: Date.now() }
         this.openFiles.set(key, entry)
-        getOutputChannel().debug(`<SystemScriptFS.stat> /system/script/${name} cached mtime=${entry.mtime}`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> /system/script/${name} cached mtime=${entry.mtime}`)
       }
       const size = entry.original ? Buffer.byteLength(entry.original, 'utf8') : 0
       const mtime = entry.mtime ?? Date.now()
-      getOutputChannel().debug(`<SystemScriptFS.stat> /system/script/${name} tracked=${entry.original !== undefined ? 'yes' : 'no'} mtime=${mtime} size=${size}`)
-      getOutputChannel().debug(`<SystemScriptFS.stat> /system/script/${name} -> File (size=${size})`)
+      getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> /system/script/${name} tracked=${entry.original !== undefined ? 'yes' : 'no'} mtime=${mtime} size=${size}`)
+      getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> /system/script/${name} -> File (size=${size})`)
       return new InMemoryStat(FileType.File, 0, mtime, size)
     }
 
@@ -310,17 +298,17 @@ export class SystemScriptFS implements FileSystemProvider {
       if (this.isPathKnownMissing(schema.path)) {
         throw FileSystemError.FileNotFound(uri)
       }
-      getOutputChannel().debug(`<SystemScriptFS.stat> schema match: path=${schema.path}, relParts=[${relParts.join(', ')}]`)
+      getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> schema match: path=${schema.path}, relParts=[${relParts.join(', ')}]`)
 
       // Exactly at schema root (e.g., /ppp/profile or /system/routerboard)
       if (relParts.length === 0) {
-        getOutputChannel().debug(`<SystemScriptFS.stat> at schema root -> Directory`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> at schema root -> Directory`)
         return new InMemoryStat(FileType.Directory, 0, Date.now(), 0)
       }
 
       // For multiFilePerItem with one relPart, it's a directory (item directory)
       if (schema.multiFilePerItem && relParts.length === 1) {
-        getOutputChannel().debug(`<SystemScriptFS.stat> multiFilePerItem item -> Directory`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> multiFilePerItem item -> Directory`)
         return new InMemoryStat(FileType.Directory, 0, Date.now(), 0)
       }
 
@@ -330,29 +318,29 @@ export class SystemScriptFS implements FileSystemProvider {
       if (!entry) {
         entry = { mtime: Date.now() }
         this.openFiles.set(key, entry)
-        getOutputChannel().debug(`<SystemScriptFS.stat> schema file cached mtime=${entry.mtime}`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> schema file cached mtime=${entry.mtime}`)
       }
       const size = entry.original ? Buffer.byteLength(entry.original, 'utf8') : 0
       const mtime = entry.mtime ?? Date.now()
-      getOutputChannel().debug(`<SystemScriptFS.stat> schema file tracked=${entry.original !== undefined ? 'yes' : 'no'} mtime=${mtime} size=${size}`)
-      getOutputChannel().debug(`<SystemScriptFS.stat> attribute/file -> File (size=${size})`)
+      getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> schema file tracked=${entry.original !== undefined ? 'yes' : 'no'} mtime=${mtime} size=${size}`)
+      getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> attribute/file -> File (size=${size})`)
       return new InMemoryStat(FileType.File, 0, mtime, size)
     }
 
     // Check if it's an intermediate directory
     const childPaths = getSchemaChildPaths(parts)
     if (childPaths.size > 0) {
-      getOutputChannel().debug(`<SystemScriptFS.stat> intermediate directory with ${childPaths.size} children -> Directory`)
+      getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> intermediate directory with ${childPaths.size} children -> Directory`)
       return new InMemoryStat(FileType.Directory, 0, Date.now(), 0)
     }
 
-    getOutputChannel().debug(`<SystemScriptFS.stat> NOT FOUND`)
+    getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> NOT FOUND`)
     throw FileSystemError.FileNotFound(uri)
   }
 
   async readDirectory(uri: Uri): Promise<[string, FileType][]> {
     const parts = uri.path.split('/').filter(Boolean)
-    getOutputChannel().debug(`<SystemScriptFS.readDirectory> uri=${uri.path}, parts=[${parts.join(', ')}]`)
+    getVirtualFileSystemChannel().debug(`<SystemScriptFS.readDirectory> uri=${uri.path}, parts=[${parts.join(', ')}]`)
 
     // special-case for /system/script to show actual script items from RouterOS
     if (parts.length === 2 && parts[0] === 'system' && parts[1] === 'script') {
@@ -434,14 +422,14 @@ export class SystemScriptFS implements FileSystemProvider {
 
     // Otherwise, show child directories from available schema paths
     const availablePaths = await this.getAvailableSchemaPaths()
-    getOutputChannel().debug(`<SystemScriptFS.readDirectory> available schema paths=${availablePaths.size}`)
+    getVirtualFileSystemChannel().debug(`<SystemScriptFS.readDirectory> available schema paths=${availablePaths.size}`)
     let childPaths = getSchemaChildPathsFromAvailable(parts, availablePaths)
-    getOutputChannel().debug(`<SystemScriptFS.readDirectory> child paths (available)=${Array.from(childPaths).join(', ')}`)
+    getVirtualFileSystemChannel().debug(`<SystemScriptFS.readDirectory> child paths (available)=${Array.from(childPaths).join(', ')}`)
     if (childPaths.size === 0) {
       // Fallback: show schema paths even if /console/inspect is restricted
       childPaths = getSchemaChildPaths(parts)
       if (childPaths.size > 0) {
-        getOutputChannel().debug(`<SystemScriptFS.readDirectory> fallback to schema paths for ${uri.path}`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.readDirectory> fallback to schema paths for ${uri.path}`)
       }
     }
     if (childPaths.size > 0) {
@@ -555,7 +543,7 @@ export class SystemScriptFS implements FileSystemProvider {
   async writeFile(uri: Uri, content: Uint8Array, options: { create: boolean, overwrite: boolean }): Promise<void> {
     const parts = uri.path.split('/').filter(Boolean)
     const newSource = new TextDecoder().decode(content)
-    getOutputChannel().debug(`<SystemScriptFS.writeFile> uri=${uri.path}, create=${options.create}, overwrite=${options.overwrite}`)
+    getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> uri=${uri.path}, create=${options.create}, overwrite=${options.overwrite}`)
 
     // system/script special-case
     if (parts.length >= 3 && parts[0] === 'system' && parts[1] === 'script') {
@@ -578,7 +566,7 @@ export class SystemScriptFS implements FileSystemProvider {
       }
 
       const tracked = this.openFiles.get(uri.toString())
-      getOutputChannel().debug(`<SystemScriptFS.writeFile> system/script tracked=${tracked ? 'yes' : 'no'} trackedLen=${tracked?.original?.length ?? -1}`)
+      getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> system/script tracked=${tracked ? 'yes' : 'no'} trackedLen=${tracked?.original?.length ?? -1}`)
       if (tracked?.original !== undefined) {
         const remote = await client.getSystemScript(name)
         const remoteSource = remote?.source ?? ''
@@ -600,13 +588,13 @@ export class SystemScriptFS implements FileSystemProvider {
     if (!schemaMatch) throw FileSystemError.FileNotFound(uri)
     const { schema, relParts } = schemaMatch
     const mapper = new SchemaMapper(RouterRestClient.default, schema)
-    getOutputChannel().debug(`<SystemScriptFS.writeFile> schema=${schema.path}, relParts=[${relParts.join(', ')}]`)
+    getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> schema=${schema.path}, relParts=[${relParts.join(', ')}]`)
 
     if (schema.singleton && schema.multiFilePerItem) {
       if (relParts.length >= 2) {
         const buttonName = decodeURIComponent(relParts[0])
         const attr = relParts[1]
-        getOutputChannel().debug(`<SystemScriptFS.writeFile> singleton multiFile update ${schema.path}/${buttonName}/${attr} len=${newSource.length}`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> singleton multiFile update ${schema.path}/${buttonName}/${attr} len=${newSource.length}`)
 
         // For routerboard, fetch current state and merge to avoid nested field issues
         const items = await mapper.listItems()
@@ -635,14 +623,14 @@ export class SystemScriptFS implements FileSystemProvider {
         const attr = relParts[1]
         const mappedAttr = schema.path === '/tool/netwatch' ? mapNetwatchAttr(attr) : attr
         const tracked = this.openFiles.get(uri.toString())
-        getOutputChannel().debug(`<SystemScriptFS.writeFile> tracked=${tracked ? 'yes' : 'no'} path=${schema.path} item=${itemName} attr=${mappedAttr} len=${newSource.length}`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> tracked=${tracked ? 'yes' : 'no'} path=${schema.path} item=${itemName} attr=${mappedAttr} len=${newSource.length}`)
         const id = await resolveItemIdByFileName(mapper, schema, itemName)
         if (!id) {
           if (!options.create || !schema.createSupported) throw FileSystemError.FileNotFound(uri)
           const payload: Record<string, unknown> = {}
           payload[schema.nameAttr ?? 'name'] = itemName
           payload[mappedAttr] = newSource
-          getOutputChannel().debug(`<SystemScriptFS.writeFile> create ${schema.path} item=${itemName} attr=${mappedAttr} len=${newSource.length}`)
+          getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> create ${schema.path} item=${itemName} attr=${mappedAttr} len=${newSource.length}`)
           await mapper.createItem(payload)
           this.updateItemInCache(schema.path, itemName, false)
           this.openFiles.set(uri.toString(), { original: newSource, mtime: Date.now() })
@@ -658,7 +646,7 @@ export class SystemScriptFS implements FileSystemProvider {
             throw new Error('Remote file changed since opened - aborting save')
           }
         }
-        getOutputChannel().debug(`<SystemScriptFS.writeFile> update ${schema.path} id=${id} attr=${mappedAttr} len=${newSource.length}`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> update ${schema.path} id=${id} attr=${mappedAttr} len=${newSource.length}`)
         await mapper.updateItem(id, { [mappedAttr]: newSource })
         this.openFiles.set(uri.toString(), { id, original: newSource, mtime: Date.now() })
         this.onDidChangeEmitter.fire([{ type: FileChangeType.Changed, uri }])
@@ -671,7 +659,7 @@ export class SystemScriptFS implements FileSystemProvider {
         const itemName = normalizeItemName(schema, decodeURIComponent(relParts[0]))
         const attr = (schema.scriptAttrs ?? [])[0]
         const tracked = this.openFiles.get(uri.toString())
-        getOutputChannel().debug(`<SystemScriptFS.writeFile> tracked=${tracked ? 'yes' : 'no'} path=${schema.path} item=${itemName} attr=${attr ?? ''} len=${newSource.length}`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> tracked=${tracked ? 'yes' : 'no'} path=${schema.path} item=${itemName} attr=${attr ?? ''} len=${newSource.length}`)
         const id = await resolveItemIdByFileName(mapper, schema, itemName)
         if (!id) {
           if (!options.create || !schema.createSupported) throw FileSystemError.FileNotFound(uri)
@@ -684,14 +672,14 @@ export class SystemScriptFS implements FileSystemProvider {
             else {
               await client.updateSystemScript(scriptId, { source: newSource })
             }
-            getOutputChannel().debug(`<SystemScriptFS.writeFile> create ${schema.path} item=${itemName} attr=${attr} len=${newSource.length}`)
+            getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> create ${schema.path} item=${itemName} attr=${attr} len=${newSource.length}`)
             await mapper.createItem({ [schema.nameAttr ?? 'name']: itemName, [attr]: itemName })
           }
           else {
             const payload: Record<string, unknown> = {}
             payload[schema.nameAttr ?? 'name'] = itemName
             if (attr) payload[attr] = newSource
-            getOutputChannel().debug(`<SystemScriptFS.writeFile> create ${schema.path} item=${itemName} attr=${attr ?? ''} len=${newSource.length}`)
+            getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> create ${schema.path} item=${itemName} attr=${attr ?? ''} len=${newSource.length}`)
             await mapper.createItem(payload)
           }
           this.updateItemInCache(schema.path, itemName, false)
@@ -728,7 +716,7 @@ export class SystemScriptFS implements FileSystemProvider {
             throw new Error('Remote file changed since opened - aborting save')
           }
         }
-        getOutputChannel().debug(`<SystemScriptFS.writeFile> update ${schema.path} id=${id} attr=${attr ?? ''} len=${newSource.length}`)
+        getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> update ${schema.path} id=${id} attr=${attr ?? ''} len=${newSource.length}`)
         await mapper.updateItem(id, { [attr]: newSource })
         this.openFiles.set(uri.toString(), { id, original: newSource, mtime: Date.now() })
         this.onDidChangeEmitter.fire([{ type: FileChangeType.Changed, uri }])
@@ -881,7 +869,7 @@ export class SystemScriptFS implements FileSystemProvider {
   createDirectory(_uri: Uri): void | Thenable<void> { throw FileSystemError.NoPermissions('Cannot create directories in RouterOS FS') }
 
   dispose(): void {
-    getOutputChannel().trace('<SystemScriptFS> {dispose} invoked')
+    getVirtualFileSystemChannel().trace('<SystemScriptFS> {dispose} invoked')
     this.onDidChangeEmitter.dispose()
   }
 }
@@ -892,12 +880,12 @@ export function initializeSystemScriptFileSystem(): Disposable[] {
   const cmd = commands.registerCommand('tikbook.mount.system.scripts', () => {
     const base = getSettings().baseUrl ?? ''
     if (!base) {
-      getOutputChannel().debug('<mount> tikbook.baseUrl missing')
+      getVirtualFileSystemChannel().debug('<mount> tikbook.baseUrl missing')
       void window.showErrorMessage('tikbook.baseUrl is not configured; set it in settings to mount router scripts')
       return
     }
     const host = base.replace(/^https?:\/\//, '').replace(/\/$/, '')
-    getOutputChannel().debug(`<mount> requested for host=${host}`)
+    getVirtualFileSystemChannel().debug(`<mount> requested for host=${host}`)
     mountScriptsToExplorer(host)
   })
 
@@ -918,8 +906,8 @@ export function initializeSystemScriptFileSystem(): Disposable[] {
 
 export function mountScriptsToExplorer(host: string): void {
   const uri = Uri.parse(`${SCHEME}://${host}/`)
-  getOutputChannel().debug(`<mount> creating workspace folder uri=${uri.toString()}`)
+  getVirtualFileSystemChannel().debug(`<mount> creating workspace folder uri=${uri.toString()}`)
   const ok = workspace.updateWorkspaceFolders(0, 0, { uri, name: `Router ${host} scripts` })
-  getOutputChannel().debug(`<mount> updateWorkspaceFolders returned=${ok}`)
+  getVirtualFileSystemChannel().debug(`<mount> updateWorkspaceFolders returned=${ok}`)
   void window.showInformationMessage(`Mounted router scripts from ${host}`)
 }

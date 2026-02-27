@@ -184,6 +184,78 @@ client.get('/ip/address').catch(() => {}); // Silent failure
 
 **Why:** Errors should be visible. Catch where you can handle them, propagate otherwise.
 
+## Async Safety Patterns
+
+### Await Before Building UI State
+
+A common race condition occurs when async operations complete after UI construction. Always `await` async provider methods **before** building UI strings, objects, or state.
+
+**Problem (Race Condition):**
+
+```typescript
+// ❌ Bad - Race condition
+class VMExplorer {
+  async getUnavailableReason(): Promise<string | undefined> {
+    // This may take 100ms...
+    return this.provider.getUnavailableReason();
+  }
+
+  async makeTreeItem(): Promise<TreeItem> {
+    // Build tooltip text immediately (before async completes)
+    const reason = this.getUnavailableReason(); // No await!
+    const tooltip = `VM: ${this.vm.name}. Status: ${reason}`; // reason is Promise, not string!
+    
+    // This tooltip is built with stale/incomplete data
+    return new TreeItem(this.vm.name, TreeItemCollapsibleState.None, {
+      tooltip, // Contains Promise placeholder, not actual reason
+    });
+  }
+}
+```
+
+**Solution (Await First):**
+
+```typescript
+// ✅ Good - Await before building UI
+class VMExplorer {
+  async getUnavailableReason(): Promise<string | undefined> {
+    return this.provider.getUnavailableReason();
+  }
+
+  async makeTreeItem(): Promise<TreeItem> {
+    // Await the async call FIRST
+    const reason = await this.getUnavailableReason();
+    
+    // Now build tooltip with resolved data
+    const tooltip = reason 
+      ? `VM: ${this.vm.name}. Status: ${reason}` 
+      : `VM: ${this.vm.name}. (Available)`;
+    
+    return new TreeItem(this.vm.name, TreeItemCollapsibleState.None, {
+      tooltip, // Contains actual string, not Promise
+    });
+  }
+}
+```
+
+**Why This Matters:**
+
+- UI frameworks may render before async completes, causing stale or placeholder text
+- Users see confusing tooltips like "undefined" or "Promise { <pending> }"
+- Hard to debug because it's not a crash—just silent data staleness
+
+**Pattern:**
+
+1. **Identify async dependencies** - What does your UI state depend on?
+2. **Await at the boundary** - Get real data before constructing UI objects
+3. **Build UI with resolved data** - Pass strings/values, never Promises
+
+**When to Use:**
+
+- **Tree view items** - Tooltips, descriptions, icons depend on async provider methods
+- **Diagnostics/status bars** - Text that shows connection status, availability, etc.
+- **Any UI construction** - if it depends on async operations
+
 ## Generic Patterns
 
 ### Flexible REST Client

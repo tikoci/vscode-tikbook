@@ -87,9 +87,11 @@ The `.vscodeignore` file controls what goes into the VSIX package:
 
 ### Markdown Linting
 
-- Public docs: `npm run markdown:lint:public` (README.md, CHANGELOG.md)
-- Internal docs/instructions: `npm run markdown:lint:agentic` (docs/ and Copilot instructions)
-- Auto-fix is manual-only: `npm run markdown:fix:all`
+- **Public docs (strict)**: `npm run markdown:lint:public` (README.md, CHANGELOG.md)
+- **Internal docs (relaxed)**: `npm run markdown:lint:agentic` (docs/ and Copilot instructions)
+  - Internal rules disable MD036 (emphasis vs heading) and MD040 (language tags) to avoid false positives
+  - No manual cleanup needed for internal docs in normal workflow
+- **Auto-fix**: `npm run markdown:fix:all` applies fixes to both public and internal files (run at session end if needed)
 
 ## Documentation Structure
 

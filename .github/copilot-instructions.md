@@ -19,6 +19,7 @@ Pattern guides in `docs/`:
 - `testing-vscode-web-local.md` - Testing web extensions locally and on vscode.dev
 - `copilot-setup.md` - Copilot configuration and troubleshooting
 - `web-desktop-compatibility.md` - Design-time verification for VS Code for Web (if created)
+- `agentic-collaboration-patterns.md` - AI-assisted spec refinement workflows (iterative Q&A, research patterns)
 
 Architectural reference: See [docs/architecture.md](../docs/architecture.md), [docs/conventions.md](../docs/conventions.md), and [docs/sarb/code-review-checklist.md](../docs/sarb/code-review-checklist.md).
 
@@ -57,14 +58,35 @@ Architectural reference: See [docs/architecture.md](../docs/architecture.md), [d
 - Gate experimental features behind settings when noted in docs/llm-todos.md or docs/future-features.md.
 - If third-party test tooling is buggy, document it in docs/interop-issues.md and consider filing an upstream issue.
 - **When adding runtime assets** (media/, web resources): Update `.vscodeignore` if patterns need adjustment.
+- **Web research source note (MikroTik):** `help.mikrotik.com` runs on Atlassian Confluence; `forum.mikrotik.com` runs on Discourse. For fetch-based extraction, query for specific section headers (Confluence) or post/reply structure and versions (Discourse) to reduce navigation noise.
 
 ## Markdown workflow (AI-friendly)
 
-- `npm run compile` does not run markdownlint (prevents file churn during agentic edits)
-- Validate public docs with `npm run markdown:lint:public`
-- Validate internal docs/instructions with `npm run markdown:lint:agentic`
-- For manual cleanup: use `npm run markdown:fix:all` or `npm run format`
-- Never recommend running `markdown:fix:*` during active development/editing
+**Always use npm scripts, never `npx markdownlint` directly:**
+
+- Check linting: `npm run markdown:lint:agentic` (docs + instructions)
+- Auto-fix issues: `npm run markdown:fix:agentic` (uses --fix flag, run at end of session)
+- Fix all (code + markdown): `npm run format` (runs eslint --fix + markdown --fix)
+
+**Agentic linting philosophy:**
+
+- **Internal docs** (docs/, instructions): Relaxed rules (`MD036`, `MD040` disabled) to avoid false positives on legitimate patterns like "Example:", "Flow 1:", fenced blocks without language tags
+- **Public docs** (README.md, CHANGELOG.md): Strict rules for professional formatting
+- This is intentional—internal docs are for dev/LLM reference, not user-facing
+
+**Workflow for markdown changes:**
+
+1. Edit markdown file (no linting during development)
+2. At session end, run `npm run markdown:lint:agentic` to check for real issues
+3. Manual fixes only needed for rare violations (e.g., HTML formatting, unclosed blocks)
+4. Do not worry about MD036/MD040 in internal docs—they're disabled for agentic mode
+
+**Why npm scripts instead of npx:**
+
+- Knows installed version and config files (.markdownlint-*.yaml)
+- Applies correct config (strict for public, agentic for docs)  
+- Handles multiple files/patterns easily
+- Consistent with eslint/lint workflow
 
 ## Unit Test Framework (CRITICAL)
 
@@ -78,12 +100,14 @@ Architectural reference: See [docs/architecture.md](../docs/architecture.md), [d
 ## Testing Workflow Hints
 
 **When implementing features:**
+
 - Suggest running tests after changes: "Run tests with Test Explorer (⌘⇧T) or `npm test`"
 - If GUI Test Runner doesn't show tests: "Run `npm run compile:test` to build test files for GUI discovery"
 - For web testing: Prompt user to open vscode.dev or github.dev (they are equivalent for extension testing)
-  - Example: "Open https://vscode.dev to test the web extension" (don't automate `open` command - let users see the action)
+  - Example: "Open <https://vscode.dev> to test the web extension" (don't automate `open` command - let users see the action)
 
 **To focus Test Explorer programmatically:**
+
 ```typescript
 await vscode.commands.executeCommand('workbench.view.testing.focus');
 // or show most recent test output:
@@ -91,9 +115,10 @@ await vscode.commands.executeCommand('testing.showMostRecentOutput');
 ```
 
 **Manual web extension testing workflow:**
+
 1. Prompt: "Run `npm run vsix:serve` in terminal"
-2. Prompt: "Open https://vscode.dev in browser"
-3. Prompt: "Install from https://localhost:5000 using Command Palette"
+2. Prompt: "Open <https://vscode.dev> in browser"
+3. Prompt: "Install from <https://localhost:5000> using Command Palette"
 4. Prompt: "Test extension activation with Option+Shift+M"
 
 See [docs/manual-testing-web-extensions.md](../docs/manual-testing-web-extensions.md) for the required manual checks after build or packaging changes.

@@ -142,6 +142,58 @@ async function getRouterName() {
 }
 ```
 
+## Command Boundaries & Type Guards
+
+### Type-Guard Unknown Command Arguments
+
+VS Code passes command arguments as `unknown` because they come from external sources (keybindings, menus, programmatic calls). Never use optional chaining directly on `unknown` arguments—define type guards first.
+
+**Why This Matters:**
+
+- Optional chaining on `unknown` silently returns `undefined` if the check fails
+- This can lead to subtle bugs where code doesn't crash, but silently skips logic
+- Type guards make the contract explicit and catch mistakes during development
+
+**Pattern:**
+
+```typescript
+// ✅ Good - Type guard at boundary
+function isVMTreeCommandItem(item: unknown): item is VMTreeCommandItem {
+  if (!item || typeof item !== 'object') return false;
+  const candidate = item as { vm?: unknown; provider?: unknown };
+  return !!candidate.vm && !!candidate.provider;
+}
+
+async function handleDeleteVM(item: unknown): Promise<void> {
+  if (!isVMTreeCommandItem(item)) {
+    log.error('[command: tikbook.vm.delete] Invalid command argument');
+    return;
+  }
+  // Now `item` is type-safe as VMTreeCommandItem
+  const vm = item.vm;
+  const provider = item.provider;
+  // ... rest of implementation
+}
+
+// ❌ Avoid - Optional chaining on unknown
+async function handleDeleteVM(item: unknown): Promise<void> {
+  const vm = (item as any)?.vm;  // Silent failure if item.vm is undefined
+  const provider = (item as any)?.provider;  // Can't catch with linting
+  if (!vm || !provider) return;  // Too late, hard to debug
+}
+```
+
+**When to Use:**
+
+- **All command handlers** that accept arguments
+- **Event listeners** that receive callback arguments with unknown shape
+- **Deserialization** from untrusted sources (JSON, user input)
+
+**When NOT Needed:**
+
+- Internal functions with controlled types (TypeScript already enforces)
+- Within a function after you've already type-checked arguments
+
 ## Async/Promises
 
 ### Await All Promises

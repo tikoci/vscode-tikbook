@@ -29,6 +29,49 @@ These rules apply to extension code in `src/**/*.ts`. The goal is web-compatible
 - Handle errors from RouterOS REST API; map to user-friendly messages.
 - Validate RouterOS commands against v7 schema before committing.
 
+## Context Menu vs Inline Buttons
+
+VS Code tree view items can display commands in two ways:
+
+### Inline Buttons (Group Name: `inline@N`)
+
+- Commands appear as icon buttons **directly on the tree item**
+- Display method: `"group": "inline@1"` (use `@1`, `@2`, `@3`... for order)
+- Use when: Quick actions, frequently used commands, space allows
+- Example: Start/Stop/Delete buttons next to each VM name
+- **Note:** Only one display method works at a time for a given command—if a command is in `inline` group, it won't appear in context menu
+
+### Context Menu (Default: Any other group name)
+
+- Commands appear when right-clicking the tree item
+- Display method: `"group": "actions@1"`, `"info@1"`, `"management@1"`, etc.
+- Use when: Less frequent actions, limited inline space, logical grouping needed
+- **Note:** Separator lines appear between different group names in context menu
+
+### Key Pattern
+
+In `package.json` `view/item/context`:
+
+```json
+{
+  "command": "tikbook.chrvm.start",
+  "when": "view == treeViewId && viewItem =~ /pattern/",
+  "group": "inline@1"  // inline = tree item button
+}
+```
+
+vs
+
+```json
+{
+  "command": "tikbook.chrvm.create",
+  "when": "view == chrVMExplorer",
+  "group": "actions@1"  // any name = context menu only
+}
+```
+
+A command belongs to **either** inline (appears as button) **or** context menu (appears on right-click), not both.
+
 ## References
 
 See [docs/conventions.md](../../docs/conventions.md) for detailed patterns.

@@ -23,7 +23,9 @@
         "timeout": true,
         "true": true,
         "npm": true,
-        "npx tsc": true
+        "npx tsc": true,
+        "npx eslint": true,
+        "osascript": true
     },
     
     // ============================================

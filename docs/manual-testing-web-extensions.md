@@ -26,11 +26,12 @@ These are the **two critical manual tests** after any build system changes:
 ### Quick Steps
 
 1. **Open VS Code for Web**
+
    ```
    https://vscode.dev
    ```
 
-2. **Open command palette** 
+2. **Open command palette**
    - `Cmd+Shift+P` (macOS) or `Ctrl+Shift+P`
 
 3. **Install extension from location**
@@ -45,7 +46,7 @@ These are the **two critical manual tests** after any build system changes:
 5. **Trigger extension activation**
    - Press `Option+Shift+M` (or `Alt+Shift+M` on Windows/Linux)
    - **Expected:** Quick menu appears with options like:
-     - "Show TikBook Menu" 
+     - "Show TikBook Menu"
      - "New TikBook Notebook"
      - etc.
 
@@ -58,17 +59,20 @@ These are the **two critical manual tests** after any build system changes:
 ### What You're Verifying
 
 ✅ **Pass conditions:**
+
 - Menu appears after `Option+Shift+M`
 - Commands are visible and clickable
 - No "Cannot load module" errors in console
 - No "Activating extension failed" messages
 
 ⚠️ **Known Issues (Expected):**
+
 - RouterOS LSP not activating ("Language client is not ready") - LSP is Node-only, can't work in web sandbox
 - Icon doesn't display (CORS issue from ibb.co) - cosmetic only, not a build issue
 - "package.nls.json 404" - expected for extensions without translation files
 
 ❌ **Fail conditions (build system issue):**
+
 - Menu doesn't appear or throws error
 - Console errors mention "Cannot resolve" or module loading
 - Extension doesn't load/activate at all
@@ -76,6 +80,7 @@ These are the **two critical manual tests** after any build system changes:
 ### Diagnostic Console Logs to Check
 
 **Good signs** (Extension host):
+
 ```
 [12:34:56] Activating extension TIKOCI.tikbook
 [12:34:56] TIKOCI.tikbook (EXTENSION) ✓ Activation succeeded
@@ -83,6 +88,7 @@ These are the **two critical manual tests** after any build system changes:
 ```
 
 **Bad signs** (Something is broken in build):
+
 ```
 [12:34:56] Cannot load module './codelens'
 [12:34:56] Activating extension 'TIKOCI.tikbook' failed
@@ -100,11 +106,13 @@ These are the **two critical manual tests** after any build system changes:
 ### Prerequisites
 
 1. **Tests must be compiled first** (GUI runner doesn't auto-compile)
+
    ```bash
    npm run compile:test
    ```
-   
+
    Or to compile everything:
+
    ```bash
    npm run compile && npm run compile:test
    ```
@@ -140,12 +148,14 @@ These are the **two critical manual tests** after any build system changes:
 ### What You're Verifying
 
 ✅ **Pass conditions:**
+
 - Tests appear in sidebar after compile
 - Can run individual tests successfully
 - Debug mode opens debugger window
 - All 91 tests pass
 
 ❌ **Fail conditions (test infrastructure broken):**
+
 - Tests don't appear (usually means `out/test/` not compiled)
 - Run fails with "No tests found" despite compiling
 - Test results show failures that don't match CLI results
@@ -161,6 +171,7 @@ npm run compile:test
 Then reload VS Code sidebar (click refresh icon in test panel).
 
 **Alternative:** Use the "Debug Tests" launch configuration:
+
 - Open Run view (Cmd+Shift+D)
 - Select "Debug Tests" from dropdown
 - Click **Play** button
@@ -191,6 +202,7 @@ npx @vscode/vsce ls --tree tikbook-web.vsix | head -30
 ## Testing After Build System Changes
 
 **Always verify both tests when:**
+
 - Changing build tools (tsc, Bun, esbuild, etc.)
 - Modifying webpack/bundle config
 - Updating source map generation
@@ -216,13 +228,16 @@ npx @vscode/vsce ls --tree tikbook-web.vsix | head -30
 If the menu doesn't appear on vscode.dev:
 
 ### 1. Check VSIX contents
+
 ```bash
 npx @vscode/vsce ls --tree tikbook-web.vsix | grep extension.js
 # Should show: dist/extension.js in output
 ```
 
 ### 2. Check npx serve output
+
 Look at terminal where `npm run vsix:serve` is running:
+
 ```
 HTTP  GET /package.json      → 200 ✓
 HTTP  GET /dist/extension.js → 200 ✓  (should be large, ~800KB)
@@ -232,15 +247,18 @@ HTTP  GET /icon.png          → 304 ✓  (cached)
 If you see **404** for extension.js, the build output doesn't exist.
 
 ### 3. Check browser console (F12)
+
 - Go to **Console** tab
 - Make sure all message levels shown (don't filter to only Errors)
 - Look for module loading errors or activation failures
 
 ### 4. Check "Extension Host (Worker)" in DevTools
+
 - Some errors only appear in the extension worker context
 - Look for anything mentioning "Activating extension" or module failures
 
 ### 5. Verify compile step
+
 ```bash
 ls -lh dist/extension.js out/extension.js
 # Both should exist and be >600KB
@@ -253,11 +271,13 @@ ls -lh dist/extension.js out/extension.js
 **⚠️ Note:** CORS issues when **using TikBook features** (like connecting to RouterOS) are **NOT build issues**. The build system is working correctly if the menu appears.
 
 **CORS is a separate architectural issue** requiring:
+
 - Reverse proxy between vscode.dev and RouterOS device
 - Certificate trust configuration on all parties
 - This is beyond scope of build system testing
 
 **For build verification, it's sufficient to confirm:**
+
 - Extension loads and registers commands
 - Menu appears when triggered
 - No "Cannot load module" errors
@@ -286,4 +306,3 @@ npm run vsix:serve
 # ✅ If menu appears AND tests show in GUI: Build system working correctly
 # ❌ If either fails: Likely build/bundling issue requiring investigation
 ```
-

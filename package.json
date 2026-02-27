@@ -184,6 +184,16 @@
         }
       }
     },
+    "views": {
+      "explorer": [
+        {
+          "id": "chrVMExplorer",
+          "name": "CHR Test VMs",
+          "icon": "$(server-environment)",
+          "contextualTitle": "RouterOS CHR VMs"
+        }
+      ]
+    },
     "viewsWelcome": [
       {
         "view": "explorer",
@@ -211,6 +221,40 @@
           "command": "tikbook.new.notebook.router.scripts",
           "group": "notebook",
           "icon": "$(mikrotik-icon-line)"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "tikbook.chrvm.create",
+          "when": "view == chrVMExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tikbook.chrvm.refresh",
+          "when": "view == chrVMExplorer",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "tikbook.chrvm.start",
+          "when": "view == chrVMExplorer && viewItem =~ /vm.*\\.stopped/",
+          "group": "inline@1"
+        },
+        {
+          "command": "tikbook.chrvm.stop",
+          "when": "view == chrVMExplorer && viewItem =~ /vm.*\\.running/",
+          "group": "inline@2"
+        },
+        {
+          "command": "tikbook.chrvm.details",
+          "when": "view == chrVMExplorer && viewItem =~ /^vm/",
+          "group": "inline@3"
+        },
+        {
+          "command": "tikbook.chrvm.delete",
+          "when": "view == chrVMExplorer && viewItem =~ /^vm/ && viewItem !~ /running/",
+          "group": "inline@4"
         }
       ],
       "explorer/context": [
@@ -596,6 +640,42 @@
         "command": "tikbook.show.menu.main",
         "title": "Show TikBook Menu",
         "category": "TikBook"
+      },
+      {
+        "command": "tikbook.chrvm.refresh",
+        "title": "Refresh CHR VMs",
+        "category": "CHR VM",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "tikbook.chrvm.create",
+        "title": "Create New CHR VM",
+        "category": "CHR VM",
+        "icon": "$(add)"
+      },
+      {
+        "command": "tikbook.chrvm.start",
+        "title": "Start VM",
+        "category": "CHR VM",
+        "icon": "$(play)"
+      },
+      {
+        "command": "tikbook.chrvm.stop",
+        "title": "Stop VM",
+        "category": "CHR VM",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "tikbook.chrvm.delete",
+        "title": "Delete VM",
+        "category": "CHR VM",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "tikbook.chrvm.details",
+        "title": "Show VM Details",
+        "category": "CHR VM",
+        "icon": "$(info)"
       }
     ],
     "continueEditSession": [
@@ -651,10 +731,10 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run markdown:lint:public && npm run lint && npm run compile",
-    "compile": "npm run clean && npm run lint && npm run compile:node",
+    "compile": "npm run clean && npm run lint && npm run typecheck && npm run compile:node",
     "compile:node": "bun build src/extension.ts --outdir=./out --entry-naming=extension.js --external vscode --format=cjs --target=node --sourcemap",
     "compile:web": "bun build src/extension.ts --outdir=./dist --entry-naming=extension.js --external vscode --format=cjs --target=browser --sourcemap",
-    "compile:test": "bun build src/test/suite/**/*.test.ts --outdir=./out/test --external vscode --format=cjs --target=node --sourcemap",
+    "compile:test": "rm -rf out/test && bun build $(find src/test/suite -name '*.test.ts' -type f) --outdir=./out/test --external vscode --format=cjs --target=node --sourcemap",
     "pretest": "npm run compile:node && npm run compile:test",
     "test": "vscode-test --config .vscode-test-cli.mjs",
     "pretest:web": "npm run compile:web && npm run compile:test",
@@ -698,7 +778,8 @@
   },
   "dependencies": {
     "axios": "^1.13.5",
-    "luxon": "^3.7.2"
+    "luxon": "^3.7.2",
+    "semver": "^7.7.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -708,6 +789,7 @@
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/test-web": "^0.0.79",
+    "@types/semver": "^7.7.1",
     "eslint": "^10.0.1",
     "markdownlint-cli": "^0.43.0",
     "mocha": "^10",

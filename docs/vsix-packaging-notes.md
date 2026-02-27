@@ -3,6 +3,7 @@
 ## Current Status
 
 After Bun build system transition, the web VSIX (.target web) is being packaged with both:
+
 - ✅ `dist/extension.js` (2.1 MB) - correct web bundle
 - ✅ `node_modules/` (7.2 MB) - OK for runtime dependencies
 - ⚠️ `out/` (1.76 MB) - **unnecessary, only needed for node target**
@@ -36,10 +37,12 @@ Add cleanup step right before vsce package:
 ```
 
 **Pros:**
+
 - Simple, explicit, works regardless of .vscodeignore quirks
 - Ensures out/ is gone when vsce runs
 
 **Cons:**
+
 - Slightly fragile (depends on timing)
 
 ### Option B: Use .vscodeignore pattern more explicitly
@@ -64,9 +67,11 @@ Create separate compile scripts that don't pollute each other:
 ```
 
 **Pros:**
+
 - Clean separation, no cleanup needed
 
 **Cons:**
+
 - Requires refactoring all related scripts (test:web, vscode:prepublish, etc.)
 - More complex
 
@@ -95,6 +100,7 @@ npx @vscode/vsce ls --tree tikbook-web.vsix | grep "out/"
 ```
 
 Expected output:
+
 ```
 tikbook-web.vsix
 ├─ dist/extension.js
@@ -110,6 +116,7 @@ tikbook-web.vsix
 ## File Size Reference
 
 **Current web VSIX:**
+
 - Total: 2.72 MB
   - dist/ (bundled code): 2.14 MB ✓
   - node_modules/: 7.22 MB (necessary)
@@ -117,7 +124,7 @@ tikbook-web.vsix
   - out/ (node output): 1.76 MB ✗ unnecessary
 
 **After cleanup:**
+
 - Expected: ~2.8 MB (slight increase due to node_modules, but no duplicate output)
 - out/ directory gone
 - Web VSIX size more predictable
-

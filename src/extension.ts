@@ -11,6 +11,10 @@ import { initializeSystemScriptFileSystem } from './scriptfs'
 import { initializeLogging, log } from './shared'
 import { VideoViewer } from './video'
 import { initializeVirtualDocs } from './virtualdocs'
+import { initializeCHRVMCommands } from './vm-commands'
+import { CHRVMExplorerProvider } from './vm-explorer'
+import { UTMProvider } from './vm-providers/utm-provider'
+import { vmProviderRegistry } from './vm-providers/vm-provider-registry'
 import { logVersionInfo } from './vscode-compat'
 import { StatusWatchdog } from './watchdog'
 
@@ -19,11 +23,22 @@ let activationSubscriptionCount = 0
 export function activate(context: ExtensionContext): void {
   log.info('TikBook <activate> started')
   logVersionInfo(log)
+
+  // Register VM providers FIRST - before tree view initialization
+  const utmProvider = new UTMProvider()
+  // eslint-disable-next-line vscode-sanity/no-floating-disposable
+  vmProviderRegistry.register(utmProvider)
+
+  // Initialize CHR VM Explorer (after providers are registered)
+  const chrVMExplorer = CHRVMExplorerProvider.register(context)
+
   context.subscriptions.push(
+    chrVMExplorer,
     SecretManager.start(context),
     ...initializeLogging(),
     ...initializeMenus(),
     ...initializeCommands(),
+    ...initializeCHRVMCommands(context, chrVMExplorer),
     ...initializeNotebookEngines(),
     ...initializeVirtualDocs(),
     ...initializeSSH(),

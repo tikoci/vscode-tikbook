@@ -8,6 +8,44 @@ applyTo: '**/*.test.ts,**/*.spec.ts,llm-experiments.test.js'
 
 These rules apply to test files and one-off validation code.
 
+## Test-Driven Development for Integration Features
+
+**Philosophy:** For features that integrate with external systems (VMs, APIs, file systems), validate code blocks work in unit tests **before** integrating into UI or core extension code.
+
+**Benefits:**
+
+- **Faster iteration**: Test integration methods without full extension reload
+- **Clearer debugging**: Isolate VS Code-specific issues from integration logic
+- **Better documentation**: Tests show what approaches were tried and why
+- **Reduced risk**: Catch permission issues, API quirks, performance problems early
+
+**Workflow:**
+
+1. **Research phase**: Document integration options in `docs/research/`
+2. **Experiment phase**: Write `*.experiment.test.ts` files to test approaches empirically
+3. **Decision phase**: Document findings and choose approach based on test results
+4. **Implementation phase**: Extract validated code blocks into extension, add proper error handling
+5. **Preservation phase**: Mark experiments with `this.skip()`, keep as reference
+
+**Example:** UTM integration tested utmctl CLI vs AppleScript vs URL schemes in experiments before implementing VM provider interface.
+
+## Spec Quality & Iterative Q&A Pattern
+
+**Meta-principle:** Invest in specification clarity and validated technical answers *before* implementation. Time spent clarifying requirements and testing assumptions prevents rework cycles. Raw hour estimates matter less than spec quality.
+
+**Workflow for complex features:**
+
+1. **Create initial spec** with best-guess architecture, design questions, and open issues
+2. **Ask clarifying questions one at a time** to stakeholder/implementer
+3. **After each answer, re-prioritize remaining questions** - some resolve automatically
+4. **Capture each decision in spec** before moving to next question
+5. **Document scope boundaries** explicitly (what's MVP vs Phase 2+)
+6. **Only start implementation** once spec answers the top 80% of implementer questions
+
+**Value:** A tight spec with explicit decisions prevents mid-implementation scope creep and reduces rework. Spend an extra hour clarifying now; save 5-10 hours of rework during implementation.
+
+**Pattern:** "Critical Questions I'd Have About This Spec + Asking Highest Priority Question + Re-checking List If Still Relevant" - iterate through questions, cascading clarifications to simplify later questions.
+
 ## Test Files
 
 ### General Tests
@@ -72,7 +110,50 @@ suiteTeardown(() => {
 - Very complex environment setup that's hard to mock
 - Testing behavior outside VS Code context as baseline
 - Interactive prompts that benefit from manual observation
+- **AppleScript validation** - test syntax with `osascript -e` before extension integration
 - (But try unit test approach first)
+
+### AppleScript and Scripting Best Practices
+
+**Never integrate AppleScript/shell scripts without standalone testing:**
+
+1. **Create standalone test files** in `scripts/test-*.sh` to validate syntax
+
+   ```bash
+   #!/bin/bash
+   osascript << 'EOF'
+   tell application "UTM"
+     -- your script here
+   end tell
+   EOF
+   ```
+
+2. **Test in isolation** - run script directly to catch syntax errors:
+
+   ```bash
+   ./scripts/test-utm-applescript.sh
+   ```
+
+3. **Debug iteratively** - test syntax variations before embedding in code:
+   - Try different property access patterns
+   - Validate AppleScript dictionary (use `sdef /Applications/AppName.app`)
+   - Check if properties/methods actually exist on objects
+
+4. **Add unit tests** that validate the script:
+
+   ```typescript
+   test('AppleScript syntax is valid', async () => {
+     const { stdout } = await execFileAsync('osascript', ['-e', scriptText])
+     // Assert expected output
+   })
+   ```
+
+5. **Document solutions** in code comments and Phase notes:
+   - Why the pattern works (or doesn't)
+   - Limitations of the approach
+   - Example of standalone test
+
+**Why:** AppleScript errors only surface when the extension runs, making debugging hard. Testing standalone scripts in shells first catches 90% of issues earlier, with faster iteration cycles.
 
 ## Allowed in Tests
 
