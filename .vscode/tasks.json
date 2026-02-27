@@ -17,6 +17,29 @@
 				"reveal": "always",
 				"panel": "dedicated"
 			}
+		},
+		{
+			"type": "npm",
+			"script": "compile:test",
+			"group": "build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"presentation": {
+				"reveal": "silent"
+			}
+		},
+		{
+			"label": "test-build",
+			"dependsOn": [
+				"compile",
+				"compile:test"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "silent"
+			}
 		}
 	]
 }

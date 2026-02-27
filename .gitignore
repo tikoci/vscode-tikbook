@@ -1,6 +1,8 @@
 out
+dist
 node_modules
 .vscode-test
+.vsix-serve
 tsconfig.tsbuildinfo
 
 client/out
@@ -29,3 +31,7 @@ examples
 *.code-workspace
 
 cloc.*
+
+# Environment variables for integration tests
+.env
+.env.local.sarbsettings

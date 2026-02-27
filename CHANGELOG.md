@@ -75,11 +75,10 @@ _Bumped v0.3.3. Removed "Preview" and "Pre Release" flags in Extension Marketpla
 * CodeLens support for "RouterOS Run" in markdown
 * Uses `context.secret` to override the password in `settings.json` using VS Code's built-in secret storage (which is backed by OS credential storage like Apple Keychain)
 
-> **_REST-able commands_**
->
+> **REST-able commands**
 > One subtle feature is some cells will make a "direct" REST API call to get JSON data, plus the "normal" text output of a command. All cells are run using RouterOS's `:execute as-string script="<notebook-cell-code>"`, but if the last command is `print`, that "special" today.  And, the use of a `print` will add an  _additional_ cell output, in JSON, that VSCode "Renderers" to present tables or other UI to manipulate the returned RouterOS data.  The command path must be "fully qualified", like `/ip/address/print`, **not** complex expressions (e.g. `/ip/address { ...some code...; print })` for this to work.  But idea is _more_ expressions could be completed with a "standard" REST in future — just the code/logic belongs in [RouterOS LSP](https://github.com/tikoci/lsp-routeros-ts).  For example, if a cell was **only** a "path", notebook could execute it as a `GET`, similar for _some_ `POST` like `print` and `monitor` – which get JSON output.  _Or potentially an `:execute` with a `:put [:serialize to=<json|dsv>  [<notebook-cell-code>]]`_
 
-> 0.2.x skipped, preserving "even minor" versions for versions **not** marked `--prerelease`
+_Note: 0.2.x skipped, preserving "even minor" versions for versions **not** marked `--prerelease`_
 
 ### 0.1.9
 
@@ -113,7 +112,7 @@ _Bumped v0.3.3. Removed "Preview" and "Pre Release" flags in Extension Marketpla
 
 ### 0.1.6
 
-_Ephemeral_
+Ephemeral build (not published)
 
 ### 0.1.5
 
@@ -159,8 +158,10 @@ _Ephemeral_
 * `markdown-routeros` needs LSP support for "embedded languages"
  Some minor issues – with syntax colors – however...
   * No RouterOS syntax coloring when in markdown editor, so `.md` file will show it uncolored.
-    > RouterOS LSP needs support for "embedded languages".  This is more complex, since VS Code does not "automatically" wireup the blocks to an LSP server. Basically RouterOS LSP extension client, needs both grammars and custom "proxy" to wireup the grammars to LSP.  See VS Code docs on [embedded languages]().
+    > RouterOS LSP needs support for "embedded languages".  This is more complex, since VS Code does not "automatically" wireup the blocks to an LSP server. Basically RouterOS LSP extension client, needs both grammars and custom "proxy" to wireup the grammars to LSP.  See VS Code embedded languages documentation.
   * While colors are present in Markdown's "Preview" window for ` ```routeros ` blocks, the coloring does not use **any** VS Code provided.  Instead, it uses _some_ JS library to do coloring.
     > So even if with "embedded RouterOS" support, the coloring in preview _still_ be wrong.  More research needed, but there are schemes to "hook" the preview window to "fix" the colors.
 * Support internalization files for string.  While only English is planned, having all the strings in one places just makes editing text easier & code cleaner.  _And, if community members wanted to translate, it be easy to support alterative languages — although not many user strings & RouterOS is still only English_
 * VS Code custom `when` context needed to know if connected, this allow different wording/menus/etc. based on if RouterOS is online.  For example, menu could hide "show" options in menus.
+
+[RouterOS LSP]: https://github.com/tikoci/lsp-routeros-ts

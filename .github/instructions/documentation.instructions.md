@@ -19,8 +19,10 @@ These guidelines apply to all documentation files in `docs/`.
 
 ## Markdown Linting Workflow
 
-- **During development**: `npm run compile` validates markdown but does NOT auto-fix
-- **Manual cleanup**: `npm run markdown:fix` applies auto-fixes to docs/
+- **During development**: `npm run compile` does not run markdownlint
+- **Public docs validation**: `npm run markdown:lint:public` (README.md, CHANGELOG.md)
+- **Internal docs validation**: `npm run markdown:lint:agentic` (docs/ and Copilot instructions)
+- **Manual cleanup**: `npm run markdown:fix:all` applies auto-fixes to public + internal docs
 - **All-in-one format**: `npm run format` runs all linters with --fix
 - This prevents markdown auto-fixes from interfering with AI read/edit cycles
 
@@ -70,12 +72,14 @@ These guidelines apply to all documentation files in `docs/`.
 ### When to Add to `docs/llm-todos.md`
 
 **Use llm-todos.md for actionable tasks that can be delegated to an agent:**
+
 - Clear, specific work items ("Rename X to Y", "Add test for Z", "Fix type error in...")
 - Tasks you could start with "Please handle this" and expect completion
 - Items with clear file locations and scope
 - Deferred cleanup, refactoring, or small enhancements
 
 **When you realize:**
+
 - "This should be fixed, but not right now"
 - "Let's put this on the list for later"
 - "Good idea, but out of scope for this change"
@@ -83,6 +87,7 @@ These guidelines apply to all documentation files in `docs/`.
 **Add with:** File paths, priority (🔴 high / 🟡 medium / 🟢 low), clear description of what needs doing
 
 **Example:**
+
 ```markdown
 ### Fix Type Assertion in routeros.ts
 
@@ -94,6 +99,7 @@ These guidelines apply to all documentation files in `docs/`.
 ### When to Add to `docs/future-features.md`
 
 **Use future-features.md for vague, complex, or architectural ideas:**
+
 - Features requiring design decisions ("Should we support SSH transport?")
 - Architectural changes spanning multiple components
 - Ideas that need investigation or validation
@@ -101,6 +107,7 @@ These guidelines apply to all documentation files in `docs/`.
 - "Nice to have" enhancements without clear implementation path
 
 **When you realize:**
+
 - "This is interesting but complex"
 - "We should consider this in the future"
 - "This might require major refactoring"
@@ -109,6 +116,7 @@ These guidelines apply to all documentation files in `docs/`.
 **Add with:** Context on why it's deferred, decision points, considerations, external blockers
 
 **Example:**
+
 ```markdown
 ### SSH Transport Support
 

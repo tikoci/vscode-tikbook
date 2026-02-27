@@ -48,15 +48,26 @@ Your unit tests stopped working with `npm run test` due to a **critical bug in v
 - **To**: `.vscode-test.mjs` (ES Modules)
 - **Why**: Microsoft's official example uses `.vscode-test.mjs`; often more reliable with vscode-test-cli
 
-### 3. Updated .vscode-test.mjs glob pattern (EXACT MATCH)
+### 3. Implemented dual-config pattern (AI-FRIENDLY OUTPUT)
+
+- **Problem**: vscode-test-cli config overrides CLI `--reporter` args, but Extension Test Runner breaks if config has reporter
+- **Solution**: Two config files for separate use cases
+  - `.vscode-test.mjs` - NO reporter (Extension Test Runner GUI)
+  - `.vscode-test-cli.mjs` - custom reporter (writes `.vscode-test/test-output.log`)
+- **Benefit**: CLI tests show clear pass/fail with test names (human and AI readable)
+- **Usage**: `npm test` uses CLI config automatically
+
+### 4. Updated glob pattern (EXACT MATCH)
 
 - **Pattern**: `'out/test/**/*.test.js'` (explicit `.test.js` suffix, like Microsoft example)
 - **Previous**: Various glob patterns including `**/*.js` (too broad)
 
 ## Files Changed
 
-1. **package.json** - `@vscode/test-cli` **pinned to ^0.0.12**; added `format` script; compile now uses `markdown:lint` (not --fix)
-1. **.vscode-test.mjs** - ESM config file (follows Microsoft's official pattern)
+1. **package.json** - `@vscode/test-cli` **pinned to ^0.0.12**; test scripts use `.vscode-test-cli.mjs`; added `format` script
+1. **.vscode-test.mjs** - GUI config (no reporter, Extension Test Runner compatible)
+1. **.vscode-test-cli.mjs** - CLI config (custom reporter writing `.vscode-test/test-output.log`)
+1. **mocha-ai-reporter.cjs** - CLI reporter that writes output to `.vscode-test/test-output.log`
 1. **.vscode-test.js** - **DELETED** (had literal syntax errors and was being loaded instead of .mjs)
 1. **.vscode/launch.json** - Simplified to "Run Extension" and "Run Web Extension"
 1. **.vscode/tasks.json** - Single `compile` task (removed watch mode)
@@ -64,7 +75,8 @@ Your unit tests stopped working with `npm run test` due to a **critical bug in v
 1. **.github/copilot-instructions.md** - Added critical warning about test-cli version and markdown workflow
 1. **.github/instructions/testing.instructions.md** - Added test framework version requirements and verification
 1. **.github/instructions/documentation.instructions.md** - Added markdown linting workflow
-1. **.markdownlint.yaml** - Relaxed rules (MD029, MD041) for docs/instructions
+1. **.markdownlint-agentic.yaml** - Relaxed rules (MD029, MD041) for docs/instructions
+1. **.markdownlint-strict.yaml** - Strict defaults for public docs
 
 ## Current Status
 
@@ -77,7 +89,7 @@ Your unit tests stopped working with `npm run test` due to a **critical bug in v
 - launch.json simplified with clear naming
 - Both `npm test` and `npm run test:web` confirmed working
 
-**Important Note**: Test output may be minimal (exit code 0 with no verbose output). This is normal for vscode-test-cli - if tests pass/no failures, it simply reports success quietly. Tests ARE running; you just don't see the "Loaded test file" output in console output.
+**Important Note**: CLI test output is now captured in `.vscode-test/test-output.log` even when stdout is minimal. Use that file as the source of truth for pass/fail details.
 
 ## How to Run Tests
 

@@ -29,17 +29,20 @@ ESLint configuration is optimized to catch common LLM mistakes:
 ### Codify patterns as rules
 
 **When to add a rule:**
+
 - You caught a mistake that could be automated
 - A pattern emerged from multiple code reviews
 - A convention should be enforced consistently
 
 **Process:**
+
 1. Add rule to `tools/eslint/vscode-sanity.mjs` with clear error message
 2. Document the pattern in `docs/conventions.md` (include the *why*)
 3. Add entry to `docs/sarb/decision-log.md` explaining why this rule is valuable
 4. Run `npm run lint --fix` to validate against existing code
 
 **Example decision-log entry:**
+
 ```
 - 2026-02-25: Added no-console-in-extension rule - console.log is invisible to users; use OutputChannel instead
 ```
@@ -47,6 +50,7 @@ ESLint configuration is optimized to catch common LLM mistakes:
 ## Per-File Allowlists
 
 Some files use Node APIs that are normally blocked:
+
 - `src/routeros.ts` - allows `https` import
 - `src/virtualdocs.ts` - allows `path` import
 - `src/scriptfs.ts` - allows `util` import

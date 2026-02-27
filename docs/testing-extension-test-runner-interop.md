@@ -44,11 +44,13 @@ This document tracks suspected issues in third-party tooling that affect test ex
 - @vscode/test-cli merges mocha options in a way that favors config over CLI args: see `testEnvOptions` in `out/cli/platform/desktop.mjs`.
 - @vscode/test-cli `fullJsonStreamReporter.cjs` writes JSON events to stdout; the "Run Test" path appears to emit none.
 
-**Workaround**:
+**Workaround (IMPLEMENTED)**:
 
-- Do not set `mocha.reporter` in `.vscode-test.mjs`.
+- **Dual-config pattern:** Two separate config files for different use cases
+  - `.vscode-test.mjs` - NO reporter, used by Extension Test Runner GUI
+  - `.vscode-test-cli.mjs` - custom reporter, used by `npm test` and `npm run test:web`
 - Use "Debug Test" in the Extension Test Runner (UI results match actual outcomes).
-- For CLI runs, pass `--reporter spec` explicitly when you want verbose output.
+- CLI tests write full output to `.vscode-test/test-output.log` (always available).
 
 **Potential fix upstream**:
 
@@ -64,15 +66,19 @@ This document tracks suspected issues in third-party tooling that affect test ex
 ### Good and Useful Outcomes
 
 - CLI tests run reliably with the current config and are fast once VS Code is cached.
+- CLI output is always captured in `.vscode-test/test-output.log` for humans and LLMs.
 - Extension Test Runner "Debug Test" produces correct UI results and honors failures.
 - The unit test suite validates pure logic (converters, schema mapper, VS Code compat) without network calls.
 
 ### Friction Points and Pitfalls
 
 - Extension Test Runner "Run Test" appears to be broken in the current toolchain (exit code 0 with no JSON events).
-- Minimal CLI output is normal for vscode-test-cli even when tests pass; rely on exit code.
+- CLI stdout can still be minimal; use `.vscode-test/test-output.log` as the source of truth.
 - If `.vscode-test.mjs` sets `mocha.reporter`, it can override GUI reporters and break UI parsing.
 - Older @vscode/test-cli versions silently run zero tests due to glob/minimatch issues.
+- CLI custom reporter captures `console.log`/`console.warn`/`console.error` output into `.vscode-test/test-output.log`.
+- **Test discovery is strict**: tests must live under `src/test/suite/` to compile into `out/test/suite/**/*.test.js`.
+- `.vscode-test/test-output.log` is written synchronously for reliability; if it still stops early, suspect a crash or forced process exit.
 
 ## Best Practices for Future Extensions
 
@@ -85,8 +91,11 @@ This document tracks suspected issues in third-party tooling that affect test ex
 
 ### Runner Configuration
 
-- Do not set `mocha.reporter` in the config; allow CLI/GUI to choose the reporter.
-- For CLI verbosity, run `npx vscode-test --config .vscode-test.mjs --reporter spec`.
+- **Dual-config pattern (SOLUTION):**
+  - `.vscode-test.mjs` - GUI config, no reporter (Extension Test Runner compatible)
+  - `.vscode-test-cli.mjs` - CLI config, custom reporter (writes `.vscode-test/test-output.log`)
+  - `npm test` uses `.vscode-test-cli.mjs` for readable output
+  - Extension Test Runner automatically discovers and uses `.vscode-test.mjs`
 - Keep a temporary failing test to validate that the runner actually executes tests.
 
 ### GUI Integration Expectations

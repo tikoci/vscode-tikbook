@@ -1,0 +1,31 @@
+{
+  // TikBook Integration Test Configuration
+  // Copy this file to .sarbsettings and fill in your RouterOS device details
+  
+  // RouterOS connection settings (matches extension settings structure)
+  "tikbook": {
+    // RouterOS REST API base URL (include port if non-standard)
+    "baseUrl": "http://192.168.88.1:7080",
+    
+    // RouterOS username for REST API authentication
+    "username": "admin",
+    
+    // RouterOS password for REST API authentication  
+    "password": "your-password-here",
+    
+    // API request timeout in milliseconds (default: 5000)
+    "apiTimeout": 5000
+  },
+  
+  // VS Code test framework settings (NOT extension settings)
+  "vscode-test": {
+    // Test framework timeout in milliseconds (default: 30000)
+    "timeout": 30000,
+    
+    // Skip tests that require live external resources (default: false)
+    // Note: Currently used for RouterOS connection tests; can be extended for other external resources
+    // - false: Run tests and fail if resources unavailable (catch configuration issues)
+    // - true: Skip tests requiring external resources (for CI/CD without device)
+    "skipLiveTests": false
+  }
+}

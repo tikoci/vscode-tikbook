@@ -4,9 +4,8 @@ import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// GUI-specific config (NO reporter) for Extension Test Runner compatibility
-// Used by: VS Code Extension Test Runner GUI
-// For CLI tests with output: Use .vscode-test-cli.mjs (has spec reporter)
+// Used by: npm test, npm run test:web
+// DO NOT use with Extension Test Runner GUI - use .vscode-test.mjs instead
 export default defineConfig({
   files: 'out/test/**/*.test.js',
   launchArgs: [
@@ -17,5 +16,6 @@ export default defineConfig({
     timeout: 60000,
     color: true,
     ui: 'tdd',
+    reporter: path.resolve(__dirname, 'mocha-ai-reporter.cjs'), // Custom reporter with file output
   },
 })

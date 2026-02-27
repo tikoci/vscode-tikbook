@@ -22,18 +22,18 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install `bun`
-        uses: oven-sh/setup-bun@v2
-
       - name: Install dependencies
-        run: bun install
+        run: npm ci
+      
+      - name: Security audit (CI/CD - zero tolerance)
+        run: npm audit --audit-level=low
       
       - name: Calculate LOCs
         run: |
           npx cloc --git HEAD
       
       - name: Build project
-        run: bun run compile
+        run: npm run compile
 
       - name: Upload JavaScript .map files for symbols
         uses: actions/upload-artifact@v4
@@ -43,11 +43,10 @@ jobs:
             *.map
             ./out/*
             ./**/out/*
-            **/*.bun-build
 
       - name: Package VSIX
         run: |
-          bun run vsix:package
+          npm run vsix:package
 
       - name: Upload VSIX artifact (node)
         uses: actions/upload-artifact@v4

@@ -1,42 +1,70 @@
+# Source files
+src/**
 **/*.ts
-**/tsconfig.json
+
+# Build configuration
+# Note: Do not add out/ or dist/ here - vsce automatically excludes build outputs
+# that arent in package.json main/browser entry points
+tsconfig.json
+tsconfig.tsbuildinfo
+eslint.config.mjs
+.eslintrc.json
+
+# Test files and infrastructure
 test*
 tests
-examples
 **/tests
-icon.svg
-**/*.map
-**/.*bun-build
-vscode-tikbook*
-**/tsconfig.tsbuildinfo
+out/test/**
+.vscode-test/**
+.vscode-test.mjs
+.vscode-test-cli.mjs
+mocha-ai-reporter.cjs
+
+# Development documentation
+docs/**
+DEVELOPMENT.md
 .github/**
-.vscode/**
-client/src/**
-server/src/**
-**/*.ts
-**/node_modules/**
-**/*.map
-.gitignore
-webpack.config.js
-.eslintrc.json
-bun.lock
-**/bun.lock
-.vscodeignore*
-screenshot-*.*
-.scratch
-.vscode/sftp.json
-*.code-workspace
-tools
+
+# Examples
+examples/**
+
+# Build tools
 tools/**
+
+# Markdown linting
+.markdownlint.yaml
+.markdownlint-agentic.yaml
+.markdownlint-strict.yaml
+
+# Development artifacts
+.vscode/**
+.scratch/**
+.vsix-serve/**
+.env.example
+.sarbsettings*
+package-lock.json
+package*.json-save*
+bun.lock
+*.code-workspace
+*.backup
+*-backup*
+
+# Media files to exclude
 media/fonticon/*.css
 media/fonticon/*.eot
 media/fonticon/*.html
 media/fonticon/*.json
 media/fonticon/*.ts
 media/fonticon/*.woff
-media/tools
-media/tools/**
-media/screenshots
+media/fonticon/*.ttf
 media/screenshots/**
-eslint*
+media/tools/**
+media/images/**
+
+# Build artifacts
+screenshot-*.*
 cloc.*
+
+# Git
+.gitignore
+.gitattributes

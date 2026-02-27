@@ -46,7 +46,7 @@
   "engines": {
     "vscode": "^1.78.2"
   },
-  "browser": "./out/extension-web.js",
+  "browser": "./dist/extension.js",
   "main": "./out/extension.js",
   "funding": [
     "https://coff.ee/amm0"
@@ -650,29 +650,39 @@
     "releaseflag": "--pre-release"
   },
   "scripts": {
-    "vscode:prepublish": "npm audit && npm run lint && npm run compile",
-    "compile": "npm run clean && (npm run markdown:lint || true) && npm run lint && npm run compile:tsc",
-    "compile:tsc": "tsc -p ./",
-    "pretest": "npm run compile",
-    "test": "vscode-test --config .vscode-test.mjs",
-    "test:web": "vscode-test --config .vscode-test.mjs --browser",
+    "vscode:prepublish": "npm run markdown:lint:public && npm run lint && npm run compile",
+    "compile": "npm run clean && npm run lint && npm run compile:node",
+    "compile:node": "bun build src/extension.ts --outdir=./out --entry-naming=extension.js --external vscode --format=cjs --target=node --sourcemap",
+    "compile:web": "bun build src/extension.ts --outdir=./dist --entry-naming=extension.js --external vscode --format=cjs --target=browser --sourcemap",
+    "compile:test": "bun build src/test/suite/**/*.test.ts --outdir=./out/test --external vscode --format=cjs --target=node --sourcemap",
+    "pretest": "npm run compile:node && npm run compile:test",
+    "test": "vscode-test --config .vscode-test-cli.mjs",
+    "pretest:web": "npm run compile:web && npm run compile:test",
+    "test:web": "vscode-test --config .vscode-test-cli.mjs --browser",
     "lint": "eslint src --ext ts --fix",
     "lint:tools": "eslint tools --ext js,mjs --fix",
     "lint:all": "npm run lint && npm run lint:tools",
-    "markdown:lint": "markdownlint 'docs/**/*.md'",
-    "markdown:fix": "markdownlint 'docs/**/*.md' --fix",
-    "format": "npm run lint:all && npm run markdown:fix",
-    "vsix:package:all": "npm run vsix:package:node && && npm run vsix:package:web ",
+    "markdown:lint:public": "markdownlint 'README.md' 'CHANGELOG.md' --config .markdownlint-strict.yaml",
+    "markdown:lint:agentic": "markdownlint 'docs/**/*.md' '.github/instructions/**/*.md' '.github/copilot-instructions.md' 'DEVELOPMENT.md' --config .markdownlint-agentic.yaml",
+    "markdown:lint:all": "npm run markdown:lint:public && npm run markdown:lint:agentic",
+    "markdown:lint": "npm run markdown:lint:agentic",
+    "markdown:fix:public": "markdownlint 'README.md' 'CHANGELOG.md' --config .markdownlint-strict.yaml --fix",
+    "markdown:fix:agentic": "markdownlint 'docs/**/*.md' '.github/instructions/**/*.md' '.github/copilot-instructions.md' 'DEVELOPMENT.md' --config .markdownlint-agentic.yaml --fix",
+    "markdown:fix:all": "npm run markdown:fix:public && npm run markdown:fix:agentic",
+    "markdown:fix": "npm run markdown:fix:agentic",
+    "format": "npm run lint:all && npm run markdown:fix:all",
+    "vsix:package:all": "npm run vsix:package:node && npm run vsix:package:web",
     "vsix:package": "npm run vsix:package:node && npm run vsix:package:web",
-    "vsix:package:node": "rm -f *-node.vsix && npm run compile && npx @vscode/vsce package --no-dependencies $npm_package_config_releaseflag -o tikbook-node.vsix",
-    "vsix:package:web": "rm -f *-web.vsix && npm run compile && npx @vscode/vsce package --target web --no-dependencies $npm_package_config_releaseflag -o tikbook-web.vsix",
+    "vsix:package:node": "rm -f *-node.vsix && npm run compile && npx @vscode/vsce package $npm_package_config_releaseflag -o tikbook-node.vsix",
+    "vsix:package:web": "rm -f *-web.vsix && npm run clean && npm run lint && npm run compile:web && npx @vscode/vsce package --target web $npm_package_config_releaseflag -o tikbook-web.vsix",
     "vsix:install": "npm run vsix:remove; npm run vsix:package && code --install-extension tikbook-*.vsix",
     "vsix:remove": "code --uninstall-extension tikoci.tikbook || echo '... well if not install, cannot remove it'",
-    "vsix:publish:node": "npx @vscode/vsce publish --packagePath ./tikbook-node.vsix --no-dependencies $npm_package_config_releaseflag -p $VSCE_PAT",
-    "vsix:publish:web": "npx @vscode/vsce publish --target web --packagePath ./tikbook-web.vsix --no-dependencies $npm_package_config_releaseflag -p $VSCE_PAT",
+    "vsix:serve": "npm run vsix:package:web && rm -rf .vsix-serve && unzip -q tikbook-web.vsix -d .vsix-serve && npx serve@latest --cors .vsix-serve/extension -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
+    "vsix:publish:node": "npx @vscode/vsce publish --packagePath ./tikbook-node.vsix $npm_package_config_releaseflag -p $VSCE_PAT",
+    "vsix:publish:web": "npx @vscode/vsce publish --target web --packagePath ./tikbook-web.vsix $npm_package_config_releaseflag -p $VSCE_PAT",
     "ovsx:publish": "npx ovsx publish tikbook-node.vsix -p $OVSX_PAT",
-    "package": "npm run compile && npx @vscode/vsce package --no-dependencies",
-    "package:web": "npm run compile && npx @vscode/vsce package --target web --no-dependencies",
+    "package": "npm run compile && npx @vscode/vsce package",
+    "package:web": "npm run compile && npx @vscode/vsce package --target web",
     "bump:patch": "npm version patch",
     "compile:icons": "npm run compile:icons:tikoci && npm run compile:icons:mikrotik",
     "compile:icons:tikoci": "mkdir -p ./media/fonticon; npx fantasticon -t woff2 -g css --output ./media/fonticon --name tikoci ./media/svg/tikoci",
@@ -680,8 +690,11 @@
     "compile:icons:all:ttf": "mkdir -p ./media/fonticon; npx fantasticon -t ttf -g html --output ./media/fonticon --name tikoci-all ./media/svg",
     "outputenv": "node -e 'console.log(process.env)' | grep npm",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf out *.vsix",
-    "clean:srcjs": "rm -rf src/*.js src/*.map"
+    "clean": "rm -rf out",
+    "clean:all": "npm run clean && rm -rf dist *.vsix .vsix-serve",
+    "clean:srcjs": "rm -rf src/*.js src/*.map",
+    "serve": "npx serve@latest --cors --listen 3000",
+    "serve:https": "npx serve@latest --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem"
   },
   "dependencies": {
     "axios": "^1.13.5",
@@ -695,11 +708,14 @@
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/test-web": "^0.0.79",
+    "dotenv": "^17.3.1",
     "eslint": "^10.0.1",
     "markdownlint-cli": "^0.43.0",
     "mocha": "^10",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.0"
+    "typescript-eslint": "^8.56.0",
+    "minimatch": "10.2.4",
+    "brace-expansion": "5.0.3"
   },
   "peerDependencies": {
     "@types/luxon": "^3.7.1",
@@ -707,18 +723,5 @@
     "@types/node": "^22",
     "@types/vscode": "^1.109.0"
   },
-  "private": false,
-  "scripts2": {
-    "compile": "node esbuild.js",
-    "compile:test": "tsc -p tsconfig.test.json",
-    "watch": "node esbuild.js --watch",
-    "pretest": "npm run clean && npm run compile && npm run compile:test",
-    "test": "vscode-test --testPath out/test",
-    "vscode:prepublish": "npm run lint && npm run compile",
-    "old:watch:node": "npm build src/extension.ts --outdir=./out --entry-naming=extension-node.js --external vscode --format=cjs --target=node --sourcemap --watch",
-    "old:compile:node": "bun build src/extension.ts --outdir=./out --entry-naming=extension-node.js --external vscode --format=cjs --target=node --sourcemap ",
-    "old:compile:web": "bun build src/extension.ts --outdir=./out --entry-naming=extension-web.js --external vscode --format=cjs --target=browser --sourcemap",
-    "old:compile:test": "bun build src/test/*.test.ts --outdir=./out/test --entry-naming=[name].js --external vscode --format=cjs --target=node --sourcemap",
-    "old:pretest": "bun run compile && bun run compile:test"
-  }
+  "private": false
 }

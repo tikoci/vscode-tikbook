@@ -201,10 +201,12 @@ export default [
 	},
 	{
 		// Tests and tooling are not web targets
-		files: ['**/*.test.ts', '**/*.spec.ts', 'tools/eslint/**'],
+		files: ['**/*.test.ts', '**/*.spec.ts', 'tools/eslint/**', 'src/test/**/*.ts'],
 		rules: {
 			'vscode-sanity/no-node-builtins-web': 'off',
-			'@typescript-eslint/explicit-function-return-type': 'off'
+			'@typescript-eslint/explicit-function-return-type': 'off',
+			'no-restricted-imports': 'off',
+			'no-restricted-globals': 'off'
 		}
 	},
 	{

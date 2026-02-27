@@ -1,34 +1,106 @@
 # LLM TODOs
 
-This file tracks deferred cleanup and suggestions from LLM sessions. Add new items here when a good idea is identified but not acted on immediately.
+This file tracks **quick action items** from LLM sessions - typically 1-3 hour tasks with clear requirements.
+
+---
+
+## 📋 Organization System
+
+**For quick tasks (1-3 hours):** Add to this file (llm-todos.md)
+
+- Code cleanup
+- Small bug fixes
+- Documentation updates
+- Clear, actionable items
+
+**For larger features (requiring design decisions):** Use [docs/specs/](./specs/README.md)
+
+- Features needing multi-paragraph specifications
+- Features requiring user input over time
+- Features with open design questions
+- Features you want to evolve incrementally
+
+**Workflow:**
+
+1. Add quick items here
+2. Create spec in docs/specs/ for complex features
+3. Mark spec status: `draft` → `under-review` → `ready-for-implementation` → `implemented`
+4. When spec is ready, reference it from here or implement directly
+
+**See also:**
+
+- [DEVELOPMENT.md](../../DEVELOPMENT.md) - Main development guide
+- [docs/specs/README.md](./specs/README.md) - Feature spec system
+- [future-features.md](./future-features.md) - Long-term ideas and dependencies
+
+---
 
 ## 🔴 High Priority Tasks
 
 These items should be addressed soon:
 
-### Create Root DEVELOPMENT.md Entry Point
+### ✅ Implement Web Extension Bundling with Bun - COMPLETED
 
-**Files affected:** DEVELOPMENT.md (new), docs/development/ (folder reorganization)
-**Reason:** Agents need a single discoverable entry point like CONTRIBUTING.md. Currently LLM guidance is scattered across docs/.
-**Priority Note:** Plan this before implementing; impacts file layout and Copilot instructions organization.
-**Future steps:**
+**Status:** ✅ COMPLETE (2026-02-26)
+**Implementation:** Switched from tsc-only to Bun for both node and web builds
 
-1. Review current structure and decide on docs/development/ subfolder
-2. Create DEVELOPMENT.md at root that points to all LLM guidance
-3. Update .github/instructions/ files to reference DEVELOPMENT.md
-4. Validate all internal markdown links
+**What was fixed:**
+- Node build: `bun build` to `out/extension.js` (0.71 MB bundled)
+- Web build: `bun build --target=browser` to `dist/extension.js` (0.79 MB bundled)
+- All 91 tests pass with Bun compilation
+- Web extension successfully loads on vscode.dev with proper bundling
+- Single source file (`src/extension.ts`) with different targets eliminates duplication
 
-### Hide Interactive REPL Behind Experimental Features
+**Build Pipeline:**
+- `npm run compile` → builds node target only (dev-optimized)
+- `npm run compile:web` → builds web target (explicit, when needed)
+- `npm run compile:test` → builds all tests
+- `npm test` → runs desktop tests (91 tests, 2s)
+- `npm run test:web` → runs browser tests with web build
+- `npm run vsix:serve` → packages and serves on localhost:5000
 
-**Files affected:** menus.ts, package.json, notebook.ts, README.md
-**Reason:** Not well documented; keep for now but hide behind Experimental Features setting
-**Priority Note:** Lower priority compared to core notebook and transport work; treat as an example of experimental feature gating
-**Steps:**
+**Verification:**
+- ✅ Desktop VSIX installs and works
+- ✅ Web VSIX packages successfully (2.8 MB)
+- ✅ Extension loads on vscode.dev with bundled code
+- ✅ Commands register and execute 
+- ✅ All test runners work (CLI, web, GUI extension runner)
 
-1. Add a JSON-only setting (no UI) to enable experimental features
-2. Gate REPL command/menu items behind the setting
-3. Add a short touchpoint map in FUTURE_FEATURES.md (commands, menus, controller)
-4. Update README.md to mark REPL as experimental and hidden by default
+**Related Update:**
+- Updated docs/testing-vscode-web-local.md to remove "known limitation" note
+
+### Add Integration Tests for VS Code Extension Features (Status: Phase 1-2 Complete)
+
+**Status Update:** ✅ Phase 1 (Priority 0 - Contributions): 66 tests complete  
+**Status Update:** ✅ Phase 2 (Priority 1 - Notebook Kernel): 45 tests complete  
+**Remaining:** Phase 2 decision - Continue with Approach 1 for more integration tests or wait?
+
+**Files completed:**
+
+- src/test/suite/integration/contributions.test.ts (66 tests)
+- src/test/suite/integration/notebook-kernel.test.ts (17 tests)
+- src/test/suite/integration/config.test.ts (13 tests)
+- src/test/suite/integration/vscode-compat.test.ts (19 tests)
+
+**See:** [docs/integration-testing-strategy.md](./integration-testing-strategy.md) for complete status
+
+### Create Root DEVELOPMENT.md Entry Point ✅ COMPLETE
+
+**Status:** Completed 2026-02-26
+**Files created:** DEVELOPMENT.md (root), docs/specs/README.md (new spec system)
+**Outcome:**
+
+- Created comprehensive DEVELOPMENT.md as single entry point
+- Created docs/specs/ system for incremental feature design
+- Provides template-based workflow for capturing design decisions
+- See [DEVELOPMENT.md](../../DEVELOPMENT.md) and [docs/specs/README.md](./specs/README.md)
+
+### Hide Interactive REPL Behind Experimental Features → MOVED TO SPEC
+
+**Status:** Detailed spec created, ready for implementation
+**Spec:** [docs/specs/experimental-features.md](./specs/experimental-features.md)
+**Scope:** Generic experimental feature system for REPL, Video, and future features
+**Next Step:** Implement experimental.ts infrastructure per spec
 
 ### Rationalize Notebook Serialization Code
 
@@ -38,15 +110,23 @@ These items should be addressed soon:
 
 ## Pending Tasks
 
-### SystemScriptFS Completion and Organization
+### Add linting for markdown embedded in UI strings
 
-**Context:** Auto-mount is commented out in extension.ts lines 39-57 for debugging purposes (this is intentional). More work planned before enabling.
-**Tasks:**
+**Files affected:** package.json (markdownDescription, markdownDeprecationMessage, viewsWelcome, etc.)
+**Reason:** Markdown rendered in VS Code UI is not currently linted.
+**Priority:** 🟢 Low - nice-to-have validation
 
-1. Complete scriptfs.ts implementation (current version not fully correct)
-2. After scriptfs is complete, rationalize overlap between scriptfs.ts and virtualdocs.ts
-3. Consider broader task: disable/gate experimental features properly
-**Note:** Auto-mount comment-out is temporary for debugging - not a decision point
+### SystemScriptFS Completion and Organization → MOVED TO SPEC
+
+**Status:** Detailed spec created (draft), awaiting user input
+**Spec:** [docs/specs/scriptfs-completion.md](./specs/scriptfs-completion.md)
+**Reason for Draft:** Feature is ~70% complete but needs user specification of:
+
+- Exact file/path structure expectations
+- Filename templates per schema entry
+- Multi-file vs single-file preference
+- RouterOS add operation requirements
+**Next Step:** User fills in spec requirements, then change to ready-for-implementation
 
 ### Video Player and Teaching Features
 
@@ -79,28 +159,27 @@ These items should be addressed soon:
 5. Research restraml RAML usage for REST validation inside TikBook (agentic use)
 6. Define how to surface schema downloads in Quick Commander (RAML/OAS2/inspect.json)
 
-### RouterOS /app Dev Workflow (VS Code)
+### RouterOS /app Dev Workflow → MOVED TO SPEC
 
-**Context:** Support custom /app container development/testing from VS Code.
-**Tasks:**
+**Status:** Placeholder spec created (draft), awaiting user input
+**Spec:** [docs/specs/app-yaml-schema.md](./specs/app-yaml-schema.md)
+**Priority:** YAML schema is higher priority than full UI (per user)
+**Reason for Draft:** Needs user specification of:
 
-1. Add UI to manage `/app` entries (list, view YAML, enable/disable, cleanup)
-2. Support local `app-store-urls` testing workflow (serve YAML from VS Code)
-3. Add helper for "edit/repull" workflow (copy YAML, re-add, cleanup)
-4. Auto-configure YAML schema for RedHat YAML extension when TikBook activates
+- Complete /app YAML property list
+- Example /app YAML file
+- File detection pattern preference
+- Auto-configuration behavior
+**Next Step:** User provides schema requirements in spec
 
-- Check if schema is already configured
-- Prompt to add or auto-add based on JSON-only setting
-- Also document manual steps in README
+**Note:** Full /app UI toolkit is future work, schema is Phase 1
 
-### RouterOS Certificate UX
+### RouterOS Certificate UX → MOVED TO SPEC
 
-**Context:** VS Code UI for RouterOS certificates is missing. Users also need a simple path to wrap certs for deployment.
-**Tasks:**
-
-1. Add VS Code UI management for RouterOS certificates (import, view, export, delete)
-2. Add support to wrap certificates into mobile/desktop deployment formats (e.g., .mobileconfig)
-3. Recommend supporting VS Code extensions for schema/validation of those formats
+**Status:** Placeholder spec created (draft), awaiting user design
+**Spec:** [docs/specs/certificate-ux.md](./specs/certificate-ux.md)
+**Reason for Draft:** Needs user specification of UX design, operation scope, deployment wrapping requirements
+**Next Step:** User sketches ideal UX and prioritizes operations in spec
 
 ### ScriptFS + Remote UX (viewsWelcome)
 

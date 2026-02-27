@@ -54,6 +54,8 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 - Use fenced code blocks with a language tag, even for plain text (markdownlint prefers explicit fences).
 - Add blank lines around blocks you add or edit (headings, lists, fenced code, tables, paragraphs).
 - Before finalizing a task that touches markdown, run markdownlint on any file produced or edited in the chat session and fix violations in the edited blocks.
+- Public docs: `npm run markdown:lint:public` (README.md, CHANGELOG.md)
+- Internal docs/instructions: `npm run markdown:lint:agentic` (docs/ and Copilot instructions)
 
 ### Codify patterns as lint rules
 
@@ -91,6 +93,7 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 
 - **Package.json sync**: If adding commands/menus/settings, verify package.json contributions match code
 - **Markdown links**: If moving/renaming files, check internal links aren't broken
+- **Public markdown**: If touching README.md or CHANGELOG.md, run `npm run markdown:lint:public`
 - **Pre-publish validation**: `npm run vscode:prepublish` runs audit → lint → compile (final check before release)
 
 **Note on tooling**: Pylance MCP tools are available in this workspace but are Python-specific. This is a TypeScript project; use standard TypeScript/ESLint validation instead.
@@ -99,7 +102,11 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 
 - Verify package.json version follows the versioning scheme.
 - Publishing is via GitHub Actions in .github/workflows/build.yaml only. Do not publish directly.
-- There should always be a CHANGELOG.md entry for each published build, or whenever the package version changes.  
+- There should always be a CHANGELOG.md entry for each published build, or whenever the package version changes.
+- **Review .vscodeignore before release** - ensure new directories are appropriately included/excluded.
+  - Check that runtime assets (media/, out/) are included
+  - Verify dev-only files (docs/, tools/, .vscode-test/) are excluded
+  - Test locally with `npm run vsix:install` before triggering CI  
 
 ## Versioning scheme
 
@@ -112,23 +119,27 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 ## Unit testing strategy
 
 **CRITICAL: Do NOT mock vscode.* APIs**
+
 - **Anti-pattern:** Using mocking libraries (sinon, jest mocks) for vscode.* objects
 - **Why it's bad:** Maintenance burden, doesn't catch real API changes, false confidence
 - **Preferred approach:** Tests run in VS Code extension host via @vscode/test-cli → use real APIs
 - **Only mock:** External services (RouterOS REST, file systems outside workspace, network calls)
 
 **Test as you develop:**
+
 - Tests run in VS Code extension host → provides real vscode.* API context (no mocks needed)
 - Use tests to explore uncertain API behavior (real APIs reveal actual constraints)
 - Write failing test first, implement until green (TDD)
 
 **When tests are required:**
+
 - **New features:** Test happy path + edge cases before considering work complete
 - **Bug fixes:** Add regression test that would have caught the bug (test should fail on old code, pass on fix)
 - **API integrations:** Use real VS Code APIs; mock only external dependencies (REST, network)
 - **Refactoring:** Ensure existing tests still pass; add tests for newly exposed behavior
 
 **Web + Desktop compatibility testing:**
+
 - **Test both modes:** Run `npm test` (desktop) AND `npm run test:web` (browser) before completing work
 - **Platform detection:** Use `vscode.env.uiKind === vscode.UIKind.Desktop` to check mode in runtime code
 - **Avoid Node APIs:** Don't use `fs`, `path`, `os` directly; use vscode.workspace.fs + vscode.Uri instead
@@ -136,11 +147,13 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 - **Test platform-specific behavior:** If code has conditional logic for web vs desktop, verify both paths
 
 **Test types:**
+
 - **Feature tests:** `src/test/suite/*.test.ts` → compile to `out/test/suite/*.test.js`
 - **Experiments:** `src/test/llm-experiments.test.ts` for one-off validation during development
 - **Integration tests:** Test with real VS Code APIs when mocking is too complex (preferred over mocks)
 
 **VS Code test context benefits:**
+
 - Access to vscode.workspace, vscode.window, vscode.commands during test execution (NO MOCKING)
 - Validate extension activation and deactivation behavior
 - Test notebook providers, virtual documents, language clients in realistic environment
@@ -148,6 +161,7 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 - Real API usage reveals version incompatibilities and missing features
 
 **Example: Testing without mocks (PREFERRED)**
+
 ```typescript
 import * as vscode from 'vscode';
 import * as assert from 'assert';
@@ -175,6 +189,7 @@ suite('Virtual Document Provider', () => {
 ```
 
 **Example: When to mock (external services ONLY)**
+
 ```typescript
 import * as sinon from 'sinon';
 import axios from 'axios';
@@ -205,11 +220,13 @@ suite('RouterOS REST Client', () => {
 ```
 
 **When NOT to test:**
+
 - Pure UI interactions that require manual verification (consider integration test instead)
 - Code that directly wraps VS Code APIs without logic (test the caller instead)
 - One-time migration scripts (though llm-experiments.test.js can validate logic)
 
 **Web compatibility checklist:**
+
 - [ ] Test passes in both `npm test` and `npm run test:web`
 - [ ] No Node API usage (fs, path, os, child_process) without vscode.env.uiKind gates
 - [ ] URI handling uses vscode.Uri.parse/file, not string concatenation

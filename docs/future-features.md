@@ -6,7 +6,36 @@ This document tracks potential features, enhancements, and architectural improve
 
 These items require architectural or product decisions before implementation can proceed:
 
-### 1. Interactive REPL Feature - Keep or Remove?
+### 1. First-Time User Onboarding Flow
+
+**Related Feature:** Test Router (UTM/VM integration)  
+**Current Status:** Under research (see [docs/research/findings-on-vscode-container-vm-routeros-chr.md](research/findings-on-vscode-container-vm-routeros-chr.md))  
+**Issue:** Multiple approaches exist for first-time setup when user has no RouterOS configured  
+**Decision Needed:**
+
+- **Modal prompt:** "Connect to real router or use test VM?" when no configuration exists
+- **Walkthrough:** VS Code walkthrough API for guided setup experience
+- **Welcome screen:** Custom webview with setup wizard
+- **Explorer-first:** Show VM explorer immediately, user discovers "Add CHR" button organically
+- **Command Palette-first:** User explicitly runs "TikBook: Setup" command to start flow
+
+**Considerations:**
+
+- Should detection of UTM/VMware/VirtualBox trigger automatic prompt?
+- How to avoid annoying users who deliberately haven't configured yet?
+- Consistency with VS Code UX patterns (walkthroughs are native, modals less common)
+- Needs research on VS Code onboarding best practices
+
+**Research Required:**
+
+- Survey VS Code walkthrough examples (Python, Remote-SSH, etc.)
+- Test modal vs. walkthrough user acceptance
+- Define "first launch" detection logic
+- Consider settings to disable auto-prompts
+
+**Blocked Until:** UTM integration MVP is complete (understand the technical surface before designing UX)
+
+### 2. Interactive REPL Feature - Keep or Remove?
 
 **Location:** menus.ts line 120, notebook.ts  
 **Current Status:** Fully implemented and accessible via "Start Interactive REPL" command  
