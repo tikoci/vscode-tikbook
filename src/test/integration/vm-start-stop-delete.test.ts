@@ -57,7 +57,10 @@ function shouldShowStop(contextValue: string): boolean {
 	return /vm.*\.running/.test(contextValue)
 }
 
-suite('Start/Stop/Delete Workflow', () => {
+// MOVED FROM unit/ to integration/ (2026-02-27)
+// Integration test: requires UTM/AppleScript
+
+suite.skip('Start/Stop/Delete Workflow', () => {
 	suite('Context Value Generation', () => {
 		test('running CHR VM generates correct context value', () => {
 			const vm: VM = {

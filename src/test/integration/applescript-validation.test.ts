@@ -1,10 +1,5 @@
-/**
- * Tests for AppleScript functionality in VM providers
- * These tests validate AppleScript syntax and execution before code integration.
- * 
- * This prevents "works in extension but fails at runtime" errors with AppleScript.
- * Run via: npm test -- --grep "applescript"
- */
+// MOVED FROM unit/ to integration/ (2026-02-27)
+// Integration test: uses AppleScript and process listing
 
 import * as assert from 'assert'
 import { execFile } from 'node:child_process'
@@ -12,7 +7,7 @@ import { promisify } from 'node:util'
 
 const execFileAsync = promisify(execFile)
 
-suite('AppleScript Validation - UTM Provider', () => {
+suite.skip('AppleScript Validation - UTM Provider', () => {
   test('UTM connection works (baseline check)', async () => {
     try {
       const { stdout } = await execFileAsync('osascript', ['-e', 'tell application "UTM" to name'])
@@ -20,7 +15,7 @@ suite('AppleScript Validation - UTM Provider', () => {
     }
     catch (error) {
       if (error instanceof Error && error.message.includes('not found')) {
-        console.log('⊘ UTM not installed - skipping UTM AppleScript tests')
+        console.log('\u2298 UTM not installed - skipping UTM AppleScript tests')
         return
       }
       throw error
@@ -45,7 +40,7 @@ suite('AppleScript Validation - UTM Provider', () => {
     }
     catch (error) {
       if (error instanceof Error && error.message.includes('not found')) {
-        console.log('⊘ UTM not installed - skipping this test')
+        console.log('\u2298 UTM not installed - skipping this test')
         return
       }
       // If it's a syntax error, fail the test

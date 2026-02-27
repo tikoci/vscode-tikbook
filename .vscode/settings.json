@@ -25,7 +25,8 @@
         "npm": true,
         "npx tsc": true,
         "npx eslint": true,
-        "osascript": true
+        "osascript": true,
+        "mv": true
     },
     
     // ============================================

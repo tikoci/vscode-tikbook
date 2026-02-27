@@ -1,5 +1,12 @@
 # Integration Testing for TikBook VS Code Extension
 
+---
+
+**Test Suite Structure:**
+See [test-suite-structure.md](test-suite-structure.md) for the current organization of all test files, migration summary, and next steps for test categorization (unit vs integration).
+
+---
+
 **Date:** February 2026  
 **Status:** Strategy finalized. Phase 1-3 plan: Approach 1 (VS Code Test Framework) only.
 

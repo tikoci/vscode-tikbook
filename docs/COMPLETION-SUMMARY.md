@@ -1,5 +1,13 @@
 # Build System Transition Summary (Feb 26, 2026)
 
+---
+
+# Test Suite Migration (2026)
+
+All test files are now organized under `src/test/integration/` and `src/test/unit/` only. See [docs/test-suite-structure.md](test-suite-structure.md) for details on the migration, new structure, and next steps for test categorization.
+
+---
+
 ## ✅ Completed
 
 ### Build System Overhaul

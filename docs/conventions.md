@@ -1,3 +1,12 @@
+---
+
+## Test Suite Structure & Migration
+
+For the current organization of all test files, migration summary, and next steps for test categorization (unit vs integration), see:
+
+- [test-suite-structure.md](test-suite-structure.md)
+
+---
 # TikBook Code Conventions & Patterns
 
 This document captures recurring patterns, naming conventions, and style guidance specific to TikBook. Use this to write code that fits the project naturally.

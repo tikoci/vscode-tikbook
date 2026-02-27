@@ -5,6 +5,14 @@ TikBook is a companion extension to [RouterOS LSP](https://marketplace.visualstu
 
 TikBook offers a VS Code notebook interface for RouterOS scripts, along with "virtual config", converters, CSV exports, and other RouterOS tools - specifically for VS Code.  Together with RouterOS LSP's syntax coloring, diagnostics, and text completion, the combination offers a rich experience for working with RouterOS scripts and configuration in Visual Studio Code.
 
+---
+
+## Test Suite Structure (2026)
+
+See [docs/test-suite-structure.md](docs/test-suite-structure.md) for a summary of the test migration, new structure, and next steps for test categorization (unit vs integration).
+
+---
+
 [![copilot-ip-add](https://tikoci.github.io/vscode-tikbook/media/screenshots/copilot-add-ip.png)](https://code.visualstudio.com/docs/copilot/guides/notebooks-with-ai)
 
 > Both "Known Issues" and a per-version "Changelog" are in [`CHANGELOG.md`](https://github.com/tikoci/vscode-tikbook/blob/main/CHANGELOG.md), which tracks the _current_ state of affairs for the [`tikoci/vscode-tikbook`](https://github.com/tikoci/vscode-tikbook) project.
