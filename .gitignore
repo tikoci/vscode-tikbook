@@ -34,4 +34,6 @@ cloc.*
 
 # Environment variables for integration tests
 .env
-.env.local.sarbsettings
+.env.local
+.sarbsettings
+.sarbsettings.local

@@ -75,4 +75,25 @@ Architectural reference: See [docs/architecture.md](../docs/architecture.md), [d
 
 **GUI Test Runner Reminder:** If tests do not appear in the VS Code Testing sidebar, run `npm run compile:test`. `npm run compile` alone does NOT build `out/test/**/*.test.js`.
 
+## Testing Workflow Hints
+
+**When implementing features:**
+- Suggest running tests after changes: "Run tests with Test Explorer (⌘⇧T) or `npm test`"
+- If GUI Test Runner doesn't show tests: "Run `npm run compile:test` to build test files for GUI discovery"
+- For web testing: Prompt user to open vscode.dev or github.dev (they are equivalent for extension testing)
+  - Example: "Open https://vscode.dev to test the web extension" (don't automate `open` command - let users see the action)
+
+**To focus Test Explorer programmatically:**
+```typescript
+await vscode.commands.executeCommand('workbench.view.testing.focus');
+// or show most recent test output:
+await vscode.commands.executeCommand('testing.showMostRecentOutput');
+```
+
+**Manual web extension testing workflow:**
+1. Prompt: "Run `npm run vsix:serve` in terminal"
+2. Prompt: "Open https://vscode.dev in browser"
+3. Prompt: "Install from https://localhost:5000 using Command Palette"
+4. Prompt: "Test extension activation with Option+Shift+M"
+
 See [docs/manual-testing-web-extensions.md](../docs/manual-testing-web-extensions.md) for the required manual checks after build or packaging changes.

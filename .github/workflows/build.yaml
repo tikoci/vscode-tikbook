@@ -22,8 +22,13 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Install dependencies
-        run: npm ci
+        run: bun install
       
       - name: Security audit (CI/CD - zero tolerance)
         run: npm audit --audit-level=low

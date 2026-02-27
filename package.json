@@ -708,7 +708,6 @@
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/test-web": "^0.0.79",
-    "dotenv": "^17.3.1",
     "eslint": "^10.0.1",
     "markdownlint-cli": "^0.43.0",
     "mocha": "^10",

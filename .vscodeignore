@@ -18,7 +18,6 @@ out/test/**
 .vscode-test/**
 .vscode-test.mjs
 .vscode-test-cli.mjs
-mocha-ai-reporter.cjs
 
 # Development documentation
 docs/**

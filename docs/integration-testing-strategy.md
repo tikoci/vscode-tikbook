@@ -185,9 +185,9 @@ suite('Extension Contributions', () => {
 
 **Files Created:**
 
-- ✅ `.env.example` - Template for RouterOS test device configuration
-- ✅ `src/test/suite/integration-test-config.ts` - Helper to load `.env` via dotenv
-- ✅ Updated `.gitignore` - Added `.env` and `.env.local`
+- ✅ `.sarbsettings.example` - Template for RouterOS test device configuration (JSONC format)
+- ✅ `src/test/suite/integration-test-config.ts` - Helper to load `.sarbsettings` with JSONC parsing
+- ✅ Updated `.gitignore` - Added `.sarbsettings` (personal config file)
 - ✅ Updated `eslint.config.mjs` - Allowed Node APIs in test files
 
 **Usage:**
@@ -462,7 +462,7 @@ const baseUrl = config.inspect('baseUrl')?.defaultValue;
 
 **Current Workaround vs Future:**
 
-- **Now:** Use `config.inspect().defaultValue` + `.env` for custom test devices
+- **Now:** Use `config.inspect().defaultValue` + `.sarbsettings` for custom test devices
 - **Future (Approach 5):** Docker dev container provides both clean settings + bundled RouterOS
 
 **Decision Log:** Settings isolation issue discovered 2026-02, documented as additional rationale for Approach 5 when Docker dev container feature is planned.

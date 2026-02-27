@@ -16,6 +16,6 @@ export default defineConfig({
     timeout: 60000,
     color: true,
     ui: 'tdd',
-    reporter: path.resolve(__dirname, 'mocha-ai-reporter.cjs'), // Custom reporter with file output
+    reporter: path.resolve(__dirname, 'tools/mocha-ai-reporter/index.cjs'), // Custom reporter with file output
   },
 })
