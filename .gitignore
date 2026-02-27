@@ -24,6 +24,7 @@ tests
 examples
 
 .scratch
+.tmp/
 
 .DS_Store
 
