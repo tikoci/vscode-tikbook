@@ -27,7 +27,6 @@ function createLogChannel(name: string): LogOutputChannel {
 
 // Singleton instances
 let tikbookChannel: LogOutputChannel | null = null;
-let virtualFileSystemChannel: LogOutputChannel | null = null;
 let routerOSLSPChannel: LogOutputChannel | null = null;
 
 /**
@@ -39,15 +38,6 @@ export function getTikBookChannel(): LogOutputChannel {
   return tikbookChannel;
 }
 
-/**
- * Get the virtual file system output channel for ScriptFS and schema operations
- * @returns Shared LogOutputChannel for virtual file system logs
- * @note Created on-demand to avoid channel duplication
- */
-export function getVirtualFileSystemChannel(): LogOutputChannel {
-  virtualFileSystemChannel ??= createLogChannel('RouterOS Virtual FileSystem');
-  return virtualFileSystemChannel;
-}
 
 /**
  * Get the RouterOS LSP coordination output channel

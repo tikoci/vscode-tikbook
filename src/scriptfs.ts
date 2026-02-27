@@ -1,7 +1,7 @@
 import type { Disposable, FileChangeEvent, FileStat, FileSystemProvider } from 'vscode';
 import { commands, EventEmitter, FileChangeType, FileSystemError, FileType, languages, Uri, window, workspace } from 'vscode';
 import { getSettings } from './config';
-import { getVirtualFileSystemChannel } from './output-channels';
+import { getTikBookChannel } from './output-channels';
 import { RouterRestClient } from './routeros';
 import SchemaMapper from './schema-mapper';
 import type { SchemaEntry } from './scriptfs-schema';
@@ -131,7 +131,7 @@ function hashString(value: string): string {
 }
 
 function logCompareMismatch(label: string, tracked: string, remote: string): void {
-  getVirtualFileSystemChannel().debug(
+  getTikBookChannel().debug(
     `<SystemScriptFS.writeFile> compare-mismatch ${label} trackedLen=${tracked.length} remoteLen=${remote.length} trackedHash=${hashString(tracked)} remoteHash=${hashString(remote)}`,
   )
 }
@@ -185,7 +185,7 @@ export class SystemScriptFS implements FileSystemProvider {
   private itemsCacheTimeout = 10 * 1000 // 10 seconds for item cache
 
   constructor() {
-    getVirtualFileSystemChannel().trace('<SystemScriptFS> {constructor} initialized')
+    getTikBookChannel().trace('<SystemScriptFS> {constructor} initialized')
   }
 
   watch(_uri: Uri, _options: { recursive: boolean, excludes: string[] }): Disposable { return { dispose: () => { } } }
@@ -251,11 +251,11 @@ export class SystemScriptFS implements FileSystemProvider {
 
   stat(uri: Uri): FileStat | Thenable<FileStat> {
     const parts = uri.path.split('/').filter(Boolean)
-    getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> uri=${uri.path}, parts=[${parts.join(', ')}]`)
+    getTikBookChannel().debug(`<SystemScriptFS.stat> uri=${uri.path}, parts=[${parts.join(', ')}]`)
 
     // Root directory
     if (parts.length === 0) {
-      getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> ROOT -> Directory`)
+      getTikBookChannel().debug(`<SystemScriptFS.stat> ROOT -> Directory`)
       return new InMemoryStat(FileType.Directory, 0, 0, 0)
     }
 

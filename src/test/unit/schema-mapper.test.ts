@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert'
-import type { RouterRestClient } from '../../routeros'
-import { SchemaMapper } from '../../schema-mapper'
-import type { SchemaEntry } from '../../scriptfs-schema'
+import type { RouterRestClient } from '../../../src/routeros'
+import { SchemaMapper } from '../../../src/schema-mapper'
+import type { SchemaEntry } from '../../../src/scriptfs-schema'
 
 interface MockClientOptions {
   listData?: unknown[]

@@ -4,8 +4,8 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { promisify } from 'util';
-import { fetchCHRReleases } from '../../remote';
-import { UTMProvider } from '../../vm-providers/utm-provider';
+import { fetchCHRReleases } from '../../../src/remote';
+import { UTMProvider } from '../../../src/vm-providers/utm-provider';
 
 const execFileAsync = promisify(execFile);
 

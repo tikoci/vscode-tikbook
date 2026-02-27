@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert';
 import * as vscode from 'vscode';
 import { NotebookCellData, NotebookCellKind, NotebookData } from 'vscode';
-import { MarkdownSerializer, ScriptSerializer } from '../../../notebook';
+import { MarkdownSerializer, ScriptSerializer } from '../../../src/notebook';
 
 suite('Priority 1: Notebook Kernel', () => {
 	suite('Notebook Controllers', () => {

@@ -26,7 +26,7 @@ import { exec, execFile } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
-import { ensureRunningQemuCHRVM } from './chr-vm-provisioning';
+import { ensureRunningQemuCHRVM } from './chr-vm-provisioning'; // path is correct, both are in integration/
 
 const execFileAsync = promisify(execFile);
 const execAsync = promisify(exec);

@@ -1,5 +1,5 @@
 import { strict as assert } from 'assert'
-import { escapeRouterString, routerosArrayFromJson } from '../../converters'
+import { escapeRouterString, routerosArrayFromJson } from '../../../src/converters'
 
 suite('Basic escaping', () => {
   test('should escape double quotes', () => {

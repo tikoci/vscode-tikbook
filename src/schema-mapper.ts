@@ -1,4 +1,4 @@
-import { getVirtualFileSystemChannel } from './output-channels';
+import { getTikBookChannel } from './output-channels';
 import type { RouterRestClient } from './routeros';
 import type { SchemaEntry } from './scriptfs-schema';
 
@@ -6,27 +6,27 @@ export class SchemaMapper {
   constructor(private client: RouterRestClient, private schema: SchemaEntry) {}
 
   async listItems(): Promise<unknown[]> {
-    getVirtualFileSystemChannel().debug(`<SchemaMapper.listItems> path=${this.schema.path}, filter=${JSON.stringify(this.schema.printBody)}`)
+    getTikBookChannel().debug(`<SchemaMapper.listItems> path=${this.schema.path}, filter=${JSON.stringify(this.schema.printBody)}`)
     try {
       const items = await this.client.list(this.schema.path, this.schema.printBody)
-      getVirtualFileSystemChannel().debug(`<SchemaMapper.listItems> SUCCESS: ${items.length} items from ${this.schema.path}`)
+      getTikBookChannel().debug(`<SchemaMapper.listItems> SUCCESS: ${items.length} items from ${this.schema.path}`)
       return items
     }
     catch (err) {
-      getVirtualFileSystemChannel().error(`<SchemaMapper.listItems> FAILED for ${this.schema.path}: ${err instanceof Error ? err.message : String(err)}`)
+      getTikBookChannel().error(`<SchemaMapper.listItems> FAILED for ${this.schema.path}: ${err instanceof Error ? err.message : String(err)}`)
       throw err
     }
   }
 
   async getItem(idOrName: string): Promise<Record<string, unknown> | undefined> {
-    getVirtualFileSystemChannel().debug(`<SchemaMapper.getItem> path=${this.schema.path}, idOrName='${idOrName}', nameAttr='${this.schema.nameAttr}'`)
+    getTikBookChannel().debug(`<SchemaMapper.getItem> path=${this.schema.path}, idOrName='${idOrName}', nameAttr='${this.schema.nameAttr}'`)
     try {
       const item = await this.client.get(this.schema.path, idOrName) as Record<string, unknown>
-      getVirtualFileSystemChannel().debug(`<SchemaMapper.getItem> SUCCESS: got item with keys: ${Object.keys(item).join(', ')}`)
+      getTikBookChannel().debug(`<SchemaMapper.getItem> SUCCESS: got item with keys: ${Object.keys(item).join(', ')}`)
       return item
     }
     catch (err) {
-      getVirtualFileSystemChannel().debug(`<SchemaMapper.getItem> get() failed, trying fallback list+match: ${err instanceof Error ? err.message : String(err)}`)
+      getTikBookChannel().debug(`<SchemaMapper.getItem> get() failed, trying fallback list+match: ${err instanceof Error ? err.message : String(err)}`)
       return this.getItemFallback(idOrName)
     }
   }
@@ -39,15 +39,15 @@ export class SchemaMapper {
         return rec[this.schema.nameAttr ?? 'name'] === idOrName || rec['.id'] === idOrName || rec.id === idOrName
       }) as Record<string, unknown> | undefined
       if (found) {
-        getVirtualFileSystemChannel().debug(`<SchemaMapper.getItem> FALLBACK SUCCESS: found in list`)
+        getTikBookChannel().debug(`<SchemaMapper.getItem> FALLBACK SUCCESS: found in list`)
       }
       else {
-        getVirtualFileSystemChannel().debug(`<SchemaMapper.getItem> FALLBACK FAILED: not found in list (searched ${items.length} items)`)
+        getTikBookChannel().debug(`<SchemaMapper.getItem> FALLBACK FAILED: not found in list (searched ${items.length} items)`)
       }
       return found
     }
     catch (fallbackErr) {
-      getVirtualFileSystemChannel().error(`<SchemaMapper.getItem> fallback also failed: ${fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)}`)
+      getTikBookChannel().error(`<SchemaMapper.getItem> fallback also failed: ${fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)}`)
       throw fallbackErr
     }
   }

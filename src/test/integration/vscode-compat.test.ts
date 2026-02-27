@@ -1,6 +1,6 @@
 import { strict as assert } from 'assert';
 import * as vscode from 'vscode';
-import { getActiveNotebook, hasAPI, parseVersion, safeCall } from '../../../vscode-compat';
+import { getActiveNotebook, hasAPI, parseVersion, safeCall } from '../../../src/vscode-compat';
 
 suite('Priority 1: VS Code Compatibility Utilities', () => {
 	suite('Version Parsing', () => {

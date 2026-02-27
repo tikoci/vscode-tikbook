@@ -1,5 +1,5 @@
 import { strict as assert } from 'assert'
-import { hasAPI, parseVersion, safeCall } from '../../vscode-compat'
+import { hasAPI, parseVersion, safeCall } from '../../../src/vscode-compat'
 
 suite('vscode-compat utilities', () => {
   test('parseVersion handles valid version strings', () => {

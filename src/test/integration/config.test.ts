@@ -1,6 +1,6 @@
 import { strict as assert } from 'assert';
 import * as vscode from 'vscode';
-import { getConnectionUrlString, getSettings } from '../../../config';
+import { getConnectionUrlString, getSettings } from '../../../src/config';
 
 suite('Priority 1: Configuration & Settings', () => {
 	suite('Settings Retrieval', () => {
