@@ -20,11 +20,13 @@ log.info('Connected to RouterOS');
 console.log('Connected'); // user won't see this
 ```
 
+
 ### Output Channels
 
-- Create channels sparingly (one per major feature area)
-- Current: "TikBook" (main), "RouterOS LSP" (coordination)
-- Avoid duplicates: schema-mapper.ts and scriptfs.ts both use "RouterOS Virtual FileSystem"
+- **All TikBook feature logging (including ScriptFS, schema-mapper, virtual file system, etc.) must use the main "TikBook" output channel.**
+- Only interactive/UX output (such as Markdown Run) should use a dedicated channel for user-facing results.
+- Do **not** create separate channels for internal feature logs. This ensures all logs are visible in one place and avoids confusion.
+- Current: "TikBook" (main), "RouterOS LSP" (coordination), "RouterOS Run" (interactive Markdown execution only)
 
 ## File I/O
 

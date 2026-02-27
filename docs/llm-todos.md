@@ -168,6 +168,30 @@ These items should be addressed soon:
 - Created: [.github/instructions/phase-scope-verification.md](.github/instructions/phase-scope-verification.md) - Before testing, verify scope
 - Updated: All logging now includes before/after filtering context (shows what UI displays, not just raw counts)
 
+## 🛠️ Technical Debt (Action Items)
+
+The following technical debt items are now tracked as quick tasks for cleanup and improvement:
+
+### 1. scriptfs.ts uses Node util (TextEncoder/TextDecoder)
+**Problem:** Uses Node's util module, which is not available in VS Code web. Blocks SystemScriptFS auto-mount in web.
+**Action:** Refactor to use global TextEncoder/TextDecoder or gate feature to desktop only. Ensure compatibility with web extension.
+
+### 2. Duplicate Output Channels
+**Problem:** Both schema-mapper.ts and scriptfs.ts create a channel named "RouterOS Virtual FileSystem", which can confuse Output panel organization.
+**Action:** Consolidate or rename output channels to clarify their purpose and avoid duplication.
+
+### 3. Commented Serialization Code in notebook.ts
+**Problem:** notebook.ts contains ~50 lines of alternative serialization logic (lines 560–599) that are commented out. Unclear if reference, abandoned, or future format.
+**Action:** Review, clarify intent, and either document, refactor, or remove as appropriate.
+
+### 4. Error Detection Patterns (Regex vs LSP)
+**Problem:** Error detection is currently regex-based and incomplete. Not robust across RouterOS versions.
+**Action:** Research and propose improvements: expand regex patterns, move to LSP-based detection, or auto-generate from docs.
+
+### 5. Metadata and Output Persistence in Notebooks
+**Problem:** Notebooks do not persist outputs or metadata, blocking features like collapsed state, per-cell settings, and output saving.
+**Action:** Design and implement metadata serialization infrastructure for both .md.rsc and .rsc.md formats. Enable output persistence and related features.
+
 ## ⚡ Quick Code Wins
 
 **Status (2026-02-27): Tasks #9-11 COMPLETED ✅**
