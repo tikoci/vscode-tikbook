@@ -38,6 +38,7 @@ tools/**
 # Development artifacts
 .vscode/**
 .scratch/**
+.tmp/**
 .vsix-serve/**
 .env.example
 .sarbsettings*
