@@ -1,5 +1,5 @@
 import type { Disposable, FileChangeEvent, FileStat, FileSystemProvider } from 'vscode';
-import { commands, EventEmitter, FileChangeType, FileSystemError, FileType, languages, Uri, window, workspace } from 'vscode';
+import { commands, EventEmitter, FileChangeType, FilePermission, FileSystemError, FileType, languages, Uri, window, workspace } from 'vscode';
 import { getSettings } from './config';
 import { getTikBookChannel } from './output-channels';
 import { RouterRestClient } from './routeros';
@@ -11,7 +11,17 @@ const SCHEME = 'rscfile'
 const getVirtualFileSystemChannel = getTikBookChannel
 
 class InMemoryStat implements FileStat {
-  constructor(public type: FileType, public ctime: number, public mtime: number, public size: number) {}
+  constructor(
+    public type: FileType,
+    public ctime: number,
+    public mtime: number,
+    public size: number,
+    public permissions?: FilePermission,
+  ) {}
+}
+
+function createDirectoryStat(mtime: number): InMemoryStat {
+  return new InMemoryStat(FileType.Directory, 0, mtime, 0, FilePermission.Readonly)
 }
 
 export function findSchemaForParts(parts: string[]): { schema: SchemaEntry, relParts: string[] } | undefined {
@@ -265,7 +275,7 @@ export class SystemScriptFS implements FileSystemProvider {
     // Root directory
     if (parts.length === 0) {
       getTikBookChannel().debug(`<SystemScriptFS.stat> ROOT -> Directory`)
-      return new InMemoryStat(FileType.Directory, 0, 0, 0)
+      return createDirectoryStat(0)
     }
 
     // Try schema-driven stat
@@ -280,7 +290,7 @@ export class SystemScriptFS implements FileSystemProvider {
       // Exactly at schema root (e.g., /ppp/profile or /system/routerboard)
       if (relParts.length === 0) {
         getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> at schema root -> Directory`)
-        return new InMemoryStat(FileType.Directory, 0, Date.now(), 0)
+        return createDirectoryStat(Date.now())
       }
 
       if (schema.multiFilePerItem) {
@@ -303,7 +313,7 @@ export class SystemScriptFS implements FileSystemProvider {
 
         if (relParts.length === 1) {
           getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> multiFilePerItem item -> Directory`)
-          return new InMemoryStat(FileType.Directory, 0, Date.now(), 0)
+          return createDirectoryStat(Date.now())
         }
 
         if (relParts.length !== 2 || !getAllowedMultiFileAttrs(schema).has(String(relParts[1]))) {
@@ -334,7 +344,7 @@ export class SystemScriptFS implements FileSystemProvider {
     const childPaths = getSchemaChildPaths(parts)
     if (childPaths.size > 0) {
       getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> intermediate directory with ${childPaths.size} children -> Directory`)
-      return new InMemoryStat(FileType.Directory, 0, Date.now(), 0)
+      return createDirectoryStat(Date.now())
     }
 
     getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> NOT FOUND`)
@@ -518,9 +528,9 @@ export class SystemScriptFS implements FileSystemProvider {
     const mapper = new SchemaMapper(RouterRestClient.default, schema)
     getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> schema=${schema.path}, relParts=[${relParts.join(', ')}]`)
 
-    // CREATE GUARD: Only allow create for /system/script and /system/scheduler
-    if (options.create && schema.path !== '/system/script' && schema.path !== '/system/scheduler') {
-      throw FileSystemError.NoPermissions('Only script and scheduler items can be added via ScriptFS')
+    if (options.create) {
+      this.onDidChangeEmitter.fire([{ type: FileChangeType.Deleted, uri }])
+      throw FileSystemError.NoPermissions('RouterOS VFS does not support creating new items from VS Code yet. Edit an existing RouterOS attribute instead.')
     }
 
     if (schema.singleton && schema.multiFilePerItem) {
@@ -757,7 +767,10 @@ export class SystemScriptFS implements FileSystemProvider {
     throw FileSystemError.FileNotFound(uri)
   }
 
-  createDirectory(_uri: Uri): void | Thenable<void> { throw FileSystemError.NoPermissions('Cannot create directories in RouterOS FS') }
+  createDirectory(uri: Uri): void | Thenable<void> {
+    this.onDidChangeEmitter.fire([{ type: FileChangeType.Deleted, uri }])
+    void window.showWarningMessage('RouterOS VFS folders are derived from router configuration. Create is not supported here yet.')
+  }
 
   dispose(): void {
     getVirtualFileSystemChannel().trace('<SystemScriptFS> {dispose} invoked')
@@ -783,8 +796,8 @@ export function initializeSystemScriptFileSystem(): Disposable[] {
   // Set language ID to "RouterOS" for all files opened from the rscfile scheme
   const docOpenListener = workspace.onDidOpenTextDocument((doc) => {
     if (doc.uri.scheme === SCHEME) {
-      // Set language ID to RouterOS for syntax highlighting
-      languages.setTextDocumentLanguage(doc, 'RouterOS').then(() => {
+        // Set RouterOS language ID for syntax highlighting and package.json when-clauses
+        languages.setTextDocumentLanguage(doc, 'routeros').then(() => {
         // Success
       }, () => {
         // Silently ignore if language setting fails (e.g., RouterOS language not registered)

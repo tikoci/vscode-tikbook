@@ -271,7 +271,7 @@
           "command": "tikbook.view.markdown",
           "group": "navigation",
           "icon": "$(open-preview)",
-          "when": "notebookType == tikbook || notebookType == routeros || (resourceLangId == routeros || resourceExtname == .rsc)"
+          "when": "notebookType == tikbook || notebookType == routeros || resourceLangId == routeros || editorLangId == routeros || resourceExtname == .rsc"
         },
         {
           "command": "tikbook.view.script",
@@ -283,13 +283,13 @@
           "command": "tikbook.markdown.reopen.notebook",
           "group": "navigation@1",
           "icon": "$(tikoci-tikbook)",
-          "when": "resourceScheme == file && (resourceLangId == markdown-routeros || resourceLangId == markdown || resourceExtname == .md || resourceExtname == .rscmd) && notebookType != markdown-routeros"
+          "when": "((resourceScheme == file && (resourceLangId == markdown-routeros || resourceLangId == markdown || resourceExtname == .md || resourceExtname == .rscmd)) || (resourceScheme == rscfile && (resourceLangId == routeros || editorLangId == routeros))) && notebookType != markdown-routeros"
         },
         {
           "command": "tikbook.routeros.reopen.notebook.routeros",
           "group": "navigation@1",
           "icon": "$(tikoci-tikbook)",
-          "when": "!notebookType && resourceScheme == file && (resourceLangId == routeros || resourceExtname == .rsc || editorLangId == routeros)"
+          "when": "!notebookType && ((resourceScheme == file && (resourceLangId == routeros || resourceExtname == .rsc || editorLangId == routeros)) || (resourceScheme == rscfile && (resourceLangId == routeros || editorLangId == routeros)))"
         },
         {
           "command": "tikbook.vdoc.clone.tikbook",

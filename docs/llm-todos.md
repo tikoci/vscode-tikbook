@@ -93,6 +93,14 @@ The following technical debt items are now tracked as quick tasks for cleanup an
 **Problem:** Notebooks do not persist outputs or metadata, blocking features like collapsed state, per-cell settings, and output saving.
 **Action:** Design and implement metadata serialization infrastructure for both .md.rsc and .rsc.md formats. Enable output persistence and related features.
 
+### 6. "Open/Reopen/Copy As" command-surface audit
+**Problem:** `package.json` when-clauses and menu groups are mostly right, but there are still likely gaps or over-broad selectors across file, notebook, `rscena://`, and `rscfile://` resources.
+**Action:** Audit command visibility/placement for "Open As", "Reopen As", "Copy As", preview, and related actions so the affordances show up in the right places for the right resource types.
+
+### 7. ScriptFS / protocol naming cleanup
+**Problem:** "ScriptFS" and the `rscfile://` / `rscena://` naming story still reflects an earlier, narrower scope than the broader VFS direction now on the roadmap.
+**Action:** Revisit naming only after the broader VFS shape stabilizes, so protocol and feature names reflect the eventual resource model instead of today's partial slice.
+
 ## ⚡ Quick Code Wins
 
 These are 5-30 minute cleanups that improve codebase quality for future feature work. Grouped by effort.
