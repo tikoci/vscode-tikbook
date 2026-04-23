@@ -1,0 +1,19 @@
+# markdownlint-cli2 configuration (ignores and other CLI-only behavior)
+# https://github.com/DavidAnson/markdownlint-cli2
+#
+# Rules live in .markdownlint.yaml so both the CLI and IDE extensions see the same
+# rule choices. This file is for CLI-only ignores.
+
+ignores:
+  - "CLAUDE.md"
+  - "AGENTS.md"
+  - ".github/copilot-instructions.md"
+  - ".github/instructions/**"
+  - ".github/prompts/**"
+  - ".cursor/rules/**"
+  - ".windsurf/rules/**"
+  - ".cline/rules/**"
+  - ".roo/rules/**"
+  - ".amazonq/rules/**"
+  - "node_modules/**"
+  - "**/node_modules/**"

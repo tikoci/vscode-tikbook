@@ -75,8 +75,8 @@ Your unit tests stopped working with `npm run test` due to a **critical bug in v
 1. **.github/copilot-instructions.md** - Added critical warning about test-cli version and markdown workflow
 1. **.github/instructions/testing.instructions.md** - Added test framework version requirements and verification
 1. **.github/instructions/documentation.instructions.md** - Added markdown linting workflow
-1. **.markdownlint-agentic.yaml** - Relaxed rules (MD029, MD041) for docs/instructions
-1. **.markdownlint-strict.yaml** - Strict defaults for public docs
+1. **.markdownlint.yaml** - Shared markdownlint rules for CLI + IDE extensions
+1. **.markdownlint-cli2.yaml** - CLI-only ignores for LLM instruction files and vendored dirs
 
 ## Current Status
 

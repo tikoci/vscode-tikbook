@@ -24,6 +24,10 @@ draft → under-review → ready-for-implementation → implemented → archived
 
 ## Using Specs
 
+Before writing or implementing a spec, check [ROADMAP.md](../../ROADMAP.md) first.
+`ROADMAP.md` is the near-term source of truth for active themes; specs are where a
+roadmap item gets refined into implementation-ready design.
+
 ### For Feature Authors (Writing Specs)
 
 **Starting a new feature:**
@@ -44,23 +48,25 @@ draft → under-review → ready-for-implementation → implemented → archived
 
 1. Ensure all sections are reasonably complete
 2. Change status to `ready-for-implementation`
-3. Notify contributors/AI assistants via issue or chat
-4. Spec becomes "locked" during implementation (changes require discussion)
+3. Link the spec from the relevant roadmap item if it came from `ROADMAP.md`
+4. Notify contributors/AI assistants via issue or chat
+5. Spec becomes "locked" during implementation (changes require discussion)
 
 ### For Implementers (AI/Contributors)
 
 **Before implementing:**
 
-1. Check spec status - only implement `ready-for-implementation` specs
-2. Read entire spec carefully
-3. Ask clarifying questions if anything is unclear
-4. Update spec with implementation notes/decisions as you go
+1. Check `ROADMAP.md` for current direction and conflicts with older drafts
+2. Check spec status - only implement `ready-for-implementation` specs
+3. Read entire spec carefully
+4. Ask clarifying questions if anything is unclear
+5. Update spec with implementation notes/decisions as you go
 
 **After implementing:**
 
 1. Change spec status to `implemented`
 2. Add link to implementation (PR, commit, or file references)
-3. Move spec to `implemented/` subfolder (keeps active list clean)
+3. Keep the spec index current; archive or move files only when there is an explicit archive location/process
 
 ## Spec Template
 
@@ -164,6 +170,7 @@ See [_TEMPLATE.md](./_TEMPLATE.md) for the specification template. Copy it when 
 ## Related Documentation
 
 - **[DEVELOPMENT.md](../../DEVELOPMENT.md)** - Main development guide (points here)
+- **[ROADMAP.md](../../ROADMAP.md)** - Near-term themes and seeded work
 - **[system-design.md](./system-design.md)** - How spec system works, future-features vs specs, best practices
 - **[research/README.md](../research/README.md)** - Research findings and investigations
 - **[llm-todos.md](../llm-todos.md)** - Quick action items (1-3 hours, clear requirements)
@@ -174,8 +181,8 @@ See [_TEMPLATE.md](./_TEMPLATE.md) for the specification template. Copy it when 
 
 ## FAQ
 
-**Q: When should I create a spec vs add to llm-todos.md?**  
-A: Use specs for features that need multi-paragraph design decisions. Use llm-todos.md for quick action items (1-2 hours of work, clear requirements).
+**Q: When should I create a spec vs add to `ROADMAP.md` or `llm-todos.md`?**  
+A: Use `ROADMAP.md` for near-term themes and seeded work, specs for features that need multi-paragraph design decisions, and `llm-todos.md` for quick action items with clear requirements.
 
 **Q: Can I have multiple specs in progress?**  
 A: Yes! Work on specs at your own pace. Mark them as `draft` until ready.

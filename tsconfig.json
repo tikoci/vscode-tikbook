@@ -5,6 +5,11 @@
 		"lib": [
 			"ES2024"
 		],
+		"types": [
+			"node",
+			"mocha",
+			"vscode"
+		],
 		"outDir": "out",
 		"sourceMap": true,
 		"rootDir": "src",

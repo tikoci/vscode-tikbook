@@ -241,7 +241,7 @@ class VMExplorer {
 **Why This Matters:**
 
 - UI frameworks may render before async completes, causing stale or placeholder text
-- Users see confusing tooltips like "undefined" or "Promise { <pending> }"
+- Users see confusing tooltips like `undefined` or `Promise { <pending> }`
 - Hard to debug because it's not a crash—just silent data staleness
 
 **Pattern:**

@@ -52,17 +52,21 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 
 **Public docs (README.md, CHANGELOG.md):**
 
-- Enforce strict markdown formatting; `npm run markdown:lint:public` must pass
+- Keep docs GitHub-friendly; `npm run markdown:lint:public` must pass
 - Use fenced code blocks with language tags
 - Add blank lines around blocks you add or edit
 - Before finalizing, fix all violations reported by `npm run markdown:lint:public`
 
-**Internal docs (docs/, instructions, DEVELOPMENT.md):**
+**Human/internal docs (`ROADMAP.md`, `DEVELOPMENT.md`, `docs/**/*.md`):**
 
-- Relax markdown enforcement; agentic rules intentionally disable MD036/MD040
-- Don't spend time on markdown formatting—focus on content quality
-- `npm run markdown:lint:agentic` expects zero violations (real issues only, no false positives)
-- Only fix if linting reports genuine issues (unclosed blocks, HTML errors, etc.)
+- Keep docs readable and GitHub-friendly, but don't chase cosmetic lint noise
+- `npm run markdown:lint:agentic` should pass for those docs
+- Only fix issues that affect structure, links, fragments, tables, or other real readability/rendering problems
+
+**LLM instruction files (`CLAUDE.md`, `AGENTS.md`, `.github/instructions/**`, `.github/copilot-instructions.md`):**
+
+- These are intentionally excluded from CLI markdown linting via `.markdownlint-cli2.yaml`
+- Do not reshape prompt/instruction content around generic markdownlint preferences
 
 ### Codify patterns as lint rules
 

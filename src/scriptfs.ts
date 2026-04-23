@@ -8,6 +8,7 @@ import type { SchemaEntry } from './scriptfs-schema';
 import scriptfsSchema from './scriptfs-schema';
 
 const SCHEME = 'rscfile'
+const getVirtualFileSystemChannel = getTikBookChannel
 
 class InMemoryStat implements FileStat {
   constructor(public type: FileType, public ctime: number, public mtime: number, public size: number) {}

@@ -30,6 +30,10 @@ Architectural reference: See [docs/architecture.md](../docs/architecture.md), [d
 - **Larger features:** [docs/specs/README.md](../docs/specs/README.md) — only implement specs marked `ready-for-implementation`
 - **Long-term vision:** [docs/future-features.md](../docs/future-features.md)
 
+If `ROADMAP.md` conflicts with an older draft spec, TODO, or historical note, treat
+`ROADMAP.md` as the near-term source of truth and update the stale doc as part of
+the work.
+
 `CHANGELOG.md` is past-tense only — do not record planned work there.
 
 ## Core rules
@@ -44,7 +48,7 @@ Architectural reference: See [docs/architecture.md](../docs/architecture.md), [d
 - Use SecretStorage for credentials; avoid settings for secrets.
 - Keep types open to new RouterOS attributes (avoid overly strict typing).
 - Use all available and reasonable tools to solve problem
-- Always run build and unit tests before saying anything is line "done" or "complete"
+- Always run build and unit tests before saying anything is "done" or "complete"
 - Keep working to solve build issue if you can, including **all** tests
 
 ## Copilot Usage Context
@@ -55,11 +59,11 @@ Architectural reference: See [docs/architecture.md](../docs/architecture.md), [d
 ## Workflow checks
 
 - **Before editing code:** Read `.github/instructions/ai-editing-best-practices.md` - prevents corruption from ambiguous context matching
-- Review [docs/llm-todos.md](../docs/llm-todos.md) and [docs/future-features.md](../docs/future-features.md) for active constraints and decision points.
+- Review [ROADMAP.md](../ROADMAP.md) first, then [docs/llm-todos.md](../docs/llm-todos.md) and [docs/future-features.md](../docs/future-features.md) for active constraints and decision points.
 - Run eslint (npm run lint) on code changes.
 - Add tests when behavior is uncertain; use llm-experiments.test.js for one-off tests.
 - Keep commands, contributions, and activation events in package.json in sync with code.
-- Validate RouterOS commands using v7 docs or RouterOS LSP.
+- For RouterOS questions, use rosetta/RouterOS docs tooling first when available; otherwise validate commands using v7 docs or RouterOS LSP.
 - Publishing is only via .github/workflows/build.yaml (no direct publish).
 - Gate experimental features behind settings when noted in docs/llm-todos.md or docs/future-features.md.
 - If third-party test tooling is buggy, document it in docs/interop-issues.md and consider filing an upstream issue.
@@ -68,30 +72,31 @@ Architectural reference: See [docs/architecture.md](../docs/architecture.md), [d
 
 ## Markdown workflow (AI-friendly)
 
-**Always use npm scripts, never `npx markdownlint` directly:**
+**Always use npm scripts, never call the legacy markdownlint CLI directly:**
 
-- Check linting: `npm run markdown:lint:agentic` (docs + instructions)
-- Auto-fix issues: `npm run markdown:fix:agentic` (uses --fix flag, run at end of session)
+- Check public docs: `npm run markdown:lint:public`
+- Check human/internal docs: `npm run markdown:lint:agentic`
+- Auto-fix issues: `npm run markdown:fix:all` (run at end of session if needed)
 - Fix all (code + markdown): `npm run format` (runs eslint --fix + markdown --fix)
 
 **Agentic linting philosophy:**
 
-- **Internal docs** (docs/, instructions): Relaxed rules (`MD036`, `MD040` disabled) to avoid false positives on legitimate patterns like "Example:", "Flow 1:", fenced blocks without language tags
-- **Public docs** (README.md, CHANGELOG.md): Strict rules for professional formatting
-- This is intentional—internal docs are for dev/LLM reference, not user-facing
+- `.markdownlint.yaml` holds the shared GitHub-oriented rules for real docs
+- `.markdownlint-cli2.yaml` excludes LLM instruction files (`CLAUDE.md`, `AGENTS.md`, `.github/instructions/**`, etc.) from CLI linting
+- Human-facing docs should be well-formed; prompt/instruction files are not a formatting battleground
 
 **Workflow for markdown changes:**
 
 1. Edit markdown file (no linting during development)
-2. At session end, run `npm run markdown:lint:agentic` to check for real issues
-3. Manual fixes only needed for rare violations (e.g., HTML formatting, unclosed blocks)
-4. Do not worry about MD036/MD040 in internal docs—they're disabled for agentic mode
+2. If you touched `README.md` or `CHANGELOG.md`, run `npm run markdown:lint:public`
+3. If you touched `ROADMAP.md`, `DEVELOPMENT.md`, or files in `docs/`, run `npm run markdown:lint:agentic`
+4. Do not rewrite LLM instruction files just to satisfy generic markdownlint preferences
 
 **Why npm scripts instead of npx:**
 
-- Knows installed version and config files (.markdownlint-*.yaml)
-- Applies correct config (strict for public, agentic for docs)  
-- Handles multiple files/patterns easily
+- Uses the repo's `markdownlint-cli2` setup and ignore patterns
+- Applies the shared `.markdownlint.yaml` rules with `.markdownlint-cli2.yaml` CLI ignores
+- Handles the right file sets for public vs human/internal docs
 - Consistent with eslint/lint workflow
 
 ## Unit Test Framework (CRITICAL)

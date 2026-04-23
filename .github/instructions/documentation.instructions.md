@@ -19,17 +19,20 @@ These guidelines apply to all documentation files in `docs/`.
 
 ## Markdown Linting Workflow
 
-**Linting strategy:** Internal docs use relaxed rules (MD036, MD040 disabled); public docs stay strict.
+**Linting strategy:** Human docs use a shared `.markdownlint.yaml` rule set. CLI
+linting excludes LLM instruction/prompt files via `.markdownlint-cli2.yaml` so
+those files are not shaped around generic markdownlint busywork.
 
 - **During development**: `npm run compile` does not run markdownlint
-- **Public docs validation**: `npm run markdown:lint:public` (README.md, CHANGELOG.md) — strict rules
-- **Internal docs validation**: `npm run markdown:lint:agentic` (docs/ and Copilot instructions) — relaxed rules
-  - Relaxed rules avoid false positives on internal patterns: "Example:", "Pattern 1:", fenced blocks without language
-  - No manual markdown cleanup needed for internal docs when following this workflow
-- **Manual cleanup** (if needed): `npm run markdown:fix:all` applies auto-fixes to public + internal docs
+- **Public docs validation**: `npm run markdown:lint:public` (`README.md`, `CHANGELOG.md`)
+- **Human/internal docs validation**: `npm run markdown:lint:agentic` (`ROADMAP.md`, `DEVELOPMENT.md`, `docs/**/*.md`)
+- **Instruction files**: excluded from CLI lint by `.markdownlint-cli2.yaml`
+- **Manual cleanup** (if needed): `npm run markdown:fix:all` applies auto-fixes to the docs those scripts cover
 - **All-in-one format**: `npm run format` runs all linters with --fix
 
-**For agentic workflow:** Don't spend time on markdown formatting for internal docs. The rules are intentionally relaxed to avoid busy work. Focus on content quality. Use `npm run markdown:lint:agentic` at session end to validate actual issues (unclosed blocks, etc.), but expect zero or very few violations.
+**For agentic workflow:** Focus on content quality. Keep human docs GitHub-friendly,
+but do not rewrite LLM instruction files just to appease generic markdownlint
+preferences.
 
 ## Links
 

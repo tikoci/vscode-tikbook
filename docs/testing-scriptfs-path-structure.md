@@ -91,7 +91,7 @@ npm test -- --grep "Schema-driven"
 
 ### ✅ Test 4: Can be written/updated
 **Result:** Writing to `/system/script/my-script/source` updates RouterOS
-**Verification:** 
+**Verification:**
 1. Writes test update comment
 2. Verifies update persisted
 3. Restores original content
@@ -102,7 +102,7 @@ npm test -- --grep "Schema-driven"
 
 ## Test Setup Flow
 
-1. **beforeAll:** 
+1. **beforeAll:**
    - Connects to RouterOS
    - Uses first existing script OR creates `tikbook-test-<timestamp>`
    - Records script name for all tests
@@ -129,7 +129,7 @@ npm test -- --grep "Schema-driven"
 URL is NOT reachable: http://192.168.88.1
 Error: ECONNREFUSED
 ```
-**Fix:** 
+**Fix:**
 - Verify RouterOS device is running
 - Check IP address in baseUrl
 - Verify network connectivity

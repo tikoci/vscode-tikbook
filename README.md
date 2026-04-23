@@ -1,4 +1,3 @@
-
 # TikBook for RouterOS
 
 TikBook is a companion extension to [RouterOS LSP](https://marketplace.visualstudio.com/items?itemName=TIKOCI.lsp-routeros-ts), akin to a "plus pack". While RouterOS LSP works with any LSP-enabled editor (like NeoVim), TikBook is specific to Visual Studio Code (and its forks).
@@ -7,9 +6,9 @@ TikBook offers a VS Code notebook interface for RouterOS scripts, along with "vi
 
 ---
 
-## Test Suite Structure (2026)
+## Test Running Workflow & Suite Policy (2026)
 
-See [docs/test-suite-structure.md](docs/test-suite-structure.md) for a summary of the test migration, new structure, and next steps for test categorization (unit vs integration).
+See [docs/test-running-policy.md](docs/test-running-policy.md) for the current workflow, suite policy, and how to run or categorize tests.
 
 ---
 
@@ -49,8 +48,9 @@ This repo is designed as a best-practices example for agentic development with C
 1. Open Copilot Chat (⌃⌘I or ⌘I).
 2. Type `/init` to review custom instructions for the workspace.
 3. For setup and settings, see [docs/copilot-setup.md](docs/copilot-setup.md).
-4. For task tracking, check [docs/llm-todos.md](docs/llm-todos.md) and [docs/future-features.md](docs/future-features.md).
-5. For detailed guidance, refer to [docs/sarb-instructions.md](docs/sarb-instructions.md).
+4. For planning, start with [ROADMAP.md](ROADMAP.md), then use [docs/llm-todos.md](docs/llm-todos.md), [docs/specs/README.md](docs/specs/README.md), and [docs/future-features.md](docs/future-features.md) as needed.
+5. If roadmap direction conflicts with an older draft spec or TODO, treat `ROADMAP.md` as the near-term source of truth and update the stale doc as part of the work.
+6. For detailed guidance, refer to [docs/sarb-instructions.md](docs/sarb-instructions.md).
 
 **Verification:** Right-click in the Chat view and select "Diagnostics" to see which instruction files are loaded.
 

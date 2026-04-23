@@ -85,7 +85,10 @@ suite('Feature X Integration Experiments', () => {
 
 **Run experiments:** `npm test -- --grep "Experiment"`
 
-**Discovery requirement:** Place experiment files under `src/test/suite/` so they compile to `out/test/suite/**/*.test.js` and are picked up by the test runner.
+**Discovery requirement:** Place experiment files under the current test suites
+(`src/test/unit/` for pure tests, `src/test/integration/` for external/system
+tests) so `npm run compile:test` builds them into `out/test/unit/` or
+`out/test/integration/` and the test runner can discover them.
 
 **Logging requirement (current toolchain):** CLI runs capture `console.log`/`console.warn`/`console.error` output in `.vscode-test/test-output.log`. For GUI runs, console output is only visible in the Debug/Test output panels; if an experiment needs durable output, write results to a file and read it after the run:
 
@@ -196,11 +199,13 @@ suiteTeardown(() => {
   - Writes full results to `.vscode-test/test-output.log`
   - AI-friendly and human-friendly - shows exactly which tests pass/fail
 
-- File pattern (both configs): `files: 'out/test/suite/**/*.test.js'`
-  - **GUI (Extension Test Runner)**: Parses compiled `.test.js` files to discover `suite()` and `test()` calls
-  - **CLI (vscode-test-cli)**: Loads all matching files into Mocha for execution
+- File pattern:
+  - **GUI (`.vscode-test.mjs`)**: `files: 'out/test/**/*.test.js'`
+  - **CLI (`.vscode-test-cli.mjs`)**: `files: 'out/test/unit/**/*.test.js'` by default
+  - **GUI (Extension Test Runner)** parses the full compiled tree to discover tests
+  - **CLI (vscode-test-cli)** runs the unit suite by default; broaden the pattern only when intentionally running integration tests
 
-- Individual test files: `src/test/suite/*.test.ts` (each with `suite()` and `test()` calls)
+- Individual test files live in `src/test/unit/*.test.ts` and `src/test/integration/*.test.ts`
 - Both `npm test` (desktop) and `npm run test:web` (browser) work with CLI config
 - GUI Debug: Use the "Debug" button in the test tree to step through tests
 
@@ -237,7 +242,7 @@ If either shows exit code 0 with a failing test, the test runner is broken.
   - Already have infrastructure (`vscode-test-cli`)
   - Fast (<5 sec per suite)
   - Covers 80% of testing needs
-  - Integration tests in `src/test/suite/integration/`
+  - Automated tests are split across `src/test/unit/` and opt-in `src/test/integration/`
 
 ### Test Coverage Summary (February 2026)
 
@@ -249,7 +254,7 @@ If either shows exit code 0 with a failing test, the test runner is broken.
 - ✅ Notebook types: 3 tests (tikbook, routeros, markdown-routeros)
 - ✅ Configuration settings: 2 tests (defaults, documentation)
 - ✅ Extension lifecycle: 2 tests (install, activation)
-- ✅ File: `src/test/suite/integration/contributions.test.ts`
+- ✅ File: `src/test/unit/contributions.test.ts`
 
 **Priority 1 (45 tests) - Notebook Kernel & Core APIs:**
 
@@ -258,9 +263,9 @@ If either shows exit code 0 with a failing test, the test runner is broken.
 - ✅ Configuration management: 13 tests (settings, URL formatting, detection)
 - ✅ VS Code compatibility: 19 tests (version parsing, API detection, safeCall wrapper)
 - ✅ Files:
-  - `src/test/suite/integration/notebook-kernel.test.ts`
-  - `src/test/suite/integration/config.test.ts`
-  - `src/test/suite/integration/vscode-compat.test.ts`
+  - `src/test/integration/notebook-kernel.test.ts`
+  - `src/test/unit/config.test.ts`
+  - `src/test/unit/vscode-compat.test.ts`
 
 **RouterOS Connection Validation (4 tests):**
 
@@ -268,7 +273,7 @@ If either shows exit code 0 with a failing test, the test runner is broken.
 - ✅ REST API endpoint test: Confirms /rest is available
 - ✅ Authentication test: Verifies credentials
 - ✅ Uses `.sarbsettings` JSONC configuration (skipLiveTests flag for CI/CD)
-- ✅ File: `src/test/suite/integration/connection-validation.test.ts`
+- ✅ File: `src/test/integration/connection-validation.test.ts`
 
 **Priority 2+ (Future) - Virtual FS, Remote, SSH:**
 
@@ -399,7 +404,7 @@ const baseUrl = vscode.workspace.getConfiguration('tikbook')
 
 ### Phase 1: Priority 0 - Extension Contributions
 
-**Location:** `src/test/suite/integration/contributions.test.ts`
+**Location:** `src/test/unit/contributions.test.ts`
 
 **Tests:**
 

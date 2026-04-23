@@ -1,9 +1,92 @@
-# markdownlint configuration
-# Rule names: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+# Shared markdownlint rules (read by markdownlint-cli2 and IDE extensions)
+# https://github.com/DavidAnson/markdownlint
 
-# Relaxed for documentation and instruction files
-MD013: false # Line length
-MD024: false # Duplicate headings (common in docs with sections like "Overview")
-MD029: false # Ordered list item prefix (allow mixing 1. 1. 1. or 1. 2. 3.)
-MD033: false # Inline HTML (needed for badges, alerts, etc.)
-MD041: false # First line in file should be top-level heading (not always needed in docs)
+# MD013 — line length: long lines are normal in technical docs and tables
+MD013: false
+
+# MD024 — duplicate headings: common in changelogs and reference docs
+MD024: false
+
+# MD029 — ordered list style is cosmetic, not a correctness signal
+MD029: false
+
+# MD004 — unordered list marker style is cosmetic, not a correctness signal
+MD004: false
+
+# MD032 — blank lines around lists are useful but too noisy for dense reference docs
+MD032: false
+
+# MD022 — blank lines around headings are cosmetic in dense reference docs
+MD022: false
+
+# MD031 — blank lines around fenced code blocks are cosmetic
+MD031: false
+
+# MD010 — tabs occasionally appear in copied tables/notes; not worth fighting
+MD010: false
+
+# MD012 — multiple blank lines are cosmetic unless they break rendering
+MD012: false
+
+# MD033 — allow semantic HTML that GitHub renders usefully
+MD033:
+  allowed_elements:
+    - kbd
+    - mark
+    - details
+    - summary
+    - sub
+    - sup
+    - abbr
+    - dl
+    - dt
+    - dd
+    - figure
+    - figcaption
+    - br
+    - decision
+    - short
+
+# MD036 — emphasis-as-heading is often intentional annotation in changelogs/docs
+MD036: false
+
+# MD028 — spaced blockquotes are rendered fine by GitHub
+MD028: false
+
+# MD001 — heading increments sometimes skip levels for document structure
+MD001: false
+
+# MD041 — first-line heading is not always the best fit for technical docs
+MD041: false
+
+# MD025 — multiple top-level headings are sometimes used in summary docs
+MD025: false
+
+# MD060 — table column spacing is cosmetic
+MD060: false
+
+# MD040 — code language tags are useful, but too noisy across legacy internal docs
+MD040: false
+
+# MD046 — fenced code blocks only
+MD046:
+  style: fenced
+
+# MD048 — use backticks for fenced code blocks
+MD048:
+  style: backtick
+
+# MD051 — catch broken local heading fragments
+MD051: true
+
+# MD056 — catch malformed tables
+MD056: true
+
+# MD058 — require blank lines around tables for reliable rendering
+MD058: true
+
+# MD034 — bare URLs are usually accidental or render inconsistently
+MD034: true
+
+# MD042 — empty links are almost always mistakes
+MD042: true

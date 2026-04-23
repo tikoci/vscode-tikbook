@@ -1,6 +1,7 @@
-// ...existing code...
+import { strict as assert } from 'assert'
+
 suite.skip('UTM AppleScript Validation - SKIPPED', () => {
   test('should pass', () => {
-    expect(true).toBe(true);
-  });
-});
+    assert.ok(true)
+  })
+})

@@ -28,8 +28,8 @@ npm run test:web
 
 ### Development Workflow
 
-1. Read relevant [conventions](docs/conventions.md) and [architecture](docs/architecture.md)
-2. Check [feature specs](docs/specs/README.md) if working on new features
+1. Start with [ROADMAP.md](ROADMAP.md) for near-term direction, then read relevant [conventions](docs/conventions.md) and [architecture](docs/architecture.md)
+2. Check [feature specs](docs/specs/README.md) if working on new features; only implement specs marked `ready-for-implementation`
 3. Make changes, ensuring lint passes: `npm run lint`
 4. Test your changes (see [Testing](#testing))
 5. Follow [code review checklist](docs/sarb/code-review-checklist.md)
@@ -38,31 +38,19 @@ npm run test:web
 
 ## Build System
 
-### TypeScript Build (Current)
+### Bun Build Pipeline (Current)
 
-- The extension builds with `tsc` to `out/extension.js`.
-- A post-build step copies the output to `out/extension-web.js` for VS Code web targets.
-- This tsc-based build has not shipped in a public release yet; validate by building VSIX packages locally.
-- **Source maps included**: The VSIX includes `.map` files for better error reporting.
+- `npm run compile` runs `clean`, `lint`, `typecheck`, then `compile:node`
+- `npm run compile:node` uses `bun build` to emit `out/extension.js`
+- `npm run compile:web` uses `bun build --target=browser` to emit `dist/extension.js`
+- `npm run compile:test` rebuilds both test suites into `out/test/unit/` and `out/test/integration/`
+- Source maps are emitted for extension and test builds
 
-### Build Output Size
+### Why cleaning still matters
 
-- Compiled JavaScript: ~225 KB
-- With source maps: ~340 KB total
-- **No bundling needed**: The size is negligible; bundling adds unnecessary complexity.
-
-### Why `npm clean` is Required
-
-- **tsc does not clean the output directory** - it only overwrites files it actively compiles.
-- **Risk**: If you rename/delete a TypeScript file, the old JavaScript file remains in `out/`.
-- **Solution**: `npm run compile` includes `npm run clean` to ensure a fresh build.
-- This is a standard safety practice for TypeScript projects.
-
-### Bun History (Fallback Only)
-
-- Earlier releases used `bun build` for bundling and dual targets.
-- We moved away from bun to keep the build simpler and more agent-friendly.
-- If bundling becomes necessary again, bun is the preferred fallback, but should write to a separate output folder (e.g., `dist/`).
+- `npm run clean` removes `out/` before the node build
+- `npm run compile:test` separately clears `out/test/` before rebuilding tests
+- This avoids stale compiled files after renames, deletes, or suite moves
 
 ### Package File Control (.vscodeignore)
 
@@ -87,11 +75,11 @@ The `.vscodeignore` file controls what goes into the VSIX package:
 
 ### Markdown Linting
 
-- **Public docs (strict)**: `npm run markdown:lint:public` (README.md, CHANGELOG.md)
-- **Internal docs (relaxed)**: `npm run markdown:lint:agentic` (docs/ and Copilot instructions)
-  - Internal rules disable MD036 (emphasis vs heading) and MD040 (language tags) to avoid false positives
-  - No manual cleanup needed for internal docs in normal workflow
-- **Auto-fix**: `npm run markdown:fix:all` applies fixes to both public and internal files (run at session end if needed)
+- **Shared rules**: `.markdownlint.yaml` holds the project rules for both the CLI and IDE extensions
+- **CLI ignores**: `.markdownlint-cli2.yaml` excludes LLM instruction/prompt files from CLI linting
+- **Public docs**: `npm run markdown:lint:public` (`README.md`, `CHANGELOG.md`)
+- **Human/internal docs**: `npm run markdown:lint:agentic` (`ROADMAP.md`, `DEVELOPMENT.md`, `docs/**/*.md`)
+- **Auto-fix**: `npm run markdown:fix:all` applies fixes to the human docs covered by those scripts
 
 ## Documentation Structure
 
@@ -120,6 +108,7 @@ Located in `.github/instructions/`:
 
 ### Planning & Roadmap
 
+- **[ROADMAP.md](ROADMAP.md)** - Near-term themes and seeded tasks; start here each session
 - **[Feature Specs](docs/specs/README.md)** - Detailed designs for upcoming features (incremental, user-editable)
 - **[Research & Findings](docs/research/README.md)** - Investigations and decision context
 - **[LLM TODOs](docs/llm-todos.md)** - Quick action items from LLM sessions
@@ -132,34 +121,36 @@ Located in `.github/instructions/`:
 
 ### For New Features
 
-1. **Check if spec exists:** Look in [docs/specs/](docs/specs/README.md)
-   - If exists and status is `ready-for-implementation` → proceed
-   - If exists but status is `draft` or `under-review` → wait for completion
-   - If doesn't exist → create one using [template](docs/specs/_TEMPLATE.md)
+1. **Check the roadmap first:** Look in [ROADMAP.md](ROADMAP.md) for current direction and seeded work.
+   - If the roadmap conflicts with an older draft spec or historical TODO, follow the roadmap and update the stale doc
+2. **Check if a spec exists:** Look in [docs/specs/](docs/specs/README.md)
+   - If it exists and status is `ready-for-implementation` → proceed
+   - If it exists but status is `draft` or `under-review` → wait for completion or refine the spec first
+   - If it doesn't exist and the work needs design → create one using [template](docs/specs/_TEMPLATE.md)
 
-2. **Research required?** Check spec's "Related" section
+3. **Research required?** Check the spec's "Related" section
    - If linked research exists, read it for context
    - If research is in-progress, wait for completion before starting
    - If no research but decisions unclear, request research first
 
-3. **Implement incrementally:**
+4. **Implement incrementally:**
    - Start with unit tests (if applicable)
    - Implement core functionality
    - Add integration tests
    - Update documentation
 
-4. **Follow conventions:**
+5. **Follow conventions:**
    - No `console.log` - use output channels
    - Desktop-only features: gate with `vscode.env.uiKind`
    - Secrets: use SecretStorage, never settings
    - Prefer `vscode.workspace.fs` over Node `fs`
 
-5. **Before PR:**
-   - Run `npm run lint`
-   - Run `npm test` and `npm run test:web`
-   - Update CHANGELOG.md
-   - Check [code review checklist](docs/sarb/code-review-checklist.md)
-   - **Update spec status** to `implemented` and move to specs/implemented/
+6. **Before PR:**
+    - Run `npm run lint`
+    - Run `npm test` and `npm run test:web`
+    - Check [code review checklist](docs/sarb/code-review-checklist.md)
+    - Update spec status/docs if the work changes design or completes a spec
+    - Update `CHANGELOG.md` only for shipped work or when explicitly requested
 
 ### For Bug Fixes
 
@@ -175,24 +166,24 @@ Located in `.github/instructions/`:
 
 ### Unit Tests
 
-Fast tests that don't require VS Code:
+Fast, default-suite tests:
 
 ```bash
 npm test
 ```
 
-Located in `src/test/**/*.test.ts`
+Located in `src/test/unit/*.test.ts`
 
 ### Integration Tests  
 
-Tests requiring VS Code Extension Host:
+Opt-in tests for external systems or side effects:
 
 ```bash
-npm test                    # Desktop tests
-npm run test:web            # Web extension tests
+npm test                    # Default CLI run (unit suite)
+npm run test:web            # Default browser run (unit suite)
 ```
 
-Located in `src/test/suite/integration/*.test.ts`
+Located in `src/test/integration/*.test.ts`
 
 ### Manual Testing
 
@@ -307,15 +298,15 @@ src/
 1. Add to `package.json` contributions.commands
 2. Implement in `commands.ts`
 3. Register in `extension.ts` activate()
-4. Add integration test in `src/test/suite/integration/contributions.test.ts`
+4. Add test coverage in `src/test/unit/contributions.test.ts`
 5. Add to `menus.ts` if UI integration needed
 
 ### Adding a New Setting
 
 1. Add to `package.json` contributions.configuration
-2. Access via `vscode.workspace.getConfiguration('routeros')`
+2. Access via `vscode.workspace.getConfiguration('tikbook')`
 3. Add to `config.ts` if helper needed
-4. Add test in `src/test/suite/integration/config.test.ts`
+4. Add test in `src/test/unit/config.test.ts`
 
 ### Adding Experimental Feature
 

@@ -266,7 +266,7 @@ workspace.registerFileSystemProvider('rscfile', provider, {
 
 ### Required Method Implementations
 - `stat(uri)` - Return FileStat (mtime critical!)
-- `readDirectory(uri)` - Return [name, FileType][] array
+- `readDirectory(uri)` - Return `[name, FileType][]` array
 - `readFile(uri)` - Return Uint8Array
 - `writeFile(uri, content, options)` - Sync to RouterOS
 - `delete(uri, options)` - Remove from RouterOS

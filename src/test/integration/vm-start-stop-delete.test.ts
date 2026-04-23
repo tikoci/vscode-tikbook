@@ -19,6 +19,7 @@
  */
 
 import { strict as assert } from 'assert'
+import type { VM } from '../../vm-providers/vm-provider'
 
 /**
  * Emulate VMTreeItem.getContextValue() logic for isolated testing

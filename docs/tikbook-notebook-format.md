@@ -35,7 +35,7 @@ This document is the single source of truth for the serialization and structure 
 ```
 
 - **Notes:**
-  - All lines in a Markdown cell are prefixed with `#  ` (commented)
+  - All lines in a Markdown cell are prefixed with `#` plus two spaces (commented)
   - Code cells are plain RouterOS script
   - No outputs or metadata are persisted (future: see planned extensions)
 
