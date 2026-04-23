@@ -41,10 +41,12 @@ These items should be addressed soon and should stay aligned with `ROADMAP.md`:
 
 ### ScriptFS / VFS pre-work hardening
 
-**Files affected:** `src/scriptfs.ts`, `src/scriptfs-schema.ts`, `src/test/unit/`, `docs/specs/scriptfs-completion.md`
+**Files affected:** `ROADMAP.md`, `src/scriptfs.ts`, `src/scriptfs-schema.ts`, `src/test/unit/`, `docs/specs/scriptfs-completion.md`, `docs/architecture.md`
 
 **Why now:** VFS work is the most likely next code-heavy area, but ScriptFS still has
-too much path-specific branching and too little direct unit coverage.
+too much path-specific branching and too little direct unit coverage. Also, the
+roadmap/spec/docs need to keep treating ScriptFS as the first editable slice of a
+broader VFS theme, not the entire feature.
 
 **Priority:** 🔴 High
 

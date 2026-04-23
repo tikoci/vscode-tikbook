@@ -61,7 +61,48 @@ direction is unresolved.
 - [ ] Update `docs/specs/chr-test-environment.md` to the quickchr design (or
       open a new spec and mark this one abandoned).
 
-## Theme 2: Bundle rosetta MCP with the extension
+## Theme 2: Broaden RouterOS virtual filesystem beyond the current ScriptFS slice
+
+**Status:** proposed — 2026-04
+
+**Why:** `rscfile://` is not just "mount `/system/script`." The next body of work is a
+broader RouterOS virtual filesystem theme where the current script-attribute editor
+is only **Story 1**. The roadmap needs to keep open the next decisions: how a user
+picks a router, how much of the RouterOS command tree should be surfaced in VS Code,
+when a resource should open as plain text vs. a TikBook notebook, and how `rscfile://`
+stays aligned with `rscena://` / virtualdocs instead of drifting into two unrelated
+UI models.
+
+Related: [docs/specs/scriptfs-completion.md](docs/specs/scriptfs-completion.md),
+[docs/architecture.md#virtual-file-systems](docs/architecture.md#virtual-file-systems),
+[docs/future-features.md#systemscriptfs--virtual-documents--notebook-integration](docs/future-features.md#systemscriptfs--virtual-documents--notebook-integration).
+
+**Tasks:**
+
+- [ ] Treat current ScriptFS as **Story 1**: expose script-bearing RouterOS
+      attributes as editable VFS resources, and do not mark the broader VFS theme
+      "done" just because the current script slice works.
+- [ ] Keep attribute identity primary: the tree should represent the editable
+      attribute/file (`source`, `on-event`, `on-up`, etc.), not just the parent
+      RouterOS item.
+- [ ] Decide router-picking UX for VFS mounts: current configured router, explicit
+      IP/DNS entry, future discovered routers (MNDP / `mcp-monorepo`), and
+      credential / re-auth handoff.
+- [ ] Decide how far the VFS tree goes inside VS Code:
+      (a) script-bearing attributes only,
+      (b) configured/read-only command-tree views surfaced through virtualdocs or a
+      webview,
+      (c) a fuller command-tree browser.
+      Default assumption: keep the editable tree smaller than the full RouterOS tree.
+- [ ] Decide presentation modes per resource: open as plain text editor, open as a
+      TikBook notebook, or offer both with clear semantics.
+- [ ] Align `rscfile://` and `rscena://` / virtualdocs so editable attribute
+      resources and read-only configured/derived views share a coherent model
+      instead of competing UX.
+- [ ] Update the ScriptFS spec (or split a broader VFS spec) so the roadmap, spec,
+      and current code all describe the same next slice of work.
+
+## Theme 3: Bundle rosetta MCP with the extension
 
 **Status:** proposed — 2026-04
 
@@ -84,7 +125,7 @@ RouterOS-7 answers without the user having to know what MCP is.
       RouterOS behaviour, reach for rosetta MCP first." *(Already in CLAUDE.md
       — add the Copilot side too.)*
 
-## Theme 3: `/app` YAML JSONSchema + Monaco parity with tikapp.html
+## Theme 4: `/app` YAML JSONSchema + Monaco parity with tikapp.html
 
 **Status:** proposed — 2026-04
 
@@ -109,7 +150,7 @@ Related: [docs/specs/app-yaml-schema.md](docs/specs/app-yaml-schema.md) (draft) 
       `/app`-shaped directory) — see the `routeros-app-yaml` skill for format
       rules.
 
-## Theme 4: Ship RouterOS skills with the extension
+## Theme 5: Ship RouterOS skills with the extension
 
 **Status:** proposed — 2026-04
 
@@ -130,14 +171,38 @@ to the user's VS Code Copilot automatically.
 - [ ] Pick the shipping mechanism: git submodule of `tikoci/routeros-skills`, or
       npm dependency (if published), or bundled copy refreshed on release.
 
-## Theme 5: mcp-monorepo MCPs as VS Code explorers
+## Theme 6: Copilot integration surfaces inside TikBook
+
+**Status:** proposed — 2026-04
+
+**Why:** rosetta MCP and shipped RouterOS skills are enabling layers, but they do not
+by themselves define the end-user Copilot experience inside TikBook. After the VFS
+theme starts landing, TikBook should decide what RouterOS-aware Copilot integration
+actually looks like in the editor: which context to surface, which UX primitives to
+use, and how to avoid duplicating what rosetta / skills / RouterOS LSP already know.
+
+**Tasks:**
+
+- [ ] Decide the primary Copilot product surface: chat participant, prompt actions,
+      notebook-aware commands, editor actions on VFS/virtualdoc resources, or a mix.
+- [ ] Define which router context can be safely surfaced to Copilot: configured
+      router, mounted VFS authority, selected virtualdoc, notebook metadata, current
+      command-tree location, etc.
+- [ ] Align with rosetta MCP and RouterOS skills so TikBook contributes context and
+      UX, rather than baking RouterOS knowledge into ad hoc prompts.
+- [ ] Keep desktop/web constraints explicit — some integrations may only work on
+      desktop, while others should degrade to docs/context only in web.
+- [ ] Revisit after the first meaningful VFS progress so Copilot integration follows
+      the actual resource model instead of guessing it early.
+
+## Theme 7: mcp-monorepo MCPs as VS Code explorers
 
 **Status:** proposed — 2026-04
 
 **Why:** `~/Lab/mcp-monorepo` has MCPs for MikroTik device discovery (MNDP,
-neighbor, etc.). The data these expose is tree-shaped — a natural fit for a VS
-Code TreeView explorer alongside the existing `chrVMExplorer`. The MCP can stay
-the single source of truth; the explorer is a UI on top.
+neighbor, etc.). The data these expose is tree-shaped — a natural fit for VS
+Code TreeView explorers. The MCP can stay the single source of truth; the
+explorer is a UI on top.
 
 **Tasks:**
 
@@ -147,7 +212,7 @@ the single source of truth; the explorer is a UI on top.
       back different explorers (discovery, dude.db, etc.).
 - [ ] Gate to desktop — MCP transports typically need Node.
 
-## Theme 6: Native RouterOS API transport (tiktui / restraml)
+## Theme 8: Native RouterOS API transport (tiktui / restraml)
 
 **Status:** research — 2026-04
 

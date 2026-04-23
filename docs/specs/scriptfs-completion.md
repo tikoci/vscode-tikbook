@@ -11,6 +11,8 @@
 
 - Spec: experimental-features.md (ScriptFS should be gated as experimental)
 - Issue: N/A
+- Roadmap: Theme 2 in [ROADMAP.md](../../ROADMAP.md) treats ScriptFS as **Story 1**
+  of a broader RouterOS virtual filesystem theme
 - Docs: architecture.md (mentions ScriptFS as work-in-progress)
 - Code: src/scriptfs.ts, src/scriptfs-schema.ts
 - Research: [restraml-integration-notes.md](../research/restraml-integration-notes.md)
@@ -183,6 +185,10 @@ Example target shape:
 ### Relationship to Broader Feature (Future)
 
 ScriptFS is treated as **Phase 1** of a broader RouterOS virtual filesystem concept that may later include non-script resources (for example RouterOS `/file` paths and other typed resources). The `rscfile://` URL contract must therefore remain stable and extensible.
+
+Roadmap intent: do not treat this spec as "the whole VFS plan." It is the current
+editable script-attribute slice inside a larger VFS theme that also needs router
+selection, virtualdocs alignment, and open-mode semantics.
 
 ### Why We Need It
 

@@ -56,17 +56,17 @@ RouterOS can be reached via REST API, SSH, or native API. Currently only REST is
 
 Three ways to view/edit RouterOS content in VS Code:
 
-1. **rscena://** (virtualdocs) - Read-only generated views/transforms for context and previews (CSV exports, global functions, etc.)
-2. **rscfile://** (scriptfs) - Read-write filesystem for RouterOS script attributes (experimental, requirements locked 2026-02-27)
+1. **rscena://** (virtualdocs) - Read-only generated views/transforms for context and previews (CSV exports, global functions, configured-state views, etc.)
+2. **rscfile://** (scriptfs) - Read-write filesystem for RouterOS attributes that TikBook chooses to expose as editable resources; currently centered on script-bearing attributes
 3. **Notebooks** - Cell-based execution and documentation
 
 **Protocol Choice Principles (architectural guidance):**
 
 - **Use `rscfile://` when:** Content should be editable and synced to RouterOS (persistent editing surface)
-- **Use `rscena://` when:** Providing read-only views, derived content, or Copilot context (like SQL database views)
+- **Use `rscena://` when:** Providing read-only views, derived/configured content, or Copilot context (like SQL database views)
 - **Use notebooks when:** Mixed documentation + execution workflow, teaching, or exploratory work
 
-**Design intent:** Use case drives protocol choice. `rscena://` is "glue" for RouterOS-specific things and custom views designed for easy Copilot/end-user consumption. ScriptFS owns the editable resource identity for RouterOS attributes.
+**Design intent:** Use case drives protocol choice. `rscena://` is "glue" for RouterOS-specific things and custom views designed for easy Copilot/end-user consumption. ScriptFS owns the editable resource identity for RouterOS attributes. The broader VFS roadmap should keep those two protocols aligned instead of letting them drift into separate mental models.
 
 ### Notebook Serialization
 
@@ -105,19 +105,25 @@ Currently regex-based (7 patterns in notebook.ts lines 465-471). Incomplete and 
 
 ## Known Architectural Debt
 
-### scriptfs.ts Uses Node util
+### ScriptFS scope vs broader VFS scope
 
-Uses `TextEncoder/TextDecoder` from Node's util module. Not available in VS Code web.
+The current `rscfile://` work is still only one slice of the broader VFS story.
 
-**Impact:** SystemScriptFS cannot be auto-mounted in web unless gated to desktop or replaced with global TextEncoder/TextDecoder.
+**Impact:** Router selection, discovery-driven mount UX, full command-tree scope,
+and notebook-vs-text-editor presentation are still open decisions.
 
-**Status:** Auto-mount is commented out in extension.ts pending this fix.
+**Status:** Treat current ScriptFS as the editable script-attribute slice, not as
+the final VFS shape.
 
-### Duplicate Output Channels
+### ScriptFS vs virtualdocs alignment
 
-schema-mapper.ts and scriptfs.ts both create channel named "RouterOS Virtual FileSystem". May confuse Output panel organization.
+`rscfile://` and `rscena://` are both RouterOS-facing virtual resource surfaces.
 
-**Solution:** Consolidate or rename to distinguish purposes.
+**Risk:** Without an explicit roadmap/spec pass, editable resources and read-only
+configured/derived views can diverge into inconsistent semantics.
+
+**Action:** Keep the VFS roadmap and specs explicit about which protocol owns which
+kind of resource and when both should be offered.
 
 ### Commented Serialization Code
 
