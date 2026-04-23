@@ -186,6 +186,11 @@ function getMultiFileItemName(schema: SchemaEntry, relParts: string[]): string {
   return decodeURIComponent(relParts[0] ?? '')
 }
 
+function getRequestedSchemaChildName(schema: SchemaEntry, relParts: string[]): string {
+  if (schema.singleton) return String(relParts[0] ?? '')
+  return decodeURIComponent(relParts[0] ?? '')
+}
+
 function getAllowedMultiFileAttrs(schema: SchemaEntry): Set<string> {
   if (schema.singleton) return new Set(['on-event'])
   return new Set((schema.scriptAttrs ?? []).map(String))
@@ -291,6 +296,14 @@ export class SystemScriptFS implements FileSystemProvider {
       if (relParts.length === 0) {
         getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> at schema root -> Directory`)
         return createDirectoryStat(Date.now())
+      }
+
+      if (!schema.singleton && schema.isList) {
+        const cachedNames = this.getCachedItemNames(schema.path)
+        const requestedName = getRequestedSchemaChildName(schema, relParts)
+        if (cachedNames && !cachedNames.has(requestedName)) {
+          throw FileSystemError.FileNotFound(uri)
+        }
       }
 
       if (schema.multiFilePerItem) {
@@ -529,7 +542,6 @@ export class SystemScriptFS implements FileSystemProvider {
     getVirtualFileSystemChannel().debug(`<SystemScriptFS.writeFile> schema=${schema.path}, relParts=[${relParts.join(', ')}]`)
 
     if (options.create) {
-      this.onDidChangeEmitter.fire([{ type: FileChangeType.Deleted, uri }])
       throw FileSystemError.NoPermissions('RouterOS VFS does not support creating new items from VS Code yet. Edit an existing RouterOS attribute instead.')
     }
 
@@ -768,8 +780,7 @@ export class SystemScriptFS implements FileSystemProvider {
   }
 
   createDirectory(uri: Uri): void | Thenable<void> {
-    this.onDidChangeEmitter.fire([{ type: FileChangeType.Deleted, uri }])
-    void window.showWarningMessage('RouterOS VFS folders are derived from router configuration. Create is not supported here yet.')
+    throw FileSystemError.NoPermissions(`RouterOS VFS does not support creating folders here. '${uri.path}' is derived from router configuration.`)
   }
 
   dispose(): void {

@@ -22,4 +22,18 @@ suite('SystemScriptFS create guards', () => {
       (error: unknown) => error instanceof vscode.FileSystemError,
     )
   })
+
+  test('single-file schema stat does not pretend unknown children already exist', async () => {
+    const provider = new SystemScriptFS()
+    ;(provider as unknown as { setCachedItemNames: (schemaPath: string, names: Set<string>) => void })
+      .setCachedItemNames('/ip/dhcp-client', new Set(['ether1']))
+
+    const existing = await Promise.resolve(provider.stat(vscode.Uri.from({ scheme: 'rscfile', path: '/ip/dhcp-client/ether1' })))
+
+    assert.equal(existing.type, vscode.FileType.File)
+    assert.throws(
+      () => provider.stat(vscode.Uri.from({ scheme: 'rscfile', path: '/ip/dhcp-client/not-a-real-item' })),
+      (error: unknown) => error instanceof vscode.FileSystemError,
+    )
+  })
 })
