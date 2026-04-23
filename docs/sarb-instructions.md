@@ -159,7 +159,7 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 
 **Test types:**
 
-- **Feature tests:** `src/test/suite/*.test.ts` → compile to `out/test/suite/*.test.js`
+- **Feature tests:** `src/test/unit/*.test.ts` and `src/test/integration/*.test.ts` → compile to `out/test/**/*.test.js`
 - **Experiments:** `src/test/llm-experiments.test.ts` for one-off validation during development
 - **Integration tests:** Test with real VS Code APIs when mocking is too complex (preferred over mocks)
 

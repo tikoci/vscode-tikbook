@@ -81,8 +81,8 @@ npx eslint src/path/to/new-file.ts --fix
 ## Test Writing (After All Files Created)
 
 - [ ] **Copy test structure** from existing test file
-  - Use: [src/test/suite/converters.test.ts](../../src/test/suite/converters.test.ts)
-  - Or: [src/test/suite/phase1-unit.test.ts](../../src/test/suite/phase1-unit.test.ts)
+  - Use: [src/test/unit/converters.test.ts](../../src/test/unit/converters.test.ts)
+  - Or: [src/test/integration/phase1-unit.test.ts](../../src/test/integration/phase1-unit.test.ts)
   - Do NOT innovate on test syntax
 
 ---
@@ -206,7 +206,7 @@ Both are blocked if `npm run compile` fails. Always verify BEFORE asking user to
 
   ```bash
   npm run compile:test
-  ls -la out/test/src/test/suite/your-test.test.js
+  ls -la out/test/**/your-test.test.js
   # File should exist (~XXX KB)
   ```
 
@@ -420,7 +420,7 @@ suite('Name', () => {  // <- suite is global
 
 ### ✅ Testing  
 
-- Wrote [src/test/suite/phase1-unit.test.ts](../../src/test/suite/phase1-unit.test.ts) following existing patterns
+- Wrote [src/test/integration/phase1-unit.test.ts](../../src/test/integration/phase1-unit.test.ts) following existing patterns
 - Focused on compile (not runtime) at this stage
 
 ### ✅ Verification

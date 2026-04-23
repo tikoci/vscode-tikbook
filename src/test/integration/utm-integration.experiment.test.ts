@@ -34,9 +34,9 @@ function getResultsFilePath(): string {
 	}
 	
 	// GUI mode: try to navigate up from compiled test location
-	// Compiled: out/test/src/test/suite/utm-integration.experiment.test.js
+	// Compiled: out/test/integration/utm-integration.experiment.test.js
 	// Need to get to: workspace/.vscode-test/
-	const testFileDir = __dirname; // e.g., /Users/.../out/test/src/test/suite
+	const testFileDir = __dirname; // e.g., /Users/.../out/test/integration
 	const possibleWorkspacePath = path.resolve(testFileDir, '../../../../.vscode-test');
 	if (fs.existsSync(path.dirname(possibleWorkspacePath))) {
 		fs.mkdirSync(possibleWorkspacePath, { recursive: true });

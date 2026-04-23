@@ -278,7 +278,7 @@ export class UTMProvider implements VMProvider {
    * Opens utm://downloadVM?url=... to trigger UTM's native download and import flow.
    * 
    * Based on Experiment 13: UTM URL Scheme for Downloads
-   * See: src/test/suite/utm-integration.experiment.test.ts
+   * See: src/test/integration/utm-integration.experiment.test.ts
    * 
    * Advantages:
    * - No file system permissions needed

@@ -1,21 +1,26 @@
 # AGENTS.md
 
-Pointer file for AI coding agents (Codex, Aider, Cline, etc.) working in this repo.
+Start here if you're an AI coding agent working in this repo.
 
-**Use the Copilot instructions as the source of truth** — Claude Code uses them too
-(see [CLAUDE.md](CLAUDE.md)). Don't invent new conventions; read these first:
+## Read in this order
 
-1. [.github/copilot-instructions.md](.github/copilot-instructions.md) — always-on rules
-2. [.github/instructions/](.github/instructions/) — context-scoped rules (editing, extension, testing, routeros, docs, eslint)
-3. [DEVELOPMENT.md](DEVELOPMENT.md) — setup, build, test, publish
-4. [docs/architecture.md](docs/architecture.md) — component layout and web/desktop gating
-5. [docs/conventions.md](docs/conventions.md) — code patterns
+1. [ROADMAP.md](ROADMAP.md) — what matters next
+2. [.github/copilot-instructions.md](.github/copilot-instructions.md) — always-on repo rules
+3. Relevant files in [.github/instructions/](.github/instructions/) — task-specific rules
+4. [DEVELOPMENT.md](DEVELOPMENT.md), [docs/architecture.md](docs/architecture.md), and [docs/conventions.md](docs/conventions.md) as needed for implementation detail
 
-Work is tracked in:
+## Tracker hierarchy
 
-- [ROADMAP.md](ROADMAP.md) — near-term seeded tasks for agents
-- [docs/llm-todos.md](docs/llm-todos.md) — 1–3 hour items
-- [docs/specs/](docs/specs/README.md) — per-feature lifecycle (only code against `ready-for-implementation`)
-- [docs/future-features.md](docs/future-features.md) — long-term vision
+- [ROADMAP.md](ROADMAP.md) — near-term themes and seeded work
+- [docs/llm-todos.md](docs/llm-todos.md) — live quick tasks
+- [docs/specs/](docs/specs/README.md) — design lifecycle; only implement specs marked `ready-for-implementation`
+- [docs/future-features.md](docs/future-features.md) — long-horizon ideas and blockers
+
+If these disagree, treat `ROADMAP.md` as the near-term source of truth and update
+the stale document as part of the work.
 
 `CHANGELOG.md` is past-tense only.
+
+## Model-specific notes
+
+- Claude Code: see [CLAUDE.md](CLAUDE.md) for Claude-specific environment and MCP notes

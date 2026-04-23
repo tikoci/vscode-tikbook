@@ -24,7 +24,7 @@ description: 'Captures what we built, what we learned, and improvements for futu
 | [src/vm-providers/vm-provider-registry.ts](../../src/vm-providers/vm-provider-registry.ts) | 70 | Provider discovery & registration | ✅ Clean |
 | [src/vm-providers/chr-metadata.ts](../../src/vm-providers/chr-metadata.ts) | 270 | CHR parsing, filtering, sorting utilities | ✅ Clean |
 | [src/vm-providers/index.ts](../../src/vm-providers/index.ts) | 10 | Module exports | ✅ Clean |
-| [src/test/suite/phase1-unit.test.ts](../../src/test/suite/phase1-unit.test.ts) | 190 | Unit tests (18+ test cases) | ✅ Created |
+| [src/test/integration/phase1-unit.test.ts](../../src/test/integration/phase1-unit.test.ts) | 190 | Unit tests (18+ test cases) | ✅ Created |
 
 **Total Phase 1: ~1,240 lines of production code**
 
@@ -151,7 +151,7 @@ suite('Name', () => {
 
 The globals `suite` and `test` are injected by Mocha, not imported.
 
-**Should have checked:** Read [src/test/suite/converters.test.ts](../../src/test/suite/converters.test.ts) first.
+**Should have checked:** Read [src/test/unit/converters.test.ts](../../src/test/unit/converters.test.ts) first.
 
 **For future phases:**
 
@@ -167,7 +167,7 @@ The globals `suite` and `test` are injected by Mocha, not imported.
 
 **What happened:** Had to verify relative import paths multiple times:
 
-- From `src/test/suite/phase1-unit.test.ts`
+- From `src/test/integration/phase1-unit.test.ts`
 - To `src/vm-providers/chr-metadata.ts`
 - Path: `../../../src/vm-providers/chr-metadata` (3 levels up!)
 
@@ -176,8 +176,8 @@ The globals `suite` and `test` are injected by Mocha, not imported.
 **For future phases:**
 
 ```
-From: src/test/suite/X.test.ts
-Go up: ../../../ (src/test/suite → src)
+From: src/test/integration/X.test.ts
+Go up: ../../../ (src/test/integration → src)
 Go to: src/vm-providers/module.ts
 Import: ../../../src/vm-providers/module
 ```
@@ -286,7 +286,7 @@ ls -la src/vm-providers/
 # Shows: vm-provider.ts, utm-provider.ts, etc.
 
 # 4. Spot-check imports in a test file
-head -20 src/test/suite/phase1-unit.test.ts
+head -20 src/test/integration/phase1-unit.test.ts
 # Verify: imports look correct
 
 # 5. Read interface to verify design
@@ -346,11 +346,11 @@ Open these files in order and review:
 npm run compile:test
 
 # 2. Check if test file compiles (should, even if tests don't run)
-ls -la out/test/src/test/suite/phase1-unit.test.js
+ls -la out/test/integration/phase1-unit.test.js
 # File should exist and be ~0.8MB
 
 # 3. Check unit test structure
-head -50 src/test/suite/phase1-unit.test.ts
+head -50 src/test/integration/phase1-unit.test.ts
 # Verify: uses suite/test globals (not imports)
 ```
 

@@ -171,14 +171,22 @@ function mapNetwatchAttr(attr: string): string {
   return attr
 }
 
+function getMultiFileItemName(schema: SchemaEntry, relParts: string[]): string {
+  if (schema.singleton) return String(relParts[0] ?? '')
+  return decodeURIComponent(relParts[0] ?? '')
+}
+
+function getAllowedMultiFileAttrs(schema: SchemaEntry): Set<string> {
+  if (schema.singleton) return new Set(['on-event'])
+  return new Set((schema.scriptAttrs ?? []).map(String))
+}
+
 export class SystemScriptFS implements FileSystemProvider {
   private onDidChangeEmitter = new EventEmitter<FileChangeEvent[]>()
   readonly onDidChangeFile = this.onDidChangeEmitter.event
   private watchers = new Map<string, number>()
   // track opened files: key = uri.toString()
   private openFiles = new Map<string, { id?: string, original?: string, mtime?: number }>()
-  private scriptsDirMtime = 0
-  private scriptsDirNames = new Set<string>()
   // Generic item cache: path -> Set<itemName>
   private itemsCache = new Map<string, { names: Set<string>, timestamp: number }>()
   private pathExistsCache = new Map<string, { exists: boolean, timestamp: number }>()
@@ -260,37 +268,6 @@ export class SystemScriptFS implements FileSystemProvider {
       return new InMemoryStat(FileType.Directory, 0, 0, 0)
     }
 
-    // system/script special case
-    if (parts.length >= 2 && parts[0] === 'system' && parts[1] === 'script') {
-      if (parts.length === 2) {
-        getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> /system/script -> Directory`)
-        return new InMemoryStat(FileType.Directory, 0, this.scriptsDirMtime, 0)
-      }
-      // file under /system/script
-      const rawName = parts.slice(2).join('/')
-      const name = decodeURIComponent(rawName)
-      if (name.startsWith('.')) {
-        getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> /system/script/${name} -> FileNotFound (hidden)`)
-        throw FileSystemError.FileNotFound(uri)
-      }
-      const key = uri.toString()
-      let entry = this.openFiles.get(key)
-      if (!entry && !this.scriptsDirNames.has(name)) {
-        getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> /system/script/${name} -> FileNotFound (not listed)`)
-        throw FileSystemError.FileNotFound(uri)
-      }
-      if (!entry) {
-        entry = { mtime: Date.now() }
-        this.openFiles.set(key, entry)
-        getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> /system/script/${name} cached mtime=${entry.mtime}`)
-      }
-      const size = entry.original ? Buffer.byteLength(entry.original, 'utf8') : 0
-      const mtime = entry.mtime ?? Date.now()
-      getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> /system/script/${name} tracked=${entry.original !== undefined ? 'yes' : 'no'} mtime=${mtime} size=${size}`)
-      getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> /system/script/${name} -> File (size=${size})`)
-      return new InMemoryStat(FileType.File, 0, mtime, size)
-    }
-
     // Try schema-driven stat
     const schemaMatch = findSchemaForParts(parts)
     if (schemaMatch) {
@@ -306,10 +283,36 @@ export class SystemScriptFS implements FileSystemProvider {
         return new InMemoryStat(FileType.Directory, 0, Date.now(), 0)
       }
 
-      // For multiFilePerItem with one relPart, it's a directory (item directory)
-      if (schema.multiFilePerItem && relParts.length === 1) {
-        getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> multiFilePerItem item -> Directory`)
-        return new InMemoryStat(FileType.Directory, 0, Date.now(), 0)
+      if (schema.multiFilePerItem) {
+        const itemName = getMultiFileItemName(schema, relParts)
+        if (itemName.startsWith('.')) {
+          throw FileSystemError.FileNotFound(uri)
+        }
+
+        if (schema.singleton) {
+          if (!schema.scriptAttrs.includes(itemName)) {
+            throw FileSystemError.FileNotFound(uri)
+          }
+        }
+        else {
+          const cachedNames = this.getCachedItemNames(schema.path)
+          if (cachedNames && !cachedNames.has(itemName)) {
+            throw FileSystemError.FileNotFound(uri)
+          }
+        }
+
+        if (relParts.length === 1) {
+          getVirtualFileSystemChannel().debug(`<SystemScriptFS.stat> multiFilePerItem item -> Directory`)
+          return new InMemoryStat(FileType.Directory, 0, Date.now(), 0)
+        }
+
+        if (relParts.length !== 2 || !getAllowedMultiFileAttrs(schema).has(String(relParts[1]))) {
+          throw FileSystemError.FileNotFound(uri)
+        }
+      }
+
+      if (!schema.multiFilePerItem && relParts.length !== 1) {
+        throw FileSystemError.FileNotFound(uri)
       }
 
       // Otherwise it's a file (attribute or single-file item)
@@ -360,7 +363,6 @@ export class SystemScriptFS implements FileSystemProvider {
         }
         if (schema.isList) {
           const items = await mapper.listItems()
-          this.scriptsDirMtime = Date.now()
 
           // Cache item names for this schema path
           const itemNames = new Set<string>()

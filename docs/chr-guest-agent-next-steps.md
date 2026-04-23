@@ -110,7 +110,7 @@
 
 ### Auto-Provisioning Helper
 
-**File:** `src/test/suite/chr-vm-provisioning.ts`  
+**File:** `src/test/integration/chr-vm-provisioning.ts`  
 **Function:** `ensureRunningQemuCHRVM(options?)`
 
 ```typescript
@@ -166,7 +166,7 @@ end tell
 **Current Test Setup:**
 - Host: macOS + UTM (QEMU backend)
 - CHR Source: tikoci/mikropkl GitHub releases
-- Test File: `src/test/suite/chr-ip-detection.experiment.test.ts`
+- Test File: `src/test/integration/chr-ip-detection.experiment.test.ts`
 - Research Doc: `docs/chr-qemu-guest-agent-research.md`
 
 **Key UTM AppleScript API:**

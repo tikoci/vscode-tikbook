@@ -94,9 +94,9 @@ Pattern consistency = easier to maintain later. If a new developer reads remote.
 
 ## 🧪 Checkpoint 3: Test Structure (5 minutes)
 
-Open [src/test/suite/phase1-unit.test.ts](../../src/test/suite/phase1-unit.test.ts) first 30 lines.
+Open [src/test/integration/phase1-unit.test.ts](../../src/test/integration/phase1-unit.test.ts) first 30 lines.
 
-Compare with [src/test/suite/converters.test.ts](../../src/test/suite/converters.test.ts) first 30 lines.
+Compare with [src/test/unit/converters.test.ts](../../src/test/unit/converters.test.ts) first 30 lines.
 
 ### Questions
 

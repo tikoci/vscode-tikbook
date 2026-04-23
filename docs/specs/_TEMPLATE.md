@@ -246,7 +246,7 @@ User Action → [Component A] → [Component B] → RouterOS
 
 ### Integration Tests
 
-**Files:** `src/test/suite/integration/[feature].test.ts`
+**Files:** `src/test/integration/[feature].test.ts`
 
 **Test Cases:**
 

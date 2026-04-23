@@ -212,6 +212,6 @@ rscfile:// (root)
 
 ---
 
-**Integration Test File:** `src/test/suite/integration/scriptfs-path-structure.test.ts`  
+**Integration Test File:** `src/test/integration/scriptfs-path-structure.test.ts`  
 **Schema Definition:** `src/scriptfs-schema.ts` lines 60-80 (multiFilePerItem: true)  
 **Fixed Code:** `src/scriptfs.ts` (readDirectory, readFile, writeFile methods)

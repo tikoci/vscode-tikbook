@@ -231,7 +231,7 @@ class HyperVProvider implements VMProvider { }   // PowerShell module (phase 3)
 
 **Experimental test created:**
 
-- `src/test/suite/utm-integration.experiment.test.ts` - TypeScript unit tests to run from VS Code context
+- `src/test/integration/utm-integration.experiment.test.ts` - TypeScript tests to run from VS Code context
 
 **Run:**
 

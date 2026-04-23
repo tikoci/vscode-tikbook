@@ -2,7 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Source of truth: the Copilot instructions
+## Source of truth: shared repo guidance first
+
+For the general workflow, start with [AGENTS.md](AGENTS.md), then follow the
+shared repo guidance below. This file only adds Claude-Code-specific notes.
 
 This repo's primary agent guidance lives in GitHub Copilot's native locations, and
 Claude Code should follow them as-is instead of duplicating them here:
@@ -101,6 +104,6 @@ read-write ScriptFS in `scriptfs.ts`), a REST client (`routeros.ts` / `shared.ts
 a status watchdog (`watchdog.ts`), a CHR VM explorer (`vm-explorer.ts` +
 `vm-providers/` — currently UTM-only, **slated for replacement by quickchr**, see
 ROADMAP.md), and converters/commands/menus. Desktop-only code must be gated with
-`vscode.env.uiKind === UIKind.Web`; prefer `vscode.workspace.fs` over `node:fs`
+`vscode.env.uiKind === UIKind.Desktop`; prefer `vscode.workspace.fs` over `node:fs`
 and `SecretStorage` over settings for credentials. Language parsing and
 diagnostics belong to the LSP, not here.

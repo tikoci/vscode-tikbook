@@ -886,7 +886,7 @@ Commented code suggests an alternative that only quotes keys with special charac
 
 ### Extension Development Documentation
 
-**Status:** Scattered in BUILD_TOOLING.md and changelog  
+**Status:** Scattered in `DEVELOPMENT.md` and changelog/history notes
 **Description:** Consolidate developer documentation.  
 **Topics:**
 

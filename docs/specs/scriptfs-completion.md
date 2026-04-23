@@ -723,19 +723,19 @@ async writeFile(uri: Uri, content: Uint8Array, options: { create: boolean }): Pr
 
 ### Unit Tests
 
-**Files:** `src/test/scriptfs.test.ts`
+**Files:** `src/test/unit/scriptfs.test.ts`
 
 **Test Cases:**
 
 - [ ] `findSchemaForParts()` correctly matches paths
-- [ ] `renderFilename()` produces expected filenames
-- [ ] `deriveItemName()` extracts item name from filename
-- [ ] `normalizeItemName()` handles .rsc extension correctly
-- [ ] TextEncoder/TextDecoder work in test environment
+- [ ] `getSchemaChildPaths()` exposes only immediate schema directories
+- [ ] `SystemScriptFS.stat()` treats multi-file item directories and files consistently
+- [ ] `SystemScriptFS.stat()` rejects hidden, unknown, or invalid multi-file paths
+- [ ] `SystemScriptFS.stat()` supports singleton multi-file schemas like routerboard buttons
 
 ### Integration Tests
 
-**Files:** `src/test/suite/integration/scriptfs.test.ts`
+**Files:** `src/test/integration/scriptfs-path-structure.test.ts`
 
 **Test Cases:**
 

@@ -400,7 +400,7 @@ vscode.workspace.onDidChangeConfiguration(e => {
 
 ### Integration Tests
 
-**Files:** `src/test/suite/integration/experimental.test.ts`
+**Files:** `src/test/integration/experimental.test.ts`
 
 **Test Cases:**
 

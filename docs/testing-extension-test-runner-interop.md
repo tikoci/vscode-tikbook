@@ -77,7 +77,7 @@ This document tracks suspected issues in third-party tooling that affect test ex
 - If `.vscode-test.mjs` sets `mocha.reporter`, it can override GUI reporters and break UI parsing.
 - Older @vscode/test-cli versions silently run zero tests due to glob/minimatch issues.
 - CLI custom reporter captures `console.log`/`console.warn`/`console.error` output into `.vscode-test/test-output.log`.
-- **Test discovery is strict**: tests must live under `src/test/suite/` to compile into `out/test/suite/**/*.test.js`.
+- **Test discovery is strict**: tests must live under `src/test/unit/` or `src/test/integration/` so they compile into `out/test/**/*.test.js`.
 - `.vscode-test/test-output.log` is written synchronously for reliability; if it still stops early, suspect a crash or forced process exit.
 
 ## Best Practices for Future Extensions
@@ -85,8 +85,8 @@ This document tracks suspected issues in third-party tooling that affect test ex
 ### Test Structure and Discovery
 
 - Use `.vscode-test.mjs` (ESM) and avoid `.vscode-test.js` to prevent loader conflicts.
-- Keep test files in `src/test/suite/*.test.ts` and compile to `out/test/suite/*.test.js`.
-- Use an explicit glob like `out/test/suite/**/*.test.js`.
+- Keep test files in `src/test/unit/*.test.ts` or `src/test/integration/*.test.ts` and compile to `out/test/**/*.test.js`.
+- Use an explicit glob like `out/test/**/*.test.js`.
 - Use `suite()` and `test()` with `mocha.ui = 'tdd'` if tests are written in TDD style.
 
 ### Runner Configuration

@@ -37,148 +37,46 @@ This file tracks **quick action items** from LLM sessions - typically 1-3 hour t
 
 ## 🔴 High Priority Tasks
 
-These items should be addressed soon:
+These items should be addressed soon and should stay aligned with `ROADMAP.md`:
 
-### ✅ Implement Web Extension Bundling with Bun - COMPLETED
+### ScriptFS / VFS pre-work hardening
 
-**Status:** ✅ COMPLETE (2026-02-26)
-**Implementation:** Switched from tsc-only to Bun for both node and web builds
+**Files affected:** `src/scriptfs.ts`, `src/scriptfs-schema.ts`, `src/test/unit/`, `docs/specs/scriptfs-completion.md`
 
-**What was fixed:**
+**Why now:** VFS work is the most likely next code-heavy area, but ScriptFS still has
+too much path-specific branching and too little direct unit coverage.
 
-- Node build: `bun build` to `out/extension.js` (0.71 MB bundled)
-- Web build: `bun build --target=browser` to `dist/extension.js` (0.79 MB bundled)
-- All 91 tests pass with Bun compilation
-- Web extension successfully loads on vscode.dev with proper bundling
-- Single source file (`src/extension.ts`) with different targets eliminates duplication
+**Priority:** 🔴 High
 
-**Build Pipeline:**
+### Agent/documentation coherence pass
 
-- `npm run compile` → builds node target only (dev-optimized)
-- `npm run compile:web` → builds web target (explicit, when needed)
-- `npm run compile:test` → builds all tests
-- `npm test` → runs desktop tests (91 tests, 2s)
-- `npm run test:web` → runs browser tests with web build
-- `npm run vsix:serve` → packages and serves on localhost:5000
+**Files affected:** `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `docs/llm-todos.md`, `docs/specs/README.md`, testing/docs references
 
-**Verification:**
+**Why now:** Future agent sessions still hit duplicated workflow guidance and stale
+references to the pre-cleanup test layout.
 
-- ✅ Desktop VSIX installs and works
-- ✅ Web VSIX packages successfully (2.8 MB)
-- ✅ Extension loads on vscode.dev with bundled code
-- ✅ Commands register and execute
-- ✅ All test runners work (CLI, web, GUI extension runner)
+**Priority:** 🔴 High
 
-**Related Update:**
+### CHR backend direction cleanup
 
-- Updated docs/testing-vscode-web-local.md to remove "known limitation" note
+**Files affected:** `ROADMAP.md`, `docs/specs/chr-test-environment.md`, UTM-related docs/research
 
-### Add Integration Tests for VS Code Extension Features (Status: Phase 1-2 Complete)
+**Why now:** `ROADMAP.md` now points toward quickchr, so older UTM-centric guidance
+should be treated as historical context or updated explicitly.
 
-**Status Update:** ✅ Phase 1 (Priority 0 - Contributions): 66 tests complete  
-**Status Update:** ✅ Phase 2 (Priority 1 - Notebook Kernel): 45 tests complete  
-**Remaining:** Phase 2 decision - Continue with Approach 1 for more integration tests or wait?
-
-**Files completed:**
-
-- src/test/suite/integration/contributions.test.ts (66 tests)
-- src/test/suite/integration/notebook-kernel.test.ts (17 tests)
-- src/test/suite/integration/config.test.ts (13 tests)
-- src/test/suite/integration/vscode-compat.test.ts (19 tests)
-
-**See:** [docs/integration-testing-strategy.md](./integration-testing-strategy.md) for complete status
-
-### Create Root DEVELOPMENT.md Entry Point ✅ COMPLETE
-
-**Status:** Completed 2026-02-26
-**Files created:** DEVELOPMENT.md (root), docs/specs/README.md (new spec system)
-**Outcome:**
-
-- Created comprehensive DEVELOPMENT.md as single entry point
-- Created docs/specs/ system for incremental feature design
-- Provides template-based workflow for capturing design decisions
-- See [DEVELOPMENT.md](../../DEVELOPMENT.md) and [docs/specs/README.md](./specs/README.md)
-
-### Hide Interactive REPL Behind Experimental Features → MOVED TO SPEC
-
-**Status:** Detailed spec created, ready for implementation
-**Spec:** [docs/specs/experimental-features.md](./specs/experimental-features.md)
-**Scope:** Generic experimental feature system for REPL, Video, and future features
-**Next Step:** Implement experimental.ts infrastructure per spec
-
-### CHR VM Management Integration (Phase 1-1b: Complete, Phase 3: Deferred) ⚠️
-
-**Status:** Phase 1-1b Infrastructure Complete, Phase 3 Deferred
-**Scope:** [docs/specs/chr-test-environment.md](./specs/chr-test-environment.md)
-
-**Phase 1-1b COMPLETE (Ready to Test):**
-
-- ✅ VM provider abstraction + UTM implementation (listVMs, getStatus, startVM, stopVM)
-- ✅ Explorer tree view displays CHR VMs correctly
-- ✅ Start/Stop commands work on running VMs (tested Feb 26, 2026)
-- ✅ Delete command with confirmation dialog implemented
-- ✅ GitHub CHR release fetching + version selection
-- ✅ Comprehensive logging with UI context
-
-**Phase 3 DEFERRED (Not Yet Implemented):**
-
-- ❌ Create VM (full implementation) - Currently shows stub error
-  - Stub method added to make scope clear
-  - Requires: Download CHR image, extract, create UTM bundle, configure network
-  - Marked in code: `log.warn('NOT YET IMPLEMENTED for Phase 3')`
-  - See: src/vm-providers/utm-provider.ts line 268
-- ❌ IP detection via QEMU guest agent for CHR on macOS - Research completed; not viable in tested environment
-- ⚠️ Phase 3 should use fallback IP workflow (manual/serial/config-hint) instead of guest-agent dependency
-- ❌ Advanced networking features
-
-**Testing Guidance:**
-
-- ✅ **DO test:** Start, Stop, Delete, tree view, version selection UI
-- ❌ **Do NOT test:** Create command (deferred to Phase 3, stub intentionally throws error)
-- ✅ **Expected result:** Create command shows this error: "CHR VM creation is not yet implemented. Phase 2 scope includes VM management only. Phase 3 will add VM creation."
-
-**CRITICAL BUG FIXES (2026-02-27):**
-
-- ✅ **Fixed:** Delete cascade bug in AppleScript
-  - **Issue:** Deleting VM while iterating corrupted iteration state - only the iteration bug affected one VM per delete call, but it failed
-  - **Fixed:** Store VM reference, exit loop, then delete safely
-  - **Files:** src/vm-providers/utm-provider.ts line 350 (deleteVM method)
-
-- ✅ **Fixed:** Cannot delete running VMs (UTM API requirement)
-  - **Issue:** UTM returns `-2700: The virtual machine must be stopped before this operation can be performed`
-  - **Root cause:** UTM API doesn't allow deletion of running or paused VMs
-  - **Solution:** UI gate approach (simpler, more user-friendly)
-    - "Delete" context menu only shows for stopped/unknown VMs
-    - Enforced via package.json when clause: `viewItem !~ /running/`
-    - If running: no delete option appears (prevents user confusion)
-    - If stopped: delete works immediately
-  - **Error handling:** If delete still fails with "must be stopped" error, user gets clear message
-  - **Testing:** Verify delete hidden for running VMs; verify delete works for stopped VMs
-
-**Important for LLM Agents:**
-
-- **Before suggesting feature testing**, verify scope in [.github/instructions/phase-scope-verification.md](.github/instructions/phase-scope-verification.md)
-- Check code for "NOT YET IMPLEMENTED", "Phase X" markers
-- Spec clearly shows Phase structure - always verify feature is in target deliverable
-- The Create command is intentionally stubbed to prevent ambiguity about completion status
-
-**AI Workflow Improvement:**
-
-- Created: [.github/instructions/logging-ui-context.md](.github/instructions/logging-ui-context.md) - Logging best practices for UI-dependent code
-- Created: [.github/instructions/phase-scope-verification.md](.github/instructions/phase-scope-verification.md) - Before testing, verify scope
-- Updated: All logging now includes before/after filtering context (shows what UI displays, not just raw counts)
+**Priority:** 🔴 High
 
 ## 🛠️ Technical Debt (Action Items)
 
 The following technical debt items are now tracked as quick tasks for cleanup and improvement:
 
-### 1. scriptfs.ts uses Node util (TextEncoder/TextDecoder)
-**Problem:** Uses Node's util module, which is not available in VS Code web. Blocks SystemScriptFS auto-mount in web.
-**Action:** Refactor to use global TextEncoder/TextDecoder or gate feature to desktop only. Ensure compatibility with web extension.
+### 1. ScriptFS stat and path handling still need cleanup
+**Problem:** `SystemScriptFS` is now more coherent, but it still concentrates a lot of path/file handling in one class and needs continued hardening before larger VFS changes.
+**Action:** Add direct unit coverage and keep moving path-specific behavior into schema metadata/helpers instead of ad hoc branching.
 
-### 2. Duplicate Output Channels
-**Problem:** Both schema-mapper.ts and scriptfs.ts create a channel named "RouterOS Virtual FileSystem", which can confuse Output panel organization.
-**Action:** Consolidate or rename output channels to clarify their purpose and avoid duplication.
+### 2. Agent guidance is still somewhat duplicated
+**Problem:** The repo now has a clearer hierarchy, but workflow guidance is still repeated across agent entry-point files and can drift over time.
+**Action:** Keep reducing duplicated prose and prefer pointer-style docs that defer to `ROADMAP.md` and `.github/copilot-instructions.md`.
 
 ### 3. Commented Serialization Code in notebook.ts
 **Problem:** notebook.ts contains ~50 lines of alternative serialization logic (lines 560–599) that are commented out. Unclear if reference, abandoned, or future format.
@@ -194,38 +92,17 @@ The following technical debt items are now tracked as quick tasks for cleanup an
 
 ## ⚡ Quick Code Wins
 
-**Status (2026-02-27): Tasks #9-11 COMPLETED ✅**
-
-These tasks provided infrastructure patterns for future feature work. Completed:
-
-- ✅ **Task #9 (20 min):** Centralized output channel manager — Created `src/output-channels.ts`, removed duplicate channels from schema-mapper.ts and scriptfs.ts
-- ✅ **Task #10 (15 min):** Command boundary type guards — Added "Command Boundaries & Type Guards" section to docs/conventions.md with examples
-- ✅ **Task #11 (15 min):** Async/await best practices — Added "Async Safety Patterns" section to docs/typescript-patterns.md explaining race condition prevention
-- ✅ **Deferred:** Task #12 (VM patterns guide) — Not needed yet; UTM/AppleScript patterns too specific to this platform. Revisit when building second VM provider.
-
 These are 5-30 minute cleanups that improve codebase quality for future feature work. Grouped by effort.
 
 ### 🟢 5-15 min fixes (cleanup, consolidation, documentation)
 
-1. **Consolidate duplicate output channels** (10 min)
-   - **Files:** src/schema-mapper.ts line 18, src/scriptfs.ts line 13
-   - **Issue:** Both create "RouterOS Virtual FileSystem" output channel, causing duplicate channels
-   - **Fix:** Extract to shared `getVirtualFileSystemChannel()` helper in shared.ts, use from both files
-   - **Benefit:** Cleaner Output panel, consistent logging setup
-
-2. **Document web compatibility issue in scriptfs.ts** (5 min)
-   - **File:** src/scriptfs.ts line 1 - `import { TextDecoder, TextEncoder } from 'util'`
-   - **Issue:** Node util module not available in web extensions; uses fallback but undocumented
-   - **Fix:** Add comment explaining web gating needed if scriptfs extends to web
-   - **Pattern:** Similar to pattern in `converters.ts` for conditional encoding
-
-3. **Fix markdown cell separator regex fragility** (5 min)
+1. **Fix markdown cell separator regex fragility** (5 min)
    - **File:** src/notebook.ts line 340-345
    - **Comment:** Code says "uses a markdown comment hack to break markdown cells... have to find it"
    - **Fix:** Extract regex to named constant, add comment explaining the pattern (`[//]: #.`)
    - **Benefit:** Make markdown format more maintainable, clear for future notebook work
 
-4. **Add ESLint rule for commented-out code** (10 min)
+2. **Add ESLint rule for commented-out code** (10 min)
    - **Files:** converters.ts lines 55-60, notebook.ts line 269, virtualdocs.ts line 289, commands.ts line 27
    - **Pattern:** Multiple files have commented-out code blocks with unclear intent
    - **Fix:** Document in `tools/eslint/vscode-sanity.mjs` a rule to flag commented code > 3 lines
@@ -233,7 +110,7 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 
 ### 🟡 15-25 min focused updates (code safety improvements)
 
-5. **Enable or remove metadata parsing in notebook.ts** (10 min)
+3. **Enable or remove metadata parsing in notebook.ts** (10 min)
    - **File:** src/notebook.ts line 268 - commented `commitPending('markdown', rawMetadataParsed.groups?.[3])`
    - **Current:** Dead code with no explanation
    - **Options:**
@@ -242,20 +119,14 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
    - **Recommendation:** Remove for now (Option B); revisit when metadata persistence is specified
    - **Benefit:** Cleaner code, clearer intent for notebook format
 
-6. **Move LSP command integration from comment to feature** (15 min)
+4. **Move LSP command integration from comment to feature** (15 min)
    - **File:** src/commands.ts line 27 - commented `await commands.executeCommand('routeroslsp.runCommand', 'show.output.log')`
    - **Current:** Falls back to warning message instead
    - **Fix:** Implement as experimental feature behind `tikbook.lsp.showLogs` command
    - **Benefit:** Users can see RouterOS LSP debug output; useful for troubleshooting; foundation for LSP coordination
    - **Gating:** Either gate as experimental or add as simple feature if LSP extension is available
 
-7. **Apply web-safe encoding pattern to scriptfs.ts** (10 min)
-   - **File:** src/scriptfs.ts - uses Node `TextDecoder/TextEncoder` from util
-   - **Pattern:** Already applied in notebook.ts (uses global), follow same approach
-   - **Fix:** Replace `import { TextDecoder, TextEncoder } from 'util'` with fallback to global
-   - **Benefit:** Makes scriptfs.ts web-safe by default; removes dependency on Node util
-
-8. **Restructure eslint config for readability** (10 min)
+5. **Restructure eslint config for readability** (10 min)
    - **File:** eslint.config.mjs - vscode-api-version-compat rule is inlined on same line as closing brace
    - **Issue:** Makes spacing hard to read/maintain
    - **Fix:** Move to separate lines like other rules for clarity
@@ -263,17 +134,7 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 
 ### 🟣 20-35 min focused enhancements (patterns for future work)
 
-9. **Extract centralized output channel manager** (20 min)
-   - **Context:** From working with VM explorer, learned centralizing status mappers is cleaner
-   - **Apply to:** Output channels (currently scattered across files, some with fallbacks)
-   - **Create:** `src/output-channels.ts` exporting:
-     - `getTikBookChannel()` - Main extension logs
-     - `getVirtualFileSystemChannel()` - ScriptFS + schema-mapper
-     - `getRouterOSLSPChannel()` - LSP coordination (currently missing)
-   - **Benefit:** Single source of truth for channels, consistent error handling, easier to track which feature owns which channel
-   - **Related:** Similar pattern to `vscode-compat.ts` for version features
-
-10. **Document command boundary type guards pattern** (15 min)
+6. **Document command boundary type guards pattern** (15 min)
 	- **File:** docs/conventions.md  - Add new section after "Type Safety"
 	- **Context:** Successfully applied during hardening pass (vm-commands.ts)
 	- **Document:**
@@ -283,7 +144,7 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 	  - When to use: All command handlers + argument unpacking
 	- **Benefit:** Prevents silent type errors in command handlers; helps LLM agents write safer code
 
-11. **Add async/await best practices to TypeScript patterns** (15 min)
+7. **Add async/await best practices to TypeScript patterns** (15 min)
 	- **File:** docs/typescript-patterns.md - new section "Async Safety Patterns"
 	- **Context:** From VM explorer work, learned about async-safe UI construction
 	- **Document:**
@@ -293,7 +154,7 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 	  - Example: Show before/after from vm-explorer.ts
 	- **Benefit:** Prevents subtle race condition bugs; improves code quality in async-heavy features
 
-12. **Create "Code Patterns from VM Integration" guide** (20 min)
+8. **Create "Code Patterns from VM Integration" guide** (20 min)
 	- **New file:** docs/vm-integration-patterns.md
 	- **Content:** Lessons learned from CHR VM management that apply to future integrations (other VM systems, containers, etc.)
 	- **Sections:**
@@ -307,22 +168,22 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 ### 📋 Recommended Priority Path for Quick Wins
 
 **Week 1 (Infrastructure for future features):**
-1. Extract centralized output channel manager (item #9) — 20 min
-2. Document command boundary type guards pattern (item #10) — 15 min
-3. Add async/await best practices (item #11) — 15 min
+1. Document command boundary type guards pattern (item #6) — 15 min
+2. Add async/await best practices (item #7) — 15 min
+3. Fix markdown cell separator regex (item #1) — 5 min
 
 **Result:** Better foundations that help future features like experimental features, services integration, etc.
 
 **Week 2 (Code cleanup):**
-4. Consolidate duplicate output channels (item #1) — 10 min
-5. Fix markdown cell separator regex (item #3) — 5 min
-6. Create VM integration patterns guide (item #12) — 20 min *(applies to future expansions: Hyper-V, Docker, libvirt)*
+4. Create VM integration patterns guide (item #8) — 20 min *(applies to future expansions: Hyper-V, Docker, libvirt)*
+5. Review metadata parsing direction (item #3) — 10 min
+6. Review LSP log command path (item #4) — 15 min
 
 **Result:** Cleaner codebase, patterns documented for expansion.
 
 **Optional (if time):**
-- Items #2, #5, #6, #7, #8 are all < 15 min each
-- Item #4 (ESLint rule) helps prevent future dead code
+- Items #2, #3, #4, and #5 are all <= 15 min each
+- Item #2 (ESLint rule) helps prevent future dead code
 
 ### Rationalize Notebook Serialization Code
 
@@ -354,7 +215,7 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 
 **Gate 1 - Foundation Work (In Progress):**
 
-1. ✅ TextEncoder/TextDecoder fixed for web compatibility
+1. ✅ ScriptFS encoding path no longer blocks web compatibility groundwork
 2. ✅ Schema updated: /system/script and /system/scheduler use multiFilePerItem: true
 3. ✅ mtime handling verified (advances on every write, critical for VS Code)
 4. ✅ /console/inspect patterns documented and applied
@@ -363,7 +224,7 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 - [ ] Quick RouterOS test: validate add operations for /system/script and /system/scheduler
 - [ ] Extend schema updates to remaining supported paths
 - [ ] Add create operation guards (only /system/script and /system/scheduler)
-- [ ] Remove/adapt /system/script special-case code
+- [ ] Continue simplifying remaining ScriptFS path-special cases
 
 **Supporting research:**
 - [docs/research/restraml-integration-notes.md](./research/restraml-integration-notes.md) - RouterOS schema
@@ -465,10 +326,8 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 **Output:** Document mapping operations → transport capabilities to inform abstraction design.
 **Note:** Requirements still being clarified. Needs more thinking time before actionable. Related to multi-router management across feature set.
 
-- scriptfs.ts uses TextEncoder/TextDecoder from Node's util, which is not available in VS Code web. If SystemScriptFS is used in web, replace with global TextEncoder/TextDecoder or gate to desktop-only usage.
-- BUILD_TOOLING.md says markdownlint runs on all .md files, but scripts now target docs/**/*.md only. Update the doc to match.
+- Some older docs still imply markdownlint runs across every Markdown file; keep them aligned with the current `DEVELOPMENT.md` and npm-script workflow.
 - eslint.config.mjs has vscode-api-version-compat inlined on the same line as the previous rule and closing brace. It works but is hard to maintain.
-- schema-mapper.ts and scriptfs.ts create output channels with the same name ("RouterOS Virtual FileSystem"), which may confuse Output panel output. Consider consolidating.
 - Implement LSP command integration for showing RouterOS LSP logs. Currently commands.ts line 27 has commented code `routeroslsp.runCommand` that could enable this. Currently shows warning message instead.
 - Clean up commented exception handling in converters.ts lines 55-60. Code appears to be leftover from refactoring - either implement proper error handling or remove the commented block.
 - Fix markdown cell separator detection in notebook.ts line 265. Comment says "uses a markdown comment hack to break markdown cells... have to find it..." - indicates the regex/logic may be fragile.

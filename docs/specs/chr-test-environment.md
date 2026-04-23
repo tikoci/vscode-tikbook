@@ -8,7 +8,7 @@
 **Related:**
 
 - Research: [docs/research/findings-on-vscode-container-vm-routeros-chr.md](../research/findings-on-vscode-container-vm-routeros-chr.md)
-- Experiments: `src/test/suite/utm-integration.experiment.test.ts` (13 experiments, all passing)
+- Experiments: `src/test/integration/utm-integration.experiment.test.ts` (13 experiments, all passing)
 - Issue: Enable RouterOS CHR test environments without Docker
 - Roadmap: Phase 1 (macOS/UTM), Phase 2 (Linux/QEMU), Phase 3 (Windows/Hyper-V optional)
 

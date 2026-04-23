@@ -71,7 +71,7 @@ See [test-suite-structure.md](test-suite-structure.md) for the current organizat
 
 **Files to Create:**
 
-1. `src/test/suite/integration/contributions.test.ts` - 40+ tests
+1. `src/test/unit/contributions.test.ts` - 40+ tests
 2. `.github/workflows/test.yml` update - CI/CD integration
 3. `.github/instructions/testing.instructions.md` - Update with Approach 1 strategy
 
@@ -125,7 +125,7 @@ suite('Extension Contributions', () => {
 
 **Files Created:**
 
-1. ✅ `src/test/suite/integration/contributions.test.ts` - 66 tests
+1. ✅ `src/test/unit/contributions.test.ts` - 66 tests
 2. ✅ `.vscode-test-cli.mjs` - CLI test config with custom reporter
 3. ✅ `.vscode-test.mjs` - GUI test config (Extension Test Runner compatible)
 4. ✅ `tools/mocha-ai-reporter.cjs` - Custom reporter writing to `.vscode-test/test-output.log`
@@ -149,21 +149,21 @@ suite('Extension Contributions', () => {
 
 ### What Gets Tested
 
-**Notebook Kernel (`src/test/suite/integration/notebook-kernel.test.ts` - 17 tests):**
+**Notebook Kernel (`src/test/integration/notebook-kernel.test.ts` - 17 tests):**
 
 - ✅ Notebook controller registration (tested via `vscode.workspace.openNotebookDocument`)
 - ✅ ScriptSerializer: Deserialization (4 cell structure), serialization, round-trip
 - ✅ MarkdownSerializer: Deserialization, cell kinds, content preservation
 - ✅ Notebook creation with all supported formats
 
-**Configuration (`src/test/suite/integration/config.test.ts` - 13 tests):**
+**Configuration (`src/test/unit/config.test.ts` - 13 tests):**
 
 - ✅ Settings retrieval (baseUrl, username, password, apiTimeout)
 - ✅ Configuration detection (baseUrl, sshCommand, checkCertificates)
 - ✅ URL formatting (http/https, credentials inclusion)
 - ✅ Default values match package.json
 
-**VS Code Compatibility (`src/test/suite/integration/vscode-compat.test.ts` - 19 tests):**
+**VS Code Compatibility (`src/test/unit/vscode-compat.test.ts` - 19 tests):**
 
 - ✅ Version parsing and comparison (`parseVersion`, `meetsMinimumVersion`)
 - ✅ API availability checks (`hasAPI`)
@@ -193,7 +193,7 @@ suite('Extension Contributions', () => {
 **Files Created:**
 
 - ✅ `.sarbsettings.example` - Template for RouterOS test device configuration (JSONC format)
-- ✅ `src/test/suite/integration-test-config.ts` - Helper to load `.sarbsettings` with JSONC parsing
+- ✅ `src/test/integration/integration-test-config.ts` - Helper to load `.sarbsettings` with JSONC parsing
 - ✅ Updated `.gitignore` - Added `.sarbsettings` (personal config file)
 - ✅ Updated `eslint.config.mjs` - Allowed Node APIs in test files
 
@@ -297,17 +297,17 @@ if (hasRouterOSTestConfig()) {
 
 **Priority 0 (66 tests):**
 
-- `src/test/suite/integration/contributions.test.ts`
+- `src/test/unit/contributions.test.ts`
 
 **Priority 1 (45 tests):**
 
-- `src/test/suite/integration/notebook-kernel.test.ts` (17 tests)
-- `src/test/suite/integration/config.test.ts` (13 tests)
-- `src/test/suite/integration/vscode-compat.test.ts` (19 tests - was 18, corrected hasAPI test to valid pattern)
+- `src/test/integration/notebook-kernel.test.ts` (17 tests)
+- `src/test/unit/config.test.ts` (13 tests)
+- `src/test/unit/vscode-compat.test.ts` (19 tests - was 18, corrected hasAPI test to valid pattern)
 
 **RouterOS Connection Validation (4 tests):**
 
-- `src/test/suite/integration/connection-validation.test.ts` (4 tests)
+- `src/test/integration/connection-validation.test.ts` (4 tests)
 - Tests HTTP connectivity, REST API availability, and authentication with real RouterOS device
 - Uses `.sarbsettings` JSONC configuration file (see below)
 
@@ -332,7 +332,7 @@ if (hasRouterOSTestConfig()) {
 ### Step 1: Create Test Directory Structure
 
 ```bash
-mkdir -p src/test/suite/integration
+mkdir -p src/test/integration
 ```
 
 ### Step 2: Implement Priority 0 Tests
@@ -421,7 +421,7 @@ For tests that interact with actual RouterOS devices, use `.sarbsettings` file (
    }
    ```
 
-3. Tests will use `src/test/suite/integration-test-config.ts` helper:
+3. Tests will use `src/test/integration/integration-test-config.ts` helper:
 
    ```typescript
    import { getRouterOSTestConfig } from './integration-test-config';
