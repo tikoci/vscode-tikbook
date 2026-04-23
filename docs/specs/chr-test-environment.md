@@ -5,12 +5,16 @@
 > **Effort Estimate:** 40-60 hours (Phases 1-1b = macOS UTM MVP)  
 > **Phase Structure:** 4 phases instead of 3 (Phases 1 + 1b = macOS/UTM core + UI; Phase 2 = Linux/QEMU; Phase 3 = Windows/Hyper-V)
 
+> **Current repo state:** the CHR/UTM UI is intentionally disabled while Theme 1
+> shifts toward quickchr. Treat this spec as parked UTM research/history unless a
+> roadmap item explicitly reactivates it.
+
 **Related:**
 
 - Research: [docs/research/findings-on-vscode-container-vm-routeros-chr.md](../research/findings-on-vscode-container-vm-routeros-chr.md)
 - Experiments: `src/test/integration/utm-integration.experiment.test.ts` (13 experiments, all passing)
 - Issue: Enable RouterOS CHR test environments without Docker
-- Roadmap: Phase 1 (macOS/UTM), Phase 2 (Linux/QEMU), Phase 3 (Windows/Hyper-V optional)
+- Roadmap: Theme 1 in [ROADMAP.md](../../ROADMAP.md) now starts by keeping this UI hidden until the quickchr direction lands
 
 ---
 

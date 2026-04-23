@@ -184,16 +184,6 @@
         }
       }
     },
-    "views": {
-      "explorer": [
-        {
-          "id": "chrVMExplorer",
-          "name": "CHR Test VMs",
-          "icon": "$(server-environment)",
-          "contextualTitle": "RouterOS CHR VMs"
-        }
-      ]
-    },
     "viewsWelcome": [
       {
         "view": "explorer",
@@ -221,40 +211,6 @@
           "command": "tikbook.new.notebook.router.scripts",
           "group": "notebook",
           "icon": "$(mikrotik-icon-line)"
-        }
-      ],
-      "view/title": [
-        {
-          "command": "tikbook.chrvm.create",
-          "when": "view == chrVMExplorer",
-          "group": "navigation@1"
-        },
-        {
-          "command": "tikbook.chrvm.refresh",
-          "when": "view == chrVMExplorer",
-          "group": "navigation@2"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "tikbook.chrvm.start",
-          "when": "view == chrVMExplorer && viewItem =~ /vm.*\\.stopped/",
-          "group": "inline@1"
-        },
-        {
-          "command": "tikbook.chrvm.stop",
-          "when": "view == chrVMExplorer && viewItem =~ /vm.*\\.running/",
-          "group": "inline@2"
-        },
-        {
-          "command": "tikbook.chrvm.details",
-          "when": "view == chrVMExplorer && viewItem =~ /^vm/",
-          "group": "inline@3"
-        },
-        {
-          "command": "tikbook.chrvm.delete",
-          "when": "view == chrVMExplorer && viewItem =~ /^vm/ && viewItem !~ /running/",
-          "group": "inline@4"
         }
       ],
       "explorer/context": [
@@ -640,42 +596,6 @@
         "command": "tikbook.show.menu.main",
         "title": "Show TikBook Menu",
         "category": "TikBook"
-      },
-      {
-        "command": "tikbook.chrvm.refresh",
-        "title": "Refresh CHR VMs",
-        "category": "CHR VM",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "tikbook.chrvm.create",
-        "title": "Create New CHR VM",
-        "category": "CHR VM",
-        "icon": "$(add)"
-      },
-      {
-        "command": "tikbook.chrvm.start",
-        "title": "Start VM",
-        "category": "CHR VM",
-        "icon": "$(play)"
-      },
-      {
-        "command": "tikbook.chrvm.stop",
-        "title": "Stop VM",
-        "category": "CHR VM",
-        "icon": "$(debug-stop)"
-      },
-      {
-        "command": "tikbook.chrvm.delete",
-        "title": "Delete VM",
-        "category": "CHR VM",
-        "icon": "$(trash)"
-      },
-      {
-        "command": "tikbook.chrvm.details",
-        "title": "Show VM Details",
-        "category": "CHR VM",
-        "icon": "$(info)"
       }
     ],
     "continueEditSession": [

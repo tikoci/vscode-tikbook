@@ -30,8 +30,15 @@ URL-scheme download flow) that a rewrite is cleaner than incremental porting.
 Related: [docs/specs/chr-test-environment.md](docs/specs/chr-test-environment.md)
 (currently scoped to UTM MVP — will need revision).
 
+**Short-term handling:** keep the existing UTM/CHR implementation in-tree as
+parked work, but do **not** surface it in the VS Code UI while the quickchr
+direction is unresolved.
+
 **Tasks:**
 
+- [ ] De-expose the current CHR/UTM UI: stop contributing the explorer/commands
+      and stop activating the provider while quickchr replacement is pending.
+      Keep the code/tests/docs in-tree as parked implementation history.
 - [ ] Capture everything we learned about UTM-from-VS-Code as a skill
       (AppleScript dictionary quirks, `utmctl` behaviour, `utm://` URL-scheme
       download flow, macOS permission prompt, VM list filtering). Candidate name:

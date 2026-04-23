@@ -1,7 +1,7 @@
 import type { AxiosError } from 'axios';
 import { DateTime, Duration } from 'luxon';
 import type { Disposable, ExtensionContext, StatusBarItem } from 'vscode';
-import { commands, env, extensions, MarkdownString, StatusBarAlignment, ThemeColor, UIKind, window, workspace } from 'vscode';
+import { commands, extensions, MarkdownString, StatusBarAlignment, ThemeColor, window, workspace } from 'vscode';
 import { getConnectionUrlString, getSettings, SecretManager } from './config';
 import { RouterRestClient } from './routeros';
 import { log } from './shared';
@@ -65,13 +65,6 @@ export class StatusWatchdog {
       // if okay check at twice the timeout, if error polling happens same as timeout ms
       if (this.lastUpdate.diffNow() > Duration.fromMillis(0 - (getSettings().apiTimeout * 1000 * 2 + 1000))) void this.checkRouter()
 
-      // Periodically refresh CHR VM Explorer on desktop only (for detecting newly downloaded VMs)
-      // Uses env.uiKind check instead of process.platform for web extension compatibility
-      if (env.uiKind === UIKind.Desktop) {
-        void commands.executeCommand('tikbook.chrvm.refresh').then(undefined, (err: unknown) => {
-          log.debug(`<StatusWatchdog> VM refresh failed: ${err instanceof Error ? err.message : String(err)}`)
-        })
-      }
     }, (getSettings().apiTimeout * 1000) + 1000)
   }
 

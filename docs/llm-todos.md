@@ -62,7 +62,8 @@ references to the pre-cleanup test layout.
 **Files affected:** `ROADMAP.md`, `docs/specs/chr-test-environment.md`, UTM-related docs/research
 
 **Why now:** `ROADMAP.md` now points toward quickchr, so older UTM-centric guidance
-should be treated as historical context or updated explicitly.
+should be treated as historical context or updated explicitly. First step: keep
+the current half-shipped CHR/UTM UI out of the user-facing product surface.
 
 **Priority:** 🔴 High
 
