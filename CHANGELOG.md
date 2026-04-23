@@ -1,60 +1,59 @@
+# Changelog
 
-## Known Issues
+> **Known issues, open work, and planned features are tracked elsewhere** — this
+> file is for shipped versions only. See:
+>
+> - [ROADMAP.md](ROADMAP.md) — near-term themes
+> - [docs/future-features.md](docs/future-features.md) — long-term vision and decision points
+> - [docs/specs/](docs/specs/README.md) — per-feature designs
+> - [docs/llm-todos.md](docs/llm-todos.md) — quick action items
 
-* Early builds & conceptional to get feedback on _some_ "RouterOS Notebook" format.
-* After a notebook "cell run", errors are detected using regular expressions.  Problem is _full_ set of error strings is _unknown_.  As a result, some error may be shown as successful in UI, but not.
-* In a `markdown-routeros` notebook ("Markdown First", _i.e._ TikBook serialized to markdown using ` ```routeros `  for code view), syntax coloring does not work.
-* Typically, a notebook allow saving each cell's "outputs" to the notebook file on disk.  Currently saving outputs is unimplemented; however, is planned as an option.  
-* More user settings needed to control internal and enable/disable UI elements.  Currently hardcoded.
+## 0.5.1
 
-## Changelog
-
-### 0.5.1
-
-#### Fixes
+### Fixes
 
 * Remove `preview: true` since it global for all version.  Only use `--pre-release` flag for development/testing builds with `preview: false`
 
-### 0.5.0
+## 0.5.0
 
 _Same as 0.4.0.  To enable future development without breaking "stable".  Added "Preview" and "Pre Release" flags_
 
-### 0.4.0
+## 0.4.0
 
 _Bumped v0.3.3. Removed "Preview" and "Pre Release" flags in Extension Marketplace_
 
-#### Fixes
+### Fixes
 
 * Minor dependancy changes, including `axios`
 
-### 0.3.3
+## 0.3.3
 
-#### Changes
+### Changes
 
 * Updated dependencies based on `bun audit` failures
 
-#### Fixes
+### Fixes
 
 * Minor lint fixes to provide original exception when re-throwing
 
-### 0.3.2
+## 0.3.2
 
-#### Changes
+### Changes
 
 * Rewritten README.md to better cover features and setup/troubleshooting
 * Add titles and corrected verbage in a few "Quick Commander" menus
 * Corrected preview/open-as icons to match between `.md` and `.rsc`
 
-#### Fixes
+### Fixes
 
 * Set max value for `apiTimeout` to 60 to match RouterOS
 * Updated deps to fix npm audit issues
 
-### 0.3.1
+## 0.3.1
 
 > New "TikBook" file formats.  Previous `0.3.x` and before will need to be manually updated to support the new notebook formats. _Open GitHub [issue](https://github.com/tikoci/vscode-tikbook/issues) if you need help._
 
-#### Changes
+### Changes
 
 * New **serialization schemes**: `tikbook` and `markdown-routeros` – both present same notebook view.  However, when open/saved the file format is different.  If a file ends in `.rsc.md` (or `.rscmd`), the notebook is samed as a "normal" markdown files, using ` ```routeros ` to store code blocks.  If a file ends in `.md.rsc` (or `.tikbook`), the file is saved a normal `.rsc` that usable on RouterOS as-is (just with `#.markdown` sections with notebook markup text).
 * RouterOS can use **VS Code's `SecretStore`** for the RouterOS password, as alternative to `settings.json`.  Settings UI provides links to control it, which uses the command bar to provide it to VS Code's built-in secrets support.  If there is no secret, the plain text password in `settings.json` is used.  `username` and `baseUrl` remain as normal Settings in all cases.
@@ -68,7 +67,7 @@ _Bumped v0.3.3. Removed "Preview" and "Pre Release" flags in Extension Marketpla
 * `rscena:` Virtual read-only text documents support.  Used to present a read-only view of `:export`, `/system/scripts`, as well as previewing various notebook formats. _`rscena:` is the URI protocol for TikBook's virtual document generator, with `-ena` stem meaning "shadow" in Latvian_
 * Removed non-functional "walkthrough", plan to re-introduce later with better content
 
-#### Fixes
+### Fixes
 
 * Added ESLint, changed tsconfig.json to match RouterOS LSP, workspace extension recommenations, cleanup of debugger tasks, modularized main extension initialization
 * Added many commands and menus (see changes)
@@ -80,69 +79,69 @@ _Bumped v0.3.3. Removed "Preview" and "Pre Release" flags in Extension Marketpla
 
 _Note: 0.2.x skipped, preserving "even minor" versions for versions **not** marked `--prerelease`_
 
-### 0.1.9
+## 0.1.9
 
-#### Changes
+### Changes
 
 * Add "RouterOS LSP" and "Data Table Renderers" as recommended associated extensions.
 
-#### Fixes
+### Fixes
 
 * Cleanup of TikBook parsing code to avoid extra newlines being generated on save
 
-### 0.1.8
+## 0.1.8
 
-#### Changes
+### Changes
 
 * With a CORS proxy setup _somewhere_, VSCode for Web can run script.
 
-#### Fixes
+### Fixes
 
 * [VSCode for Web] Use withCredentials in Axios calls to REST API
 
-### 0.1.7
+## 0.1.7
 
-#### Changes
+### Changes
 
 * Allow TikBook to work on fully on desktop, including run scripting (introduced 0.1.5) but _all_ work in "VSCode for Web"
 
-#### Fixes
+### Fixes
 
 * Build and publish "web" target separate from "all others", to allow `--target node` to be used for desktop, which bypasses CORS on desktop
 
-### 0.1.6
+## 0.1.6
 
 Ephemeral build (not published)
 
-### 0.1.5
+## 0.1.5
 
-#### Changes
+### Changes
 
 * Extension is listed and installs on _VSCode for Web_ but will not run in desktop nor web (see CORS below)
 
-#### Fixes
+### Fixes
 
 * _Attempted_ fix, using `--target=browser` not `--target=node` in `package.json`
   * Which mean changes to build, since --target=node if desired on desktop, CORS is enforced.
 * Remove nascent `package-lock.json`
 
-### 0.1.4
+## 0.1.4
 
-#### Changes
+### Changes
 
 * Initial to enabled for "VSCode for Web"
 
-#### Fixes
+### Fixes
 
 * Add `browser` to `package.json` & removed `main`
 
-### 0.1.3
+## 0.1.3
 
-#### Changes
+### Changes
 
 * Checkin and build in GitHub
 
-#### Fixes
+### Fixes
 
 * Copied base code and infra from `tikoci/lsp-routeros-ts`
 

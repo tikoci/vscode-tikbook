@@ -23,11 +23,14 @@ Pattern guides in `docs/`:
 
 Architectural reference: See [docs/architecture.md](../docs/architecture.md), [docs/conventions.md](../docs/conventions.md), and [docs/sarb/code-review-checklist.md](../docs/sarb/code-review-checklist.md).
 
-**📋 Feature Development:**
+**📋 Feature Development (start here each session):**
 
-- **Quick tasks (1-3 hours):** Check [docs/llm-todos.md](../docs/llm-todos.md)
-- **Larger features:** Check [docs/specs/README.md](../docs/specs/README.md) - only implement specs marked `ready-for-implementation`
-- **Future ideas:** See [docs/future-features.md](../docs/future-features.md)
+- **Roadmap (near-term themes):** [ROADMAP.md](../ROADMAP.md) — seeded tasks for agents
+- **Quick tasks (1-3 hours):** [docs/llm-todos.md](../docs/llm-todos.md)
+- **Larger features:** [docs/specs/README.md](../docs/specs/README.md) — only implement specs marked `ready-for-implementation`
+- **Long-term vision:** [docs/future-features.md](../docs/future-features.md)
+
+`CHANGELOG.md` is past-tense only — do not record planned work there.
 
 ## Core rules
 
@@ -40,6 +43,9 @@ Architectural reference: See [docs/architecture.md](../docs/architecture.md), [d
 - Gate desktop-only behavior with vscode.env.uiKind or vscode.env.appHost.
 - Use SecretStorage for credentials; avoid settings for secrets.
 - Keep types open to new RouterOS attributes (avoid overly strict typing).
+- Use all available and reasonable tools to solve problem
+- Always run build and unit tests before saying anything is line "done" or "complete"
+- Keep working to solve build issue if you can, including **all** tests
 
 ## Copilot Usage Context
 
