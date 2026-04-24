@@ -326,11 +326,13 @@ export class BiMap<K, V> {
 
   set(key: K, value: V): void {
     // Remove old mappings if they exist
-    if (this.keyToValue.has(key)) {
-      this.valueToKey.delete(this.keyToValue.get(key)!)
+    const existingValue = this.keyToValue.get(key)
+    if (existingValue !== undefined) {
+      this.valueToKey.delete(existingValue)
     }
-    if (this.valueToKey.has(value)) {
-      this.keyToValue.delete(this.valueToKey.get(value)!)
+    const existingKey = this.valueToKey.get(value)
+    if (existingKey !== undefined) {
+      this.keyToValue.delete(existingKey)
     }
     this.keyToValue.set(key, value)
     this.valueToKey.set(value, key)

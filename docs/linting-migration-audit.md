@@ -10,6 +10,24 @@ rules are a conscious choice and not silent coverage loss.
 > **Goal here is tracking, not fixing.** Each section ends with concrete
 > action items. None of them are urgent; this is radar material.
 
+## 2026-04-23 third-eye follow-up
+
+- **Agreed and landed:** **LMA-1**, **LMA-2**, **LMA-3**, **LMA-4**, and **LMA-7**.
+- `biome.json` now restores `style.noRestrictedImports` and
+  `style.noRestrictedGlobals` for `src/**/*.ts`, with narrow carve-outs for
+  `src/routeros.ts`, `src/virtualdocs.ts`, and desktop-only
+  `src/vm-providers/utm-provider.ts`.
+- The low-signal `noTemplateCurlyInString` warnings are now scoped off only for
+  ScriptFS placeholder/template files and the two experiment files that embed
+  literal `${...}` examples; `npm run lint` is clean again.
+- `src/virtualdocs.ts` no longer relies on the `has()/get()!` pattern, and
+  `src/vm-explorer.ts` no longer carries the migration's empty constructor.
+- **Adjusted recommendation:** keep **LMA-6** on the radar, but do **not**
+  re-introduce ESLint as default repo tooling right now. That would partially
+  undo the Biome-first consistency this repo was migrated toward. If the typed
+  lint gap hurts in practice, prefer a small dedicated audit script before
+  restoring a second general-purpose linter.
+
 ## Summary
 
 - Biome recommended is **on**, plus a short list of extras explicitly enabled
@@ -23,8 +41,8 @@ rules are a conscious choice and not silent coverage loss.
 - Biome has **no type-aware lint rules**. All of typescript-eslint's
   type-aware checks (no-floating-promises, no-misused-promises, etc.) are
   simply gone; nothing in Biome replaces them.
-- `npm run lint` currently reports ~20 warnings that never surfaced under
-  ESLint. Most are low-signal but two clusters are worth scanning.
+- The original migration left ~20 warnings that never surfaced under ESLint.
+  Follow-up review cleaned those up so `npm run lint` is now clean.
 
 ## Biome rules disabled in `biome.json` — assessment
 
@@ -43,9 +61,9 @@ rules are a conscious choice and not silent coverage loss.
 None of these are currently disabled, but it's worth noting they're
 demoted to `warn` only and firing warnings today (see next section).
 
-## Current lint warnings — are they noise or signal?
+## Original lint warnings — were they noise or signal?
 
-`npm run lint` exits 0 but reports ~20 warnings. Breakdown:
+At audit time, `npm run lint` exited 0 but reported ~20 warnings. Breakdown:
 
 ### `suspicious.noTemplateCurlyInString` — 17 hits
 
@@ -62,10 +80,9 @@ demoted to `warn` only and firing warnings today (see next section).
 2. Override the rule off for `src/scriptfs-schema.ts` specifically (less
    fine-grained but one change).
 
-**Action item: [LMA-1]** add per-entry `biome-ignore` comments in
-`scriptfs-schema.ts` and the two experiment tests, or scope the rule off for
-those files. Don't globally disable — the rule does catch real bugs in
-template-literal-heavy code.
+**Status: [LMA-1] done.** The rule is now scoped off only for the ScriptFS
+placeholder/template files and the two experiment files that embed literal
+`${...}` examples. It remains enabled everywhere else.
 
 ### `style.noNonNullAssertion` — 2 hits
 
@@ -76,8 +93,8 @@ template-literal-heavy code.
 narrowing gap. Could be rewritten as a single `get` + truthy check. Low
 priority.
 
-**Action item: [LMA-2]** clean up the two non-null assertions in
-`virtualdocs.ts` next time that file is touched. Not worth a dedicated PR.
+**Status: [LMA-2] done.** `virtualdocs.ts` now uses the retrieved map values
+directly instead of `has()/get()!`.
 
 ### `complexity.noUselessConstructor` — 1 hit
 
@@ -91,8 +108,8 @@ priority.
 constructor entirely (the class has no other constructor logic) or restore
 the parameter property if the intent was to hang onto the context.
 
-**Action item: [LMA-3]** delete the empty constructor in
-`CHRVMExplorerProvider` (vm-explorer.ts:131) — it's pure noise now.
+**Status: [LMA-3] done.** The empty constructor was removed, and the refresh
+event now fires `undefined` explicitly to satisfy the current VS Code typings.
 
 ## Lost: custom `vscode-sanity` ESLint plugin
 
@@ -103,19 +120,19 @@ them run today. The file is kept as archived reference.
 ### `no-node-builtins-web` — **replaceable in Biome**
 
 Forbade `import * as fs from 'fs'` etc. in web-extension-safe code, with
-per-file allowlists for `src/routeros.ts` (https), `src/virtualdocs.ts`
-(path), and `src/scriptfs.ts` (util).
+per-file allowlists for desktop-only escapes. In the current tree those are
+`src/routeros.ts` (`node:https`), `src/virtualdocs.ts` (`node:path`), and
+`src/vm-providers/utm-provider.ts` (`node:child_process`, `node:util`).
 
 **Biome has `style.noRestrictedImports` (stable).** The old ESLint
 `no-restricted-imports` block is almost a 1:1 port; add per-file overrides
 for the three allowlisted modules. This is the single highest-value
 replacement in this audit.
 
-**Action item: [LMA-4]** port the old `no-restricted-imports` block from
-`eslint.config.mjs` (git log `4a141ec^:eslint.config.mjs` lines ~155-180)
-into `biome.json` as `style.noRestrictedImports` + per-file overrides. Also
-port the `no-restricted-globals: process` check if Biome has an equivalent
-(`noGlobalIsNan`/similar — needs a look).
+**Status: [LMA-4] done.** `biome.json` now restores
+`style.noRestrictedImports` for `src/**/*.ts` plus `style.noRestrictedGlobals`
+for `process`, with narrow file-specific carve-outs for the current desktop-only
+imports.
 
 ### `require-eventemitter-dispose` — **not directly replaceable**
 
@@ -196,11 +213,10 @@ rules catch, and TikBook has a lot of command handlers.
    with the TS compiler API but non-trivial (needs a real type checker
    instance); probably more effort than option 3.
 
-**Action item: [LMA-6]** decide between (1) wait, or (3) re-add ESLint
-as a type-aware-only pass. Recommendation: option 3, scoped to 3–4 rules:
-`no-floating-promises`, `no-misused-promises`, `switch-exhaustiveness-check`,
-`prefer-nullish-coalescing`. Everything else stays in Biome. This is the
-single highest-correctness-impact item in this audit.
+**Action item: [LMA-6]** keep this as a conscious gap decision. The remaining
+question is whether to wait for Biome's typed lint, or build a dedicated
+typed audit script. Re-adding ESLint is possible, but should not be the default
+next step in a repo that intentionally moved to a Biome-first toolchain.
 
 ## Stale doc references to ESLint
 
@@ -210,29 +226,27 @@ Not a lint issue but surfaced while auditing:
   ~140, 213, 222, 230, 242, 248, 254, 299, 317, 408). The rules it
   references are mostly valid under Biome too, just with different rule
   names.
-- `.github/instructions/eslint-rules.instructions.md` is titled "Biome
-  Linting" internally but lives at the ESLint-era filename. Rename to
-  `.github/instructions/biome-rules.instructions.md` for consistency.
+- `.github/instructions/biome-rules.instructions.md` was renamed from the
+  ESLint-era filename for consistency.
 
-**Action item: [LMA-7]** sweep `docs/conventions.md` and rename the
-`eslint-rules.instructions.md` file. Pure docs cleanup.
+**Status: [LMA-7] done.** The stale references in `docs/conventions.md` were
+updated and the instruction file now lives at
+`.github/instructions/biome-rules.instructions.md`.
 
 ## Summary of action items
 
 | ID | Effort | Value | Description |
 |---|---|---|---|
-| **LMA-1** | S | Low | Scope `noTemplateCurlyInString` off for `scriptfs-schema.ts` (or add per-entry ignores). |
-| **LMA-2** | S | Low | Clean up 2 non-null assertions in `virtualdocs.ts`. |
-| **LMA-3** | XS | Cosmetic | Delete empty constructor in `vm-explorer.ts:131`. Migration artifact. |
-| **LMA-4** | S | **High** | Port `no-restricted-imports` from old ESLint config to Biome `noRestrictedImports` (replaces most of `vscode-sanity/no-node-builtins-web`). |
+| **LMA-1** | S | Low | Done: scoped `noTemplateCurlyInString` off only for the ScriptFS placeholder/example files that intentionally embed `${...}`. |
+| **LMA-2** | S | Low | Done: removed the 2 non-null assertions in `virtualdocs.ts`. |
+| **LMA-3** | XS | Cosmetic | Done: removed the empty constructor in `vm-explorer.ts` and fixed the refresh event call. |
+| **LMA-4** | S | **High** | Done: restored Biome `noRestrictedImports`/`noRestrictedGlobals` coverage for shipped extension code. |
 | **LMA-5** | M | Medium | Build `scripts/lint-sanity.ts` to replace the three remaining `vscode-sanity` rules (dispose / floating-disposable / api-version-compat). |
-| **LMA-6** | M | **High** | Re-add ESLint as a type-aware-only pass for `no-floating-promises`, `no-misused-promises`, `switch-exhaustiveness-check`, `prefer-nullish-coalescing`. Biome keeps everything else. |
-| **LMA-7** | S | Low | Sweep stale ESLint references in `docs/conventions.md`; rename `eslint-rules.instructions.md` → `biome-rules.instructions.md`. |
+| **LMA-6** | M | **High** | Keep the typed-lint gap on radar, but prefer a dedicated typed audit (or waiting for Biome typed lint) before reintroducing ESLint to a Biome-first repo. |
+| **LMA-7** | S | Low | Done: swept stale ESLint references in `docs/conventions.md` and renamed the lint instruction file to `biome-rules.instructions.md`. |
 
-**Recommended order:** LMA-3 (trivial) → LMA-4 (quick correctness win) →
-LMA-6 (biggest correctness win) → LMA-5 (last; fills remaining gaps) →
-LMA-1, LMA-2, LMA-7 (cleanup).
+**Remaining recommended order:** LMA-5 first, then revisit LMA-6 only if the
+typed-lint gap proves painful enough to justify more tooling.
 
-Do **not** attempt all of these in a single PR. LMA-4 and LMA-6 each
-deserve their own branch so any new failures they surface are reviewable
-in isolation.
+Do **not** batch the remaining work together. If LMA-5 or LMA-6 move forward,
+each should be reviewable in isolation.

@@ -102,8 +102,8 @@ The following technical debt items are now tracked as quick tasks for cleanup an
 **Action:** Revisit naming only after the broader VFS shape stabilizes, so protocol and feature names reflect the eventual resource model instead of today's partial slice.
 
 ### 8. Linting coverage gaps from ESLint → Biome migration
-**Problem:** The migration in `4a141ec` dropped type-aware linting (no-floating-promises, no-misused-promises, switch-exhaustiveness-check, prefer-nullish-coalescing) and the custom `vscode-sanity` ESLint plugin (no-node-builtins-web, require-eventemitter-dispose, no-floating-disposable, vscode-api-version-compat). Biome has no equivalents. `npm run lint` exits 0 but ~20 warnings are firing, some worth acting on.
-**Action:** See [linting-migration-audit.md](./linting-migration-audit.md) for the full breakdown and action items **LMA-1** through **LMA-7**. Top-priority items are **LMA-4** (port `no-restricted-imports` to Biome) and **LMA-6** (re-add a minimal type-aware ESLint pass for the 3–4 high-value rules).
+**Problem:** The migration in `4a141ec` dropped type-aware linting (no-floating-promises, no-misused-promises, switch-exhaustiveness-check, prefer-nullish-coalescing) and the custom `vscode-sanity` ESLint plugin (no-node-builtins-web, require-eventemitter-dispose, no-floating-disposable, vscode-api-version-compat). Follow-up review restored the Biome-side web-safety checks and cleaned the warning noise, but the typed async/lifecycle checks are still not covered by Biome.
+**Action:** See [linting-migration-audit.md](./linting-migration-audit.md) for the full breakdown and action items **LMA-1** through **LMA-7**. **LMA-1/2/3/4/7 are done.** The main remaining work is **LMA-5** (a small `lint-sanity` audit script). Keep **LMA-6** as radar, but do **not** re-add ESLint as default repo tooling unless the typed-lint gap proves worth that complexity.
 
 ## ⚡ Quick Code Wins
 
@@ -117,10 +117,10 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
    - **Fix:** Extract regex to named constant, add comment explaining the pattern (`[//]: #.`)
    - **Benefit:** Make markdown format more maintainable, clear for future notebook work
 
-2. **Add ESLint rule for commented-out code** (10 min)
+2. **Add lint/audit check for commented-out code** (10 min)
    - **Files:** converters.ts lines 55-60, notebook.ts line 269, virtualdocs.ts line 289, commands.ts line 27
    - **Pattern:** Multiple files have commented-out code blocks with unclear intent
-   - **Fix:** Document in `tools/eslint/vscode-sanity.mjs` a rule to flag commented code > 3 lines
+   - **Fix:** If we build `scripts/lint-sanity.ts`, include a simple check that flags commented code blocks > 3 lines
    - **Benefit:** Prevents dead code accumulation; forces decisions: remove or preserve with clear reason
 
 ### 🟡 15-25 min focused updates (code safety improvements)
@@ -141,11 +141,11 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
    - **Benefit:** Users can see RouterOS LSP debug output; useful for troubleshooting; foundation for LSP coordination
    - **Gating:** Either gate as experimental or add as simple feature if LSP extension is available
 
-5. **Restructure eslint config for readability** (10 min)
-   - **File:** eslint.config.mjs - vscode-api-version-compat rule is inlined on same line as closing brace
-   - **Issue:** Makes spacing hard to read/maintain
-   - **Fix:** Move to separate lines like other rules for clarity
-   - **Benefit:** Easier future maintenance without line-wrapping issues
+5. **Decide scope for `scripts/lint-sanity.ts`** (10 min)
+   - **Files:** tools/eslint/vscode-sanity.mjs, docs/linting-migration-audit.md
+   - **Issue:** Three archived lint checks still have no replacement (`require-eventemitter-dispose`, `no-floating-disposable`, `vscode-api-version-compat`)
+   - **Fix:** Decide what belongs in a standalone audit script versus what should stay as documented review guidance
+   - **Benefit:** Keeps Biome-first tooling while recovering the highest-value custom checks
 
 ### 🟣 20-35 min focused enhancements (patterns for future work)
 
@@ -198,7 +198,7 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 
 **Optional (if time):**
 - Items #2, #3, #4, and #5 are all <= 15 min each
-- Item #2 (ESLint rule) helps prevent future dead code
+- Item #2 helps prevent future dead code
 
 ### Rationalize Notebook Serialization Code
 
@@ -342,7 +342,7 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 **Note:** Requirements still being clarified. Needs more thinking time before actionable. Related to multi-router management across feature set.
 
 - Some older docs still imply markdownlint runs across every Markdown file; keep them aligned with the current `DEVELOPMENT.md` and npm-script workflow.
-- eslint.config.mjs has vscode-api-version-compat inlined on the same line as the previous rule and closing brace. It works but is hard to maintain.
+- The archived `vscode-sanity` checks still need triage into a future `scripts/lint-sanity.ts` so the highest-value custom coverage is not lost.
 - Implement LSP command integration for showing RouterOS LSP logs. Currently commands.ts line 27 has commented code `routeroslsp.runCommand` that could enable this. Currently shows warning message instead.
 - Clean up commented exception handling in converters.ts lines 55-60. Code appears to be leftover from refactoring - either implement proper error handling or remove the commented block.
 - Fix markdown cell separator detection in notebook.ts line 265. Comment says "uses a markdown comment hack to break markdown cells... have to find it..." - indicates the regex/logic may be fragile.

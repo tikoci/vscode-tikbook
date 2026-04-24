@@ -39,7 +39,7 @@ This repo is designed as a best-practices example for agentic development with C
   - `vscode-extension.instructions.md` - Extension TypeScript code
   - `testing.instructions.md` - Test files
   - `documentation.instructions.md` - Markdown documentation
-  - `eslint-rules.instructions.md` - Linting and configuration
+  - `biome-rules.instructions.md` - Linting and configuration
 - `docs/architecture.md` - Design decisions and component relationships
 - `docs/conventions.md` - Code patterns and naming conventions
 

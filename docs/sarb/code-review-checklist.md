@@ -13,7 +13,7 @@ This checklist guides reviewers in assessing TikBook changes for quality, consis
 
 ### TypeScript & Typing
 
-- [ ] All functions have explicit return types (ESLint enforces this)
+- [ ] All functions have explicit return types (review convention; Biome does not enforce this today)
 - [ ] No `any` types (use `unknown` + type guards)
 - [ ] RouterOS response types use `Record<string, unknown>` (extensible)
 - [ ] Type guards added for API responses before use
@@ -164,7 +164,7 @@ This checklist guides reviewers in assessing TikBook changes for quality, consis
 ### Knowledge Update
 
 - [ ] New pattern discovered -> Update docs/conventions.md?
-- [ ] Mistake pattern found -> New ESLint rule needed?
+- [ ] Mistake pattern found -> New Biome rule or lint-sanity audit needed?
 - [ ] Architectural decision made -> Update decision-log.md?
 - [ ] Version compatibility quirk found -> Document in architecture.md?
 

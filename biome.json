@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -48,6 +48,58 @@
 	},
 	"overrides": [
 		{
+			"includes": ["src/**/*.ts"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"paths": {
+									"fs": "Use vscode.workspace.fs for file IO in extensions.",
+									"node:fs": "Use vscode.workspace.fs for file IO in extensions.",
+									"path": "Avoid Node path in web; prefer vscode.Uri and workspace.fs.",
+									"node:path": "Avoid Node path in web; prefer vscode.Uri and workspace.fs.",
+									"util": "Avoid Node util in web; prefer global TextEncoder/TextDecoder.",
+									"node:util": "Avoid Node util in web; prefer global TextEncoder/TextDecoder.",
+									"child_process": "Do not spawn processes from extension code.",
+									"node:child_process": "Do not spawn processes from extension code.",
+									"net": "Node net is not available in web extension hosts.",
+									"node:net": "Node net is not available in web extension hosts.",
+									"tls": "Node tls is not available in web extension hosts.",
+									"node:tls": "Node tls is not available in web extension hosts.",
+									"http": "Use fetch/axios or vscode APIs; http is not web-safe.",
+									"node:http": "Use fetch/axios or vscode APIs; http is not web-safe.",
+									"https": "Use fetch/axios or vscode APIs; https is not web-safe.",
+									"node:https": "Use fetch/axios or vscode APIs; https is not web-safe.",
+									"crypto": "Node crypto is not available in web extension hosts.",
+									"node:crypto": "Node crypto is not available in web extension hosts.",
+									"os": "Node os is not available in web extension hosts.",
+									"node:os": "Node os is not available in web extension hosts.",
+									"url": "Prefer vscode.Uri and WHATWG URL APIs.",
+									"node:url": "Prefer vscode.Uri and WHATWG URL APIs.",
+									"zlib": "Node zlib is not available in web extension hosts.",
+									"node:zlib": "Node zlib is not available in web extension hosts.",
+									"stream": "Node streams are not available in web extension hosts.",
+									"node:stream": "Node streams are not available in web extension hosts.",
+									"buffer": "Node Buffer is not available in web extension hosts.",
+									"node:buffer": "Node Buffer is not available in web extension hosts."
+								}
+							}
+						},
+						"noRestrictedGlobals": {
+							"level": "error",
+							"options": {
+								"deniedGlobals": {
+									"process": "Avoid process usage in extension code; it is not available in web extension hosts."
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		{
 			"includes": ["scripts/**", "tools/**", "*.{js,mjs}"],
 			"linter": {
 				"rules": {
@@ -66,7 +118,29 @@
 						"noExplicitAny": "warn"
 					},
 					"style": {
-						"noNonNullAssertion": "off"
+						"noNonNullAssertion": "off",
+						"noRestrictedGlobals": "off",
+						"noRestrictedImports": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/scriptfs-schema.ts", "src/scriptfs.ts", "src/test/integration/chr-ip-detection.experiment.test.ts", "src/test/integration/utm-integration.experiment.test.ts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noTemplateCurlyInString": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/routeros.ts", "src/virtualdocs.ts", "src/vm-providers/utm-provider.ts"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": "off"
 					}
 				}
 			}

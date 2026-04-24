@@ -128,14 +128,12 @@ export class CHRVMExplorerProvider implements TreeDataProvider<TreeItem> {
 
 	private treeView?: TreeView<TreeItem>
 
-	constructor(_context: ExtensionContext) {}
-
 	/**
 	 * Refresh the tree view
 	 */
 	refresh(): void {
 		log.debug('[CHRVMExplorer] Refreshing tree view')
-		this._onDidChangeTreeData.fire()
+		this._onDidChangeTreeData.fire(undefined)
 	}
 
 	/**
@@ -282,7 +280,7 @@ export class CHRVMExplorerProvider implements TreeDataProvider<TreeItem> {
 	 * Register the tree view
 	 */
 	static register(context: ExtensionContext): CHRVMExplorerProvider {
-		const provider = new CHRVMExplorerProvider(context)
+		const provider = new CHRVMExplorerProvider()
 
 		const treeView = window.createTreeView('chrVMExplorer', {
 			treeDataProvider: provider,

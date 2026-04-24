@@ -94,6 +94,7 @@ suite('TikBook Notebook Parsing', () => {
   test('parses shebang and notebook metadata in Markdown format', async () => {
     const input = '[//]: #!tikbook\n\n# Title\n\n\u0060\u0060\u0060routeros\n/ip/address/print\n\u0060\u0060\u0060\n'
     const nb = await deserializeMarkdown(input)
+    assert.ok(nb.metadata, 'Notebook metadata should be present')
     assert.ok(Object.hasOwn(nb.metadata, 'shebang'))
     assert.strictEqual(nb.cells[0].kind, NotebookCellKind.Markup)
     assert.strictEqual(nb.cells[1].kind, NotebookCellKind.Code)

@@ -195,7 +195,7 @@ suite('Extension Contributions', () => {
 - ✅ `.sarbsettings.example` - Template for RouterOS test device configuration (JSONC format)
 - ✅ `src/test/integration/integration-test-config.ts` - Helper to load `.sarbsettings` with JSONC parsing
 - ✅ Updated `.gitignore` - Added `.sarbsettings` (personal config file)
-- ✅ Updated `eslint.config.mjs` - Allowed Node APIs in test files
+- ✅ Updated lint configuration - test files are exempt from extension web-safety import restrictions
 
 **Usage:**
 

@@ -137,7 +137,7 @@ interface RouterOsItem {
 
 - All functions should have explicit return types
 - Helps LLM agents understand intent
-- Enforced by ESLint
+- Checked by lint and code review
 
 **Example:**
 
@@ -210,7 +210,7 @@ async function handleDeleteVM(item: unknown): Promise<void> {
 ### Await All Promises
 
 - Using promises without await is a common bug
-- ESLint enforces `@typescript-eslint/no-floating-promises`
+- Biome does not enforce floating-promise checks today; treat this as a review requirement until a typed audit exists
 - Event handlers are implicitly async (can return Promise)
 
 **Example:**
@@ -219,7 +219,7 @@ async function handleDeleteVM(item: unknown): Promise<void> {
 // ✅ Good
 await client.post('/system/identity/set', { name: 'newname' });
 
-// ❌ ESLint error
+// ❌ Avoid - floating promise
 client.post('/system/identity/set', { name: 'newname' }); // floating promise
 ```
 
@@ -227,7 +227,7 @@ client.post('/system/identity/set', { name: 'newname' }); // floating promise
 
 ### Prefer const; Use let When Reassigning
 
-- ESLint enforces `prefer-const`
+- Biome enforces `useConst`
 - Helps LLMs avoid accidental mutation
 
 **Example:**
@@ -239,19 +239,19 @@ const items = await client.get('/ip/address');
 let current = items[0];
 current = items[1]; // needs let because reassigned
 
-// ❌ ESLint: prefer-const
+// ❌ Biome: useConst
 let items = await client.get('/ip/address'); // never reassigned, use const
 ```
 
 ### Avoid Variable Shadowing
 
-- ESLint warns on shadowing (common LLM mistake)
+- Avoid shadowing even though Biome does not currently flag every case
 - Keep scope clear for readers
 
 **Example:**
 
 ```typescript
-// ❌ ESLint warns
+// ❌ Avoid - shadows outer x
 function outer() {
   const x = 1;
   function inner() {
@@ -296,7 +296,7 @@ enum ConnectionStatus { } // enum
 
 ### Organize Imports
 
-- Use `@typescript-eslint/consistent-type-imports` to separate type imports
+- Use `import type` for type-only imports; Biome warns via `useImportType`
 - Group: vscode, external packages, local imports
 
 **Example:**
@@ -313,8 +313,8 @@ import type { RouterOsItem } from './types';
 ### Node Built-ins in Extension Code
 
 - Avoid in general (not web-compatible)
-- Allowed (with allowlist) in: routeros.ts (https), virtualdocs.ts (path), scriptfs.ts (util)
-- ESLint enforces `no-restricted-imports`
+- Allowed (with carve-out) in: routeros.ts (`node:https`), virtualdocs.ts (`node:path`), vm-providers/utm-provider.ts (`node:child_process`, `node:util`)
+- Biome enforces `style.noRestrictedImports` for shipped extension code
 
 ## Testing
 
@@ -405,7 +405,7 @@ const baseUrl = config.get<string>('baseUrl');
 
 ## Before Opening a PR
 
-1. Run `npm run lint` - fix all ESLint errors
+1. Run `npm run lint` - fix all lint errors
 2. Check web/desktop implications
 3. Add tests for uncertain behavior
 4. Validate RouterOS commands with v7 schema

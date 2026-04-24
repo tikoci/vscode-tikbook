@@ -40,7 +40,7 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 ## While writing or editing code
 
 - Do not use console.log. Use the existing output logging pattern (e.g., log.info()).
-- Run eslint (npm run lint) and pay attention to warnings.
+- Run Biome (`npm run lint`) and pay attention to warnings.
 - Add tests when behavior is uncertain. Use llm-experiments.test.js for one-off checks.
 - Validate RouterOS commands against current v7 schema. Use RouterOS LSP to verify syntax where possible.
 - Avoid Node-specific APIs in extension code. Tools scripts may use Node, but prefer portable options.
@@ -70,15 +70,15 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 
 ### Codify patterns as lint rules
 
-- **If you catch yourself making a mistake:** Check `eslint.config.mjs` to see if a rule exists; if not, propose adding one to `tools/eslint/vscode-sanity.mjs`.
+- **If you catch yourself making a mistake:** Check `biome.json` to see if Biome can enforce it. If not, consider a small `scripts/lint-sanity.ts` audit and use `tools/eslint/vscode-sanity.mjs` as archived prior art.
 - **If you discover a useful pattern:** Document it in `docs/conventions.md` and consider if a lint rule would prevent the anti-pattern.
-- **When adding a lint rule:** Follow the pattern in vscode-sanity.mjs; run `npm run lint` to test; add an entry to `./sarb/decision-log.md` explaining why this rule catches a common mistake.
+- **When adding a lint rule:** Prefer Biome rules first. If Biome cannot express the check, document the gap and consider a dedicated audit script; add an entry to `./sarb/decision-log.md` explaining why the check catches a common mistake.
 - **Link new rules to patterns:** Reference the specific pattern in `docs/conventions.md` that the rule enforces.
 
 ## After finishing a solution
 
 - Optimize for readability for both humans and future LLMs.
-- Consider adding lint rules (vscode-sanity.mjs) to codify lessons.
+- Consider adding Biome rules or a focused lint-sanity audit to codify lessons.
 - Re-check changes in context: TikBook is a VS Code extension using REST via axios for RouterOS management.
 - Capture new learnings in docs/tools so future agents do not repeat mistakes.
 - Look for test coverage gaps and add tests when feasible.
@@ -91,7 +91,7 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 **Required before completing work:**
 
 - `npm run compile` - TypeScript compilation must succeed
-- `npm run lint` - ESLint passes with no errors (warnings acceptable if documented)
+- `npm run lint` - Biome passes with no errors (warnings acceptable if documented)
 - `npm test` - Unit tests pass (if tests exist for changed code)
 - `npm audit` - No high/critical security vulnerabilities
 
@@ -107,7 +107,7 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 - **Public markdown**: If touching README.md or CHANGELOG.md, run `npm run markdown:lint:public`
 - **Pre-publish validation**: `npm run vscode:prepublish` runs audit → lint → compile (final check before release)
 
-**Note on tooling**: Pylance MCP tools are available in this workspace but are Python-specific. This is a TypeScript project; use standard TypeScript/ESLint validation instead.
+**Note on tooling**: Pylance MCP tools are available in this workspace but are Python-specific. This is a TypeScript project; use standard TypeScript/Biome validation instead.
 
 ## Release and publishing
 

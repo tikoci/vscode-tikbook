@@ -103,7 +103,7 @@ Located in `.github/instructions/`:
 - **[vscode-extension.instructions.md](.github/instructions/vscode-extension.instructions.md)** - Extension code standards
 - **[testing.instructions.md](.github/instructions/testing.instructions.md)** - Test and experimental code guidelines
 - **[documentation.instructions.md](.github/instructions/documentation.instructions.md)** - Docs organization
-- **[eslint-rules.instructions.md](.github/instructions/eslint-rules.instructions.md)** - Biome linting expectations
+- **[biome-rules.instructions.md](.github/instructions/biome-rules.instructions.md)** - Biome linting expectations
 - **[routeros-integration.instructions.md](.github/instructions/routeros-integration.instructions.md)** - RouterOS REST API patterns
 
 ### Planning & Roadmap

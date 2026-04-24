@@ -17,26 +17,29 @@ The following versions are configured in the project:
 
 ### Development vs Runtime Strategy
 
-This project uses a **lint-time checking** approach instead of compile-time restrictions:
+This project currently uses a **runtime-compatibility-first** approach plus lint
+and review guardrails:
 
 - **@types/vscode** uses the **latest version** to provide developers with full IntelliSense and autocomplete for all current VS Code APIs
-- **Custom ESLint rule** (`vscode-api-version-compat`) detects when code uses APIs that aren't available in the minimum required version (1.78.2)
 - **Runtime compatibility layer** (`vscode-compat.ts`) provides graceful fallbacks for version-specific features
+- **Archived rule metadata** in `tools/eslint/vscode-sanity.mjs` remains as reference for a future audit script, but it is not enforced by Biome today
 
-This approach gives developers the best coding experience while ensuring compatibility is enforced during the build process.
+This approach gives developers the best coding experience while keeping compatibility checks explicit in code, review, and runtime behavior.
 
 ### Key Benefits
 
 - **Best Developer Experience**: Latest IntelliSense and autocomplete for all VS Code APIs, type-ahead suggestions for new features
-- **Build-Time Safety**: ESLint catches incompatible API usage during compilation with clear, actionable error messages
+- **Build-Time Safety**: Biome and TypeScript catch many issues, while version compatibility still relies on `vscode-compat.ts` and reviewer attention
 - **Wide Version Support**: Supports VS Code 1.78.2+ (June 2023) with graceful degradation
 - **Runtime Safety**: Detects version at startup, warns users if below minimum, logs unavailable optional features
-- **Maintainable**: Single source of truth for API versions in `tools/eslint/vscode-sanity.mjs`, easy to extend
+- **Maintainable**: `vscode-compat.ts` is the live compatibility layer; the archived rule map remains a reference if we revive automated API-version auditing
 - **No Breaking Changes**: Existing functionality preserved with fallbacks for newer APIs
 
-### Custom ESLint Rule (`vscode-api-version-compat`)
+### Archived compatibility rule (`vscode-api-version-compat`)
 
-Implemented in `tools/eslint/vscode-sanity.mjs` and enabled in `eslint.config.mjs`:
+This rule lives in `tools/eslint/vscode-sanity.mjs` as archived reference only.
+It no longer runs after the Biome migration, but the tracked API list is still
+useful if we build a dedicated compatibility audit later:
 
 - **Smart Detection**:
   - Checks method calls (e.g., `window.createOutputChannel()`)
@@ -44,7 +47,7 @@ Implemented in `tools/eslint/vscode-sanity.mjs` and enabled in `eslint.config.mj
   - Detects deprecated APIs (e.g., `window.activeNotebookEditor`)
   - Special handling for options (e.g., `createOutputChannel({ log: true })`)
 - **Configurable**: Takes `minVersion` parameter (currently set to '1.78.2')
-- **Automatic**: Runs during `npm run compile` and `npm run lint`
+- **Current status**: Not automatically enforced in the Biome toolchain
 - **Clear Messages**: Provides helpful error messages with version requirements and suggests using vscode-compat.ts
 
 #### Tracked APIs
@@ -195,20 +198,20 @@ To test compatibility with different VS Code versions:
 1. **Always use compatibility helpers** instead of direct VS Code APIs when available
 2. **Check feature flags** before using optional APIs
 3. **Add new APIs** to `vscode-compat.ts` when using features from newer versions
-4. **Watch for lint warnings** - The `vscode-api-version-compat` ESLint rule will flag APIs that require newer VS Code versions
+4. **Watch for compatibility risks** - there is no automatic API-version lint today, so lean on `vscode-compat.ts`, review, and minimum-version testing
 5. **Log warnings** for missing features rather than failing silently
 6. **Test on minimum version** regularly to ensure compatibility
-7. **Update API version map** in `tools/eslint/vscode-sanity.mjs` when using new APIs from recent VS Code releases
+7. **Keep the archived API version map updated** in `tools/eslint/vscode-sanity.mjs` if we still want it as source material for a future compatibility audit
 
 ## Adding New VS Code APIs
 
 When you need to use APIs from newer VS Code versions:
 
 1. Check the minimum version requirement in [VS Code API docs](https://code.visualstudio.com/updates/)
-2. Add the API to the version map in `tools/eslint/vscode-sanity.mjs`
-3. Add a feature flag to `vscode-compat.ts` if runtime checking is needed
-4. Use conditional logic based on the feature flag in your code
-5. Test on the minimum version (1.78.2) - the lint rule will warn if APIs are too new
+2. Add a helper or feature flag to `vscode-compat.ts` if runtime checking is needed
+3. Use conditional logic based on the feature flag in your code
+4. Test on the minimum version (1.78.2) because no automatic version-compat lint will catch this for you
+5. Update the archived version map in `tools/eslint/vscode-sanity.mjs` if you want to preserve the knowledge for a future audit
 6. Update this documentation if the API is significant
 
 ## Updating Minimum Version
@@ -216,12 +219,11 @@ When you need to use APIs from newer VS Code versions:
 To update the minimum supported VS Code version:
 
 1. Update `engines.vscode` in package.json
-2. Update the `minVersion` parameter in `eslint.config.mjs` for the `vscode-api-version-compat` rule
-3. Remove obsolete feature checks from `src/vscode-compat.ts` for APIs now universally available
-4. Clean up the version map in `tools/eslint/vscode-sanity.mjs` if desired (you can keep entries for reference or remove old ones)
-5. Update this documentation
-6. Test thoroughly on the new minimum version
-7. Update CHANGELOG.md with breaking changes if applicable
+2. Remove obsolete feature checks from `src/vscode-compat.ts` for APIs now universally available
+3. Clean up the archived version map in `tools/eslint/vscode-sanity.mjs` if desired
+4. Update this documentation
+5. Test thoroughly on the new minimum version
+6. Update CHANGELOG.md with breaking changes if applicable
 
 ## Implementation Details
 
@@ -230,8 +232,7 @@ This compatibility system was implemented across several files:
 ### Core Files
 
 - **`src/vscode-compat.ts`**: Compatibility layer with version detection, feature flags, and helper functions
-- **`tools/eslint/vscode-sanity.mjs`**: Custom ESLint rules including `vscode-api-version-compat`
-- **`eslint.config.mjs`**: ESLint configuration enabling the compatibility rule
+- **`tools/eslint/vscode-sanity.mjs`**: Archived reference for the old `vscode-api-version-compat` rule and other custom checks
 - **`src/extension.ts`**: Calls `logVersionInfo(log)` at startup for diagnostics
 
 ### Updated Files
@@ -309,10 +310,10 @@ You're using an API that's too new for the minimum supported version. You should
 2. Provide a fallback implementation or disable the feature for older versions
 3. Or update the minimum version requirement if the feature is essential
 
-To temporarily disable the check for specific lines (e.g., in the compatibility layer itself):
+If a future compatibility audit flags a deliberate use site in the compatibility layer itself, document why the direct access is safe:
 
 ```typescript
-// eslint-disable-next-line vscode-sanity/vscode-api-version-compat
+// Deliberate direct access inside the compatibility layer; guarded by version checks.
 const result = vscode.someNewApi()
 ```
 

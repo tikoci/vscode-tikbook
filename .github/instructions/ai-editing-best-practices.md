@@ -195,4 +195,4 @@ When editing code:
 
 - [vscode-extension.instructions.md](./vscode-extension.instructions.md) - Extension code standards
 - [testing.instructions.md](./testing.instructions.md) - Test file guidelines
-- [eslint-rules.instructions.md](./eslint-rules.instructions.md) - Biome linting expectations
+- [biome-rules.instructions.md](./biome-rules.instructions.md) - Biome linting expectations

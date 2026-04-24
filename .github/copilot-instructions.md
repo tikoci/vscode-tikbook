@@ -8,7 +8,7 @@ Additional context-specific rules in `.github/instructions/`:
 - `vscode-extension.instructions.md` - Extension code standards
 - `testing.instructions.md` - Test and experimental code
 - `documentation.instructions.md` - Docs organization and linking
-- `eslint-rules.instructions.md` - Biome linting expectations
+- `biome-rules.instructions.md` - Biome linting expectations
 - `routeros-integration.instructions.md` - RouterOS REST API patterns
 
 Pattern guides in `docs/`:
