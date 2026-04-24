@@ -65,7 +65,7 @@ function isVMDetailsCommandItem(item: unknown): item is VMDetailsCommandItem {
 /**
  * Initialize CHR VM commands
  */
-export function initializeCHRVMCommands(context: ExtensionContext, explorer: CHRVMExplorerProvider): Disposable[] {
+export function initializeCHRVMCommands(_context: ExtensionContext, explorer: CHRVMExplorerProvider): Disposable[] {
 	return [
 		// Refresh tree view
 		commands.registerCommand('tikbook.chrvm.refresh', () => {

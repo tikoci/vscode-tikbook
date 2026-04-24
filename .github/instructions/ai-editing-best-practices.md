@@ -124,7 +124,7 @@ test('getConnectionUrlString handles baseUrl property', () => {
 2. Run `npm test` to execute tests
 3. Check for structural issues (mismatched braces, wrong nesting)
 
-**Do NOT rely on ESLint --fix to repair structural corruption.** ESLint can fix formatting but cannot repair nested scopes or AST corruption.
+**Do NOT rely on Biome --write to repair structural corruption.** Biome can fix formatting but cannot repair nested scopes or AST corruption.
 
 ## Edge Case: Test Files
 
@@ -195,4 +195,4 @@ When editing code:
 
 - [vscode-extension.instructions.md](./vscode-extension.instructions.md) - Extension code standards
 - [testing.instructions.md](./testing.instructions.md) - Test file guidelines
-- [eslint-rules.instructions.md](./eslint-rules.instructions.md) - Linting expectations
+- [eslint-rules.instructions.md](./eslint-rules.instructions.md) - Biome linting expectations

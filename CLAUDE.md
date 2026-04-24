@@ -11,7 +11,7 @@ This repo's primary agent guidance lives in GitHub Copilot's native locations, a
 Claude Code should follow them as-is instead of duplicating them here:
 
 - **[.github/copilot-instructions.md](.github/copilot-instructions.md)** — always-on core rules, markdown workflow, test-framework gotchas
-- **[.github/instructions/](.github/instructions/)** — context-scoped rules (editing, extension code, testing, routeros integration, docs, eslint)
+- **[.github/instructions/](.github/instructions/)** — context-scoped rules (editing, extension code, testing, routeros integration, docs, biome)
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** — full contributor guide (setup, build, testing, publishing)
 - **[docs/architecture.md](docs/architecture.md)** — components, virtual filesystems, data flow, web/desktop gating
 - **[docs/conventions.md](docs/conventions.md)** — logging, secrets, REST client, type guards, naming
@@ -78,7 +78,7 @@ Full details are in [DEVELOPMENT.md](DEVELOPMENT.md); common commands:
 | `npm run compile:test` | build `out/test/{unit,integration}/**/*.test.js` — **required for GUI Test Runner** |
 | `npm test` | unit tests only (`out/test/unit/**`, per `.vscode-test-cli.mjs`) |
 | `npm run test:web` | unit tests against the web extension host |
-| `npm run lint` | `eslint src --fix` |
+| `npm run lint` | `biome check .` (no --write) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run markdown:lint:agentic` | lint `docs/` + `.github/instructions/` (relaxed rules) |
 | `npm run markdown:lint:public` | lint `README.md` + `CHANGELOG.md` (strict rules) |

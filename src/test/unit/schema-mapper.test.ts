@@ -1,4 +1,4 @@
-import { strict as assert } from 'assert'
+import { strict as assert } from 'node:assert'
 import type { RouterRestClient } from '../../../src/routeros'
 import { SchemaMapper } from '../../../src/schema-mapper'
 import type { SchemaEntry } from '../../../src/scriptfs-schema'

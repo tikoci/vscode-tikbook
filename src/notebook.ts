@@ -61,7 +61,7 @@ export function initializeNotebookEngines(): Disposable[] {
     },
     ),
     commands.registerCommand('tikbook.notebook.clone.routeros', async (uri?) => {
-      let nb
+      let nb: NotebookDocument | undefined
       if (uri) {
         await workspace.openNotebookDocument(
           'tikbook',
@@ -84,7 +84,7 @@ export function initializeNotebookEngines(): Disposable[] {
       }
     }),
     commands.registerCommand('tikbook.notebook.clone.markdown', async (uri?) => {
-      let nb
+      let nb: NotebookDocument | undefined
       if (uri) {
         await workspace.openNotebookDocument(
           'markdown-routeros',
@@ -206,7 +206,7 @@ export function copyNotebookAs(notebook: NotebookDocument, newNotebookType: stri
 
 export class MarkdownSerializer implements NotebookSerializer {
   serializeNotebook(data: NotebookData, _: CancellationToken): Uint8Array | Thenable<Uint8Array> {
-    return new TextEncoder().encode('[//]: #!tikbook\n\n' + data.cells.map((c, i, a) => {
+    return new TextEncoder().encode(`[//]: #!tikbook\n\n${data.cells.map((c, i, a) => {
       switch (c.kind) {
         case NotebookCellKind.Code: {
           const code = c.value.trim()
@@ -222,7 +222,7 @@ export class MarkdownSerializer implements NotebookSerializer {
           return `${md}\n\n`
         }
       }
-    }).join(''))
+    }).join('')}`)
   }
 
   deserializeNotebook(
@@ -264,7 +264,7 @@ export class MarkdownSerializer implements NotebookSerializer {
       }
       // uses a markdown comment hack to break markdown cells... have to find it...
       // eslint-disable-next-line no-useless-escape
-      const rawMetadataParsed = c.match(/^([\[][\/][\/][\]]: #[.])([ ][(](.*)[)])?/)
+      const rawMetadataParsed = c.match(/^([[][/][/][\]]: #[.])([ ][(](.*)[)])?/)
       if (rawMetadataParsed && cellType !== NotebookCellKind.Code) {
         // commitPending('markdown', rawMetadataParsed.groups?.[3])
         commitPending('markdown')
@@ -294,9 +294,9 @@ export class ScriptSerializer implements NotebookSerializer {
           return `${M}${V.value.trim()}\n\n`
         }
         case NotebookCellKind.Markup: {
-          return `${M}` + V.value.split('\n').reduce((m, v) => {
+          return `${M}${V.value.split('\n').reduce((m, v) => {
             return `${m}#  ${v.trim()}\n`
-          }, '#.markdown\n') + `#.\n\n`
+          }, '#.markdown\n')}#.\n\n`
         }
       }
     }, '#!tikbook\n\n'))
@@ -319,7 +319,7 @@ export class ScriptSerializer implements NotebookSerializer {
     lines.forEach((C) => {
       const c = C.trimEnd()
       // eslint-disable-next-line no-useless-escape
-      if (c.match(/^#!([\/].*)?tikbook/)) {
+      if (c.match(/^#!([/].*)?tikbook/)) {
         return
       }
       if (c.match(/^#.markdown/)) {
@@ -452,7 +452,7 @@ export abstract class TikbookControllerBase {
       const response = await client.default.run(codeText, killswitch.signal)
 
       // promote to JSON, if JSON
-      let json
+      let json: unknown
       try {
         json = JSON.parse(response)
       }

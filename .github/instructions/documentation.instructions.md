@@ -71,7 +71,7 @@ preferences.
 
 1. During work: Discover that forgetting `.get<T>()` on workspace config causes type errors
 2. Add to `docs/conventions.md`: "Always use `.get<T>()` for type-safe config access"
-3. Propose lint rule in `tools/eslint/vscode-sanity.mjs` to catch untyped `.get()`
+3. Note in `tools/eslint/vscode-sanity.mjs` (archived, biome has no plugin system) — document in `docs/conventions.md` instead
 4. Add decision-log entry: "2026-02-25: Added config-type-safety rule - prevents silent type errors"
 5. Update code-review-checklist.md if this is a new category of verification
 

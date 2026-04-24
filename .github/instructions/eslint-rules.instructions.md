@@ -1,67 +1,63 @@
 ---
-name: 'ESLint & Linting'
-description: 'Guidelines for eslint.config.mjs and lint configuration'
-applyTo: 'eslint.config.mjs,tools/eslint/**'
+name: 'Biome Linting'
+description: 'Guidelines for biome.json and lint configuration'
+applyTo: 'biome.json'
 ---
 
-# ESLint Configuration
+# Biome Linting Configuration
 
-These guidelines apply to ESLint setup and linting rules.
+These guidelines apply to Biome setup and linting rules in `biome.json`.
 
 ## Core Rules for Agents
 
-ESLint configuration is optimized to catch common LLM mistakes:
+Biome linting is configured to catch common mistakes in VS Code extension code:
 
-- **No console.log in extension code** - Prevents invisible logging
-- **Explicit return types** - Helps agents understand intent
-- **No floating promises** - Catches async mistakes
-- **No Node built-ins in extension** - Ensures web compatibility (except allowlist)
-- **Variable shadowing** - Common LLM mistake in nested scopes
-- **Type-aware linting** - Catches subtle TypeScript errors
+- **No console.log in extension code** - Prevents invisible logging (`suspicious.noConsole`)
+- **No explicit any** - Forces proper typing (`suspicious.noExplicitAny`)
+- **Prefer const** - Catches mutable bindings that should be const (`style.useConst`)
+- **Use import type** - Ensures type-only imports use `import type` (`style.useImportType`)
+- **No unused variables/imports** - Detects dead code (`correctness.noUnusedVariables`, `noUnusedImports`)
+- **Optional chain** - Encourages modern null-safe patterns (`complexity.useOptionalChain`)
 
-## Adding Rules
+Biome does NOT support custom plugins, so the VS Code-specific rules from `tools/eslint/vscode-sanity.mjs`
+(EventEmitter disposal, floating disposables, VS Code API version compat) are now archived reference only.
 
-- Run `npm run lint` after changes
-- Rules are in `eslint.config.mjs`
-- VSCode-specific rules are in `tools/eslint/vscode-sanity.mjs`
-- When you discover a common pattern mistake, add a rule to prevent it
+## Suppressing a Rule Inline
 
-### Codify patterns as rules
+Use `biome-ignore` comments (not eslint-disable):
 
-**When to add a rule:**
-
-- You caught a mistake that could be automated
-- A pattern emerged from multiple code reviews
-- A convention should be enforced consistently
-
-**Process:**
-
-1. Add rule to `tools/eslint/vscode-sanity.mjs` with clear error message
-2. Document the pattern in `docs/conventions.md` (include the *why*)
-3. Add entry to `docs/sarb/decision-log.md` explaining why this rule is valuable
-4. Run `npm run lint --fix` to validate against existing code
-
-**Example decision-log entry:**
-
-```
-- 2026-02-25: Added no-console-in-extension rule - console.log is invisible to users; use OutputChannel instead
+```typescript
+// biome-ignore lint/suspicious/noExplicitAny: intentional cast for deprecated VS Code API
+const nb = (window as any).activeNotebookEditor
 ```
 
-## Per-File Allowlists
+## Adding or Changing Rules
 
-Some files use Node APIs that are normally blocked:
+- Rules live in `biome.json` under `linter.rules`
+- File-specific overrides go in `biome.json` `overrides` array
+- Run `npm run lint` after changes to verify no new errors
+- When adjusting severity, prefer `"warn"` over `"off"` unless the rule is a false positive
 
-- `src/routeros.ts` - allows `https` import
-- `src/virtualdocs.ts` - allows `path` import
-- `src/scriptfs.ts` - allows `util` import
+## Scope and Ignores
 
-Do not add to allowlist without documented reason (e.g., desktop-only feature).
+Biome only runs on files listed in `files.includes`:
+- `src/**/*.ts` - extension source
+- `scripts/**/*.ts` - build scripts
+- `tools/**/*.mjs` - tooling
+- `*.{ts,js,mjs}` - root-level config files
 
-## Testing Lint Rules
+Files excluded by `.gitignore` (`out/`, `dist/`, `node_modules/`) are automatically skipped via `vcs.useIgnoreFile`.
 
-- Run `npm run lint` to validate all files
-- Check for new warnings after each change
-- Fix lint errors before committing
+## Lint Scripts
+
+```bash
+npm run lint      # check only — no auto-fix (safe for agents/CI)
+npm run lint:fix  # check + apply safe fixes (for humans)
+npm run format    # lint:fix + markdown fixes
+```
+
+`npm run lint` is called in the `compile` pipeline and should never auto-mutate files.
+`npm run lint:fix` is the human-facing equivalent; use it to clean up a batch of changes.
 
 ## References
 

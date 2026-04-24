@@ -99,18 +99,18 @@ export const features = {
  */
 export function getActiveNotebook(): NotebookDocument | undefined {
   // window.activeNotebookEditor is deprecated but still available
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, vscode-sanity/vscode-api-version-compat
+  // biome-ignore lint/suspicious/noExplicitAny: intentional cast to access deprecated VS Code API
   if (typeof (window as any).activeNotebookEditor !== 'undefined') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, vscode-sanity/vscode-api-version-compat
+    // biome-ignore lint/suspicious/noExplicitAny: intentional cast to access deprecated VS Code API
     return (window as any).activeNotebookEditor?.notebook as NotebookDocument | undefined
   }
   
   // Fallback: use tabGroups API if available (1.48+)
   if (features.tabGroups && window.tabGroups) {
     const activeTab = window.tabGroups.activeTabGroup?.activeTab
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: TabInputNotebook is not typed in older VS Code APIs
     if (activeTab && 'notebook' in (activeTab.input as any)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // biome-ignore lint/suspicious/noExplicitAny: TabInputNotebook is not typed in older VS Code APIs
       return (activeTab.input as any).notebook as NotebookDocument
     }
   }

@@ -8,7 +8,7 @@ Additional context-specific rules in `.github/instructions/`:
 - `vscode-extension.instructions.md` - Extension code standards
 - `testing.instructions.md` - Test and experimental code
 - `documentation.instructions.md` - Docs organization and linking
-- `eslint-rules.instructions.md` - Linting expectations
+- `eslint-rules.instructions.md` - Biome linting expectations
 - `routeros-integration.instructions.md` - RouterOS REST API patterns
 
 Pattern guides in `docs/`:
@@ -60,7 +60,7 @@ the work.
 
 - **Before editing code:** Read `.github/instructions/ai-editing-best-practices.md` - prevents corruption from ambiguous context matching
 - Review [ROADMAP.md](../ROADMAP.md) first, then [docs/llm-todos.md](../docs/llm-todos.md) and [docs/future-features.md](../docs/future-features.md) for active constraints and decision points.
-- Run eslint (npm run lint) on code changes.
+- Run biome (npm run lint) on code changes. Use `npm run lint:fix` to auto-fix safe issues.
 - Add tests when behavior is uncertain; use llm-experiments.test.js for one-off tests.
 - Keep commands, contributions, and activation events in package.json in sync with code.
 - For RouterOS questions, use rosetta/RouterOS docs tooling first when available; otherwise validate commands using v7 docs or RouterOS LSP.
@@ -77,7 +77,7 @@ the work.
 - Check public docs: `npm run markdown:lint:public`
 - Check human/internal docs: `npm run markdown:lint:agentic`
 - Auto-fix issues: `npm run markdown:fix:all` (run at end of session if needed)
-- Fix all (code + markdown): `npm run format` (runs eslint --fix + markdown --fix)
+- Fix all (code + markdown): `npm run format` (runs biome --write + markdown --fix)
 
 **Agentic linting philosophy:**
 
@@ -97,7 +97,7 @@ the work.
 - Uses the repo's `markdownlint-cli2` setup and ignore patterns
 - Applies the shared `.markdownlint.yaml` rules with `.markdownlint-cli2.yaml` CLI ignores
 - Handles the right file sets for public vs human/internal docs
-- Consistent with eslint/lint workflow
+- Consistent with biome/lint workflow
 
 ## Unit Test Framework (CRITICAL)
 

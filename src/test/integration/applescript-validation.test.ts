@@ -1,7 +1,7 @@
 // MOVED FROM unit/ to integration/ (2026-02-27)
 // Integration test: uses AppleScript and process listing
 
-import * as assert from 'assert'
+import * as assert from 'node:assert'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 

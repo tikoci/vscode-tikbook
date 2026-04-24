@@ -1,4 +1,4 @@
-import { strict as assert } from 'assert';
+import { strict as assert } from 'node:assert';
 import * as vscode from 'vscode';
 import { getActiveNotebook, hasAPI, parseVersion, safeCall } from '../../../src/vscode-compat';
 

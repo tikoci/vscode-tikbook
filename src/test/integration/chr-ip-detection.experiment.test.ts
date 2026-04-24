@@ -22,10 +22,10 @@
  * - AppleScript permission granted (one-time prompt)
  */
 
-import { exec, execFile } from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
-import { promisify } from 'util';
+import { exec, execFile } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { promisify } from 'node:util';
 import { ensureRunningQemuCHRVM } from './chr-vm-provisioning'; // path is correct, both are in integration/
 
 const execFileAsync = promisify(execFile);
@@ -95,7 +95,7 @@ suite('CHR IP Detection Experiments', function() {
 	// Increase timeout for all tests (AppleScript prompts can be slow)
 	this.timeout(30000);
 
-	suiteSetup(function() {
+	suiteSetup(() => {
 		// Clear previous results
 		if (fs.existsSync(RESULTS_FILE)) {
 			fs.unlinkSync(RESULTS_FILE);
@@ -124,7 +124,7 @@ suite('CHR IP Detection Experiments', function() {
 		logResult('================================================================================\n');
 	});
 
-	suiteTeardown(function() {
+	suiteTeardown(() => {
 		logResult('\n================================================================================');
 		logResult('EXPERIMENTS COMPLETE');
 		logResult('================================================================================');
@@ -574,7 +574,7 @@ suite('CHR IP Detection Experiments', function() {
 		}
 	});
 
-	test('Experiment 5: Comprehensive Strategy Recommendation', function() {
+	test('Experiment 5: Comprehensive Strategy Recommendation', () => {
 		logResult('\n============================================================');
 		logResult('EXPERIMENT 5: Strategy Recommendation & Roadmap');
 		logResult('============================================================');

@@ -1,7 +1,7 @@
 // MOVED FROM unit/ to integration/ (2026-02-27)
 // Integration test: UTM/AppleScript status mapping
 
-import { strict as assert } from 'assert'
+import { strict as assert } from 'node:assert'
 import { mapUTMStatusToVMStatus } from '../../../src/vm-providers/utm-provider'
 
 suite.skip('UTM Provider Status Mapping', () => {

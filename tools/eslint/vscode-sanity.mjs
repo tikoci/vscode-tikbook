@@ -420,7 +420,7 @@ export const rules = {
        */
       function checkApiVersion(node, apiName) {
         const apiInfo = apiVersionMap[apiName]
-        if (!apiInfo || !apiInfo.version) return
+        if (!apiInfo?.version) return
         
         if (apiInfo.deprecated) {
           context.report({

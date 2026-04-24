@@ -48,7 +48,8 @@ export class SecretManager {
 
   static default: SecretManager
   static start(context: ExtensionContext): SecretManager {
-    return SecretManager.default = new SecretManager(context, SecretManager.SECRET_KEY)
+    SecretManager.default = new SecretManager(context, SecretManager.SECRET_KEY)
+    return SecretManager.default
   }
 
   constructor(context: ExtensionContext, keyname: string) {

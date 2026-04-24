@@ -20,8 +20,8 @@
  * 4. Confirm context value generation matches actual status
  */
 
-import * as assert from 'assert'
-import { execSync } from 'child_process'
+import * as assert from 'node:assert'
+import { execSync } from 'node:child_process'
 
 /**
  * Raw AppleScript executor - runs script and returns output

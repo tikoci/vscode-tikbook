@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import * as path from 'path';
+import * as path from 'node:path';
 import type { CancellationToken, Disposable, TextDocumentContentProvider } from 'vscode';
 import { CancellationTokenSource, commands, EventEmitter, Uri, ViewColumn, window, workspace } from 'vscode';
 import { MarkdownSerializer, ScriptSerializer } from './notebook';

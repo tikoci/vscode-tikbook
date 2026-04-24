@@ -15,12 +15,12 @@
  * 3. Performance/reliability of each approach
  */
 
-import * as assert from 'assert';
-import * as cp from 'child_process';
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
-import { promisify } from 'util';
+import * as assert from 'node:assert';
+import * as cp from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { promisify } from 'node:util';
 
 const execAsync = promisify(cp.exec);
 
@@ -71,13 +71,13 @@ suite('UTM Integration Experiments', () => {
 	suiteSetup(() => {
 		resultsLog = [];
 		logResult('UTM INTEGRATION EXPERIMENTS');
-		logResult('Started: ' + new Date().toISOString());
+		logResult(`Started: ${new Date().toISOString()}`);
 		fs.mkdirSync(path.dirname(RESULTS_FILE), { recursive: true });
 	});
 	
 	// After ALL tests (once), write results to file
 	suiteTeardown(() => {
-		logResult('\\nCompleted: ' + new Date().toISOString());
+		logResult(`\\nCompleted: ${new Date().toISOString()}`);
 		fs.writeFileSync(RESULTS_FILE, resultsLog.join('\n'), 'utf-8');
 		console.log(`\n✓ Results written to: ${RESULTS_FILE}\n`);
 	});
@@ -641,7 +641,7 @@ suite('UTM Integration Experiments', () => {
 		try {
 			const { stdout } = await execAsync('sdef /Applications/UTM.app | head -100');
 			logResult('✓ AppleScript dictionary found:');
-			logResult(stdout.substring(0, 500) + '...');
+			logResult(`${stdout.substring(0, 500)}...`);
 			logResult('\nFull dictionary: sdef /Applications/UTM.app');
 		} catch {
 			logResult('⚠ Could not extract dictionary (this is OK for experiment)');

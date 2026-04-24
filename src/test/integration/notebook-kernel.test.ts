@@ -1,4 +1,4 @@
-import { strict as assert } from 'assert';
+import { strict as assert } from 'node:assert';
 import * as vscode from 'vscode';
 import { NotebookCellData, NotebookCellKind, NotebookData } from 'vscode';
 import { MarkdownSerializer, ScriptSerializer } from '../../../src/notebook';

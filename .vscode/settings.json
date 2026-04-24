@@ -24,53 +24,35 @@
         "true": true,
         "npm": true,
         "npx tsc": true,
-        "npx eslint": true,
+        "biome": true,
         "osascript": true,
         "mv": true
     },
     
     // ============================================
-    // ESLint Configuration (using flat config)
+    // Biome Configuration
     // ============================================
-    "eslint.enable": true,
-    "eslint.run": "onSave",
-    "eslint.format.enable": true,
-    "eslint.validate": [
-        "javascript",
-        "javascriptreact",
-        "typescript",
-        "typescriptreact"
-    ],
+    "biome.enabled": true,
     
-    // VS Code specific formatter integration
+    // VS Code specific linter integration (formatter disabled in biome.json)
     "[javascript]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-        "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.fixAll.eslint": "explicit",
-            "source.organizeImports": "explicit"
+            "quickfix.biome": "explicit"
         }
     },
     "[javascriptreact]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-        "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.fixAll.eslint": "explicit"
+            "quickfix.biome": "explicit"
         }
     },
     "[typescript]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-        "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.fixAll.eslint": "explicit",
-            "source.organizeImports": "explicit"
+            "quickfix.biome": "explicit"
         }
     },
     "[typescriptreact]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-        "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.fixAll.eslint": "explicit"
+            "quickfix.biome": "explicit"
         }
     },
 

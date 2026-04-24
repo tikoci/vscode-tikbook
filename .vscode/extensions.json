@@ -10,7 +10,7 @@
         "redhat.vscode-yaml",
         "me-dutour-mathieu.vscode-github-actions",
         "github.vscode-github-actions",
-        "dbaeumer.vscode-eslint",
+        "biomejs.biome",
         "streetsidesoftware.code-spell-checker",
         "pandy.bun",
         "github.copilot",

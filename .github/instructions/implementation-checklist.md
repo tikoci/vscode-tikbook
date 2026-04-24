@@ -28,7 +28,7 @@ Use this checklist for EVERY new implementation phase. Follows XP principles ada
   - Test files needed
   - Time: 10 minutes
 
-- [ ] **Review ESLint rules for your file type**
+- [ ] **Review Biome rules for your file type**
   - Extension code: [.github/instructions/vscode-extension.instructions.md](../../.github/instructions/vscode-extension.instructions.md)
   - Common issues: no `any`, `override` keywords, error causes
   - Time: 5 minutes
@@ -58,7 +58,7 @@ For each file you create:
 ### Step 3: Lint Immediately (2-5 min)
 
 ```bash
-npx eslint src/path/to/new-file.ts --fix
+npm run lint
 ```
 
 - [ ] Fix any errors (not warnings)
@@ -260,7 +260,7 @@ npm run compile
 Before calling code "DONE":
 
 - [ ] All files created and tested for compilation
-- [ ] Zero ESLint errors in new code (warnings OK)
+- [ ] Zero Biome errors in new code (warnings OK)
 - [ ] All imports verify (run compile)
 - [ ] Tests compile (not necessarily passing, but valid syntax)
 - [ ] JSDoc present on public APIs
@@ -275,7 +275,7 @@ Before calling code "DONE":
 
 ```bash
 # 1. Lint passes
-npx eslint src/your-module/ --ext ts
+npm run lint
 
 # 2. Compiles
 npm run compile
@@ -329,7 +329,7 @@ async loadFile(path: string): Promise<string> {
 }
 ```
 
-### ❌ ESLint Violations
+### ❌ Biome Violations
 
 ```typescript
 // BAD: unused parameter (no underscore)
@@ -381,11 +381,10 @@ suite('Name', () => {  // <- suite is global
 
 | Command | Purpose | When |
 |---------|---------|------|
-| `npx eslint src/path/file.ts --fix` | Fix one file | After creating each file |
-| `npx eslint src/folder/ --ext ts` | Check folder | Before final compile |
+| `npm run lint` | Check all files (no auto-fix) | After creating each file |
+| `npm run lint:fix` | Check + auto-fix safe issues | Before final commit |
 | `npm run compile` | Full build | After all files + tests |
 | `npm run compile:test` | Build tests only | To verify test syntax |
-| `npm run lint` | Run all linters | Full suite check |
 | `ls -la src/folder/` | Verify files exist | Quick spot-check |
 | `head -50 src/file.ts` | Read first 50 lines | Pattern review |
 
@@ -415,7 +414,7 @@ suite('Name', () => {  // <- suite is global
 ### ✅ Implementation
 
 - Created files one at a time
-- Fixed ESLint errors immediately after each file
+- Fixed Biome errors immediately after each file
 - Discovered async/await issues early
 
 ### ✅ Testing  
@@ -425,7 +424,7 @@ suite('Name', () => {  // <- suite is global
 
 ### ✅ Verification
 
-- `npx eslint src/vm-providers/ --ext ts` → 0 errors
+- `npm run lint` → 0 errors
 - `npm run compile` → success
 - Spot-checked interfaces and error handling
 
@@ -438,7 +437,7 @@ suite('Name', () => {  // <- suite is global
 3. **"Will this work on vscode.dev?"** → No Node APIs
 4. **"Does my error message help users?"** → Is language clear?
 5. **"Can I write a test for this?"** → Pure function? Easy to mock?
-6. **"Did I check ESLint yet?"** → Run it NOW, not at the end
+6. **"Did I check Biome yet?"** → Run `npm run lint` NOW, not at the end
 
 ---
 

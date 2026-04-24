@@ -5,16 +5,17 @@ import { env, EventEmitter, UIKind } from 'vscode';
 import { getSettings, SecretManager } from './config';
 import { log } from './shared';
 
-import * as https from 'https';
+import * as https from 'node:https';
 let _httpsNoCheckCertificates: https.Agent
 export function getHttpsAgent(): https.Agent | undefined {
   const shouldCheckCertificates = getSettings().checkCertificates
   if (env.uiKind === UIKind.Web) return undefined
   if (shouldCheckCertificates) return undefined
   if (_httpsNoCheckCertificates) return _httpsNoCheckCertificates
-  return _httpsNoCheckCertificates = new https.Agent({
+  _httpsNoCheckCertificates = new https.Agent({
     rejectUnauthorized: false,
   })
+  return _httpsNoCheckCertificates
 }
 
 // MARK: types
@@ -98,7 +99,7 @@ export interface SystemScriptItem extends RouterOSItem {
   comment?: string
   owner?: string
   policy?: string[]
-  ['dont-require-permissions']?: string
+  "dont-require-permissions"?: string
 }
 
 // MARK: REST lib

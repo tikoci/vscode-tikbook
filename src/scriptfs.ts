@@ -49,7 +49,7 @@ export function findSchemaForParts(parts: string[]): { schema: SchemaEntry, relP
  */
 export function getSchemaChildPaths(parts: string[]): Set<string> {
   const children = new Set<string>()
-  const currentPath = parts.length === 0 ? '' : '/' + parts.join('/')
+  const currentPath = parts.length === 0 ? '' : `/${parts.join('/')}`
 
   for (const schema of scriptfsSchema) {
     const schemaPath = schema.path
@@ -58,7 +58,7 @@ export function getSchemaChildPaths(parts: string[]): Set<string> {
       // Exact match: this is a schema root, don't add children here (handled by readDirectory)
       continue
     }
-    if (schemaPath.startsWith(currentPath + '/')) {
+    if (schemaPath.startsWith(`${currentPath}/`)) {
       // Schema extends from current path
       const remainder = schemaPath.substring(currentPath.length + 1)
       const segments = remainder.split('/').filter(Boolean)
@@ -74,11 +74,11 @@ export function getSchemaChildPaths(parts: string[]): Set<string> {
 
 function getSchemaChildPathsFromAvailable(parts: string[], availablePaths: Set<string>): Set<string> {
   const children = new Set<string>()
-  const currentPath = parts.length === 0 ? '' : '/' + parts.join('/')
+  const currentPath = parts.length === 0 ? '' : `/${parts.join('/')}`
 
   for (const schemaPath of availablePaths) {
     if (schemaPath === currentPath) continue
-    if (schemaPath.startsWith(currentPath + '/')) {
+    if (schemaPath.startsWith(`${currentPath}/`)) {
       const remainder = schemaPath.substring(currentPath.length + 1)
       const segments = remainder.split('/').filter(Boolean)
       if (segments.length >= 1) {
@@ -199,7 +199,6 @@ function getAllowedMultiFileAttrs(schema: SchemaEntry): Set<string> {
 export class SystemScriptFS implements FileSystemProvider {
   private onDidChangeEmitter = new EventEmitter<FileChangeEvent[]>()
   readonly onDidChangeFile = this.onDidChangeEmitter.event
-  private watchers = new Map<string, number>()
   // track opened files: key = uri.toString()
   private openFiles = new Map<string, { id?: string, original?: string, mtime?: number }>()
   // Generic item cache: path -> Set<itemName>

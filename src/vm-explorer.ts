@@ -123,12 +123,12 @@ class VMTreeItem extends TreeItem {
  * Tree data provider for CHR VM Explorer
  */
 export class CHRVMExplorerProvider implements TreeDataProvider<TreeItem> {
-	private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | null | void>()
-	readonly onDidChangeTreeData: Event<TreeItem | undefined | null | void> = this._onDidChangeTreeData.event
+	private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | null | undefined>()
+	readonly onDidChangeTreeData: Event<TreeItem | undefined | null | undefined> = this._onDidChangeTreeData.event
 
 	private treeView?: TreeView<TreeItem>
 
-	constructor(private context: ExtensionContext) {}
+	constructor(_context: ExtensionContext) {}
 
 	/**
 	 * Refresh the tree view

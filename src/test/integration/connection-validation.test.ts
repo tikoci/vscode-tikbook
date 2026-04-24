@@ -10,7 +10,7 @@
  * - HTTP 200: Both URL and credentials are correct
  */
 
-import * as assert from 'assert';
+import * as assert from 'node:assert';
 import { getRouterOSTestConfig, hasRouterOSTestConfig } from './integration-test-config';
 
 suite('RouterOS Connection Validation', function() {

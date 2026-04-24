@@ -220,7 +220,7 @@ export function unescapeRouterString(text: string): string {
           if (i + 2 < text.length) {
             const hexCode = text.substring(i + 1, i + 3)
             const charCode = parseInt(hexCode, 16)
-            if (!isNaN(charCode)) {
+            if (!Number.isNaN(charCode)) {
               result += String.fromCharCode(charCode)
               i += 3
             } else {

@@ -1,4 +1,4 @@
-import { strict as assert } from 'assert'
+import { strict as assert } from 'node:assert'
 import { hasAPI, parseVersion, safeCall } from '../../../src/vscode-compat'
 
 suite('vscode-compat utilities', () => {

@@ -288,7 +288,7 @@ async function showSetupBaseUrl(back?: string): Promise<string | undefined> {
       await updateSettings('username')
       if (newSettings.password) {
         await SecretManager.default.setPassword(newSettings.password)
-        msg = msg + ' and password'
+        msg = `${msg} and password`
       }
       void window.showInformationMessage(msg)
       log.debug(`<menus.showSetupBaseUrl> notified: ${msg}`)
@@ -597,7 +597,7 @@ async function showRouterVariableGlobalForClipboard(): Promise<void> {
 
   const items: QuickPickItem[] = keyValues.map((envvar: { name: string, value: string }) => ({
     label: `${envvar.name}`,
-    description: `  ${envvar.value.length > 64 ? envvar.value.substring(0, 64) + '...' : envvar.value}`,
+    description: `  ${envvar.value.length > 64 ? `${envvar.value.substring(0, 64)}...` : envvar.value}`,
   }))
   items.push(...quickPickBack('tikbook.show.menu.router.admin'))
   const selection = await window.showQuickPick(items, {

@@ -6,7 +6,7 @@
  * Run via: npm test -- --grep "applescript"
  */
 
-import * as assert from 'assert'
+import * as assert from 'node:assert'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 

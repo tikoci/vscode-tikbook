@@ -1,4 +1,4 @@
-import { strict as assert } from 'assert'
+import { strict as assert } from 'node:assert'
 import * as vscode from 'vscode'
 import { findSchemaForParts, getSchemaChildPaths, SystemScriptFS } from '../../../src/scriptfs'
 

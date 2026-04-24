@@ -18,7 +18,7 @@
  * 3. Delete operation behavior on stopped VMs
  */
 
-import { strict as assert } from 'assert'
+import { strict as assert } from 'node:assert'
 import type { VM } from '../../../src/vm-providers/vm-provider'
 
 /**

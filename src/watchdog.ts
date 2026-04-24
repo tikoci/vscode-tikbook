@@ -125,7 +125,7 @@ export class StatusWatchdog {
         mdStatus += `### System Resources\n`
         mdStatus += `| | |\n| ---: | :--- |\n`
         Object.keys(this.lastRouterResources)
-          .map(e => `| **${e}**: | ${this.lastRouterResources![e]}|`)
+          .map(e => `| **${e}**: | ${this.lastRouterResources?.[e]}|`)
           .forEach(t => mdStatus += `${t}\n`)
       }
     }
