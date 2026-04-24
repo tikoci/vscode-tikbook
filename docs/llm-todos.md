@@ -101,6 +101,10 @@ The following technical debt items are now tracked as quick tasks for cleanup an
 **Problem:** "ScriptFS" and the `rscfile://` / `rscena://` naming story still reflects an earlier, narrower scope than the broader VFS direction now on the roadmap.
 **Action:** Revisit naming only after the broader VFS shape stabilizes, so protocol and feature names reflect the eventual resource model instead of today's partial slice.
 
+### 8. Linting coverage gaps from ESLint → Biome migration
+**Problem:** The migration in `4a141ec` dropped type-aware linting (no-floating-promises, no-misused-promises, switch-exhaustiveness-check, prefer-nullish-coalescing) and the custom `vscode-sanity` ESLint plugin (no-node-builtins-web, require-eventemitter-dispose, no-floating-disposable, vscode-api-version-compat). Biome has no equivalents. `npm run lint` exits 0 but ~20 warnings are firing, some worth acting on.
+**Action:** See [linting-migration-audit.md](./linting-migration-audit.md) for the full breakdown and action items **LMA-1** through **LMA-7**. Top-priority items are **LMA-4** (port `no-restricted-imports` to Biome) and **LMA-6** (re-add a minimal type-aware ESLint pass for the 3–4 high-value rules).
+
 ## ⚡ Quick Code Wins
 
 These are 5-30 minute cleanups that improve codebase quality for future feature work. Grouped by effort.
