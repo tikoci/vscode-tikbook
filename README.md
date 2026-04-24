@@ -89,7 +89,7 @@ Settings are describe in more detail in sections below, but here are the availab
 
 MikroTik offers a _free_ license of RouterOS CHR that can virtualize RouterOS on desktop OSes.  This lets you "play" with RouterOS concepts and configuration in TikBook – without fear of "messing up" a real RouterOS.  Since TikBook itself uses very little data, the 1Mb/s data limit in the free edition is not an issue.  And the additional CPU on a desktop, over a "regular" router, speeds most TikBook operations.
 
-For Mac, TIKOCI offers [Ready-to-run CHR images](https://github.com/tikoci/mikropkl) for [UTM](https://mac.getutm.app) virtual machine runner that makes quick work of bringing up a CHR for use with TikBook – at least under macOS.  For other OSes, VMWare and QEMU are supported, see [MikroTik CHR documentation](https://help.mikrotik.com/docs/x/mgAYAQ) for more details
+For Mac, TIKOCI offers [Ready-to-run CHR images](https://github.com/tikoci/mikropkl) for [UTM](https://mac.getutm.app) and is shifting newer automation work toward `quickchr`.  TikBook's older in-extension CHR/UTM UI is currently parked while that backend direction settles, so use external VM tooling for now.  For other OSes, VMware and QEMU are supported; see [MikroTik CHR documentation](https://help.mikrotik.com/docs/x/mgAYAQ) for more details.
 
 [![UTM-on-mac](https://tikoci.github.io/vscode-tikbook/media/screenshots/mikropkl-utm.png)](https://github.com/tikoci/mikropkl)
 
@@ -387,7 +387,7 @@ By default,
 - **`.md`** will open as a text document, with the option to "Open As" a Markdown RouterOS Notebook and Preview as RouterOS Script, as well as the default Markdown Preview too
 - **`.md.rsc`** will open as RouterOS TikBook Notebook (Script-first), with the option to "Open As" an editable text document with the RouterOS script.  Changes are synced between any "Open As" documents when either document is saved.  "Copy As Markdown RouterOS" is available to convert the notebook to the Markdown-first format.
 - **`.tikbook`** same as `.md.rsc`
-- **`.rsc.md`** will open as RouterOS TikBook Notebook (Script-first), with the option to "Open As" an editable text document with the RouterOS script.  Changes are synced between any "Open As" documents when either document is saved.  "Copy As Markdown RouterOS" is available to convert the notebook to the Markdown-first format.
+- **`.rsc.md`** will open as a Markdown RouterOS notebook (Markdown-first), with the option to "Open As" the underlying Markdown text.  RouterOS code fences become runnable notebook code cells, and "Copy As RouterOS TikBook" converts the notebook into the script-first format.
 - **`.rscmd`** same as `.rsc.md`
 
 ![multitab-view-annotated](https://tikoci.github.io/vscode-tikbook/media/screenshots/multitab-annotated.png)
@@ -475,9 +475,9 @@ The only "special" support for a "Markdown First" TikBook notebook is the equiva
 [//]: #.
 ```
 
-This will create a "cell break" when viewed as a TikBook.  _RouterOS code fence blocks automatically break the markdown text at the point of the RouterOS code.
+This creates an explicit Markdown-cell break when viewed as a TikBook, and the marker itself is not preserved in the rendered cell text.  _RouterOS code fence blocks automatically break the markdown text at the point of the RouterOS code._
 
-> While none today, any persisted metadata _could_ be encoded inside `( )` in the same form as `#.` but the parentheses are needed to be "compatible" with Markdown-It used by VS Code and Discourse.
+> While none today, any persisted metadata _could_ be encoded inside `( )` in the same form as `#.` but the parentheses are needed to be "compatible" with Markdown-It used by VS Code and Discourse.  The current parser reserves that shape but ignores any metadata payload for now.
 >
 > ```text
 > [//]: #. (.. key=val .. key=value...)

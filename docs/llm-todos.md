@@ -65,18 +65,20 @@ broader VFS theme, not the entire feature.
 
 **Files affected:** `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `docs/llm-todos.md`, `docs/specs/README.md`, testing/docs references
 
-**Why now:** Future agent sessions still hit duplicated workflow guidance and stale
-references to the pre-cleanup test layout.
+**Why now:** The hierarchy is better than it used to be, but a few high-traffic docs
+still drift from current reality (for example, parked CHR/UTM state, spec-index
+wording, and notebook format notes).
 
 **Priority:** 🔴 High
 
 ### CHR backend direction cleanup
 
-**Files affected:** `ROADMAP.md`, `docs/specs/chr-test-environment.md`, UTM-related docs/research
+**Files affected:** `ROADMAP.md`, `README.md`, `CLAUDE.md`, `docs/specs/README.md`, `docs/specs/chr-test-environment.md`, UTM-related docs/research
 
 **Why now:** `ROADMAP.md` now points toward quickchr, so older UTM-centric guidance
-should be treated as historical context or updated explicitly. First step: keep
-the current half-shipped CHR/UTM UI out of the user-facing product surface.
+should be treated as historical context or updated explicitly. The user-facing UI is
+already hidden in code/package contributions, so the next actionable slice is docs +
+spec cleanup that makes the parked state explicit until quickchr lands.
 
 **Priority:** 🔴 High
 
@@ -93,8 +95,8 @@ The following technical debt items are now tracked as quick tasks for cleanup an
 **Action:** Keep reducing duplicated prose and prefer pointer-style docs that defer to `ROADMAP.md` and `.github/copilot-instructions.md`.
 
 ### 3. Commented Serialization Code in notebook.ts
-**Problem:** notebook.ts contains ~50 lines of alternative serialization logic (lines 560–599) that are commented out. Unclear if reference, abandoned, or future format.
-**Action:** Review, clarify intent, and either document, refactor, or remove as appropriate.
+**Status:** ✅ Done (2026-04-23)
+**Outcome:** Removed the obsolete commented serializer and synced the README format description to the current implementation.
 
 ### 4. Error Detection Patterns (Regex vs LSP)
 **Problem:** Error detection is currently regex-based and incomplete. Not robust across RouterOS versions.
@@ -102,7 +104,9 @@ The following technical debt items are now tracked as quick tasks for cleanup an
 
 ### 5. Metadata and Output Persistence in Notebooks
 **Problem:** Notebooks do not persist outputs or metadata, blocking features like collapsed state, per-cell settings, and output saving.
-**Action:** Design and implement metadata serialization infrastructure for both .md.rsc and .rsc.md formats. Enable output persistence and related features.
+**Action:** Move this to a spec-backed implementation slice before coding. The spec
+needs to answer: what metadata is persisted, whether output persistence is per-cell
+or per-notebook, how `.md.rsc` and `.rsc.md` encode it, and what stays transient.
 
 ### 6. "Open/Reopen/Copy As" command-surface audit
 **Problem:** `package.json` when-clauses and menu groups are mostly right, but there are still likely gaps or over-broad selectors across file, notebook, `rscena://`, and `rscfile://` resources.
@@ -122,11 +126,10 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 
 ### 🟢 5-15 min fixes (cleanup, consolidation, documentation)
 
-1. **Fix markdown cell separator regex fragility** (5 min)
-   - **File:** src/notebook.ts line 340-345
-   - **Comment:** Code says "uses a markdown comment hack to break markdown cells... have to find it"
-   - **Fix:** Extract regex to named constant, add comment explaining the pattern (`[//]: #.`)
-   - **Benefit:** Make markdown format more maintainable, clear for future notebook work
+1. **Fix markdown cell separator regex fragility** (Done 2026-04-23)
+    - **File:** src/notebook.ts line 340-345
+    - **Outcome:** Extracted the regex to a named constant, documented the fake-footnote pattern (`[//]: #.`), and fixed parsing so the separator does not leak into Markdown cell text.
+    - **Benefit:** Markdown RouterOS format is clearer and the explicit cell break now behaves as documented.
 
 2. **Add lint/audit check for commented-out code** (10 min)
    - **Files:** converters.ts lines 55-60, notebook.ts line 269, virtualdocs.ts line 289, commands.ts line 27
@@ -136,14 +139,10 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 
 ### 🟡 15-25 min focused updates (code safety improvements)
 
-3. **Enable or remove metadata parsing in notebook.ts** (10 min)
-   - **File:** src/notebook.ts line 268 - commented `commitPending('markdown', rawMetadataParsed.groups?.[3])`
-   - **Current:** Dead code with no explanation
-   - **Options:**
-     - A) Enable: Implement proper metadata persistence for notebooks (requires spec planning)
-     - B) Remove: Delete commented code, keep simple 2-arg calls
-   - **Recommendation:** Remove for now (Option B); revisit when metadata persistence is specified
-   - **Benefit:** Cleaner code, clearer intent for notebook format
+3. **Enable or remove metadata parsing in notebook.ts** (Done 2026-04-23)
+    - **File:** src/notebook.ts line 268 - commented `commitPending('markdown', rawMetadataParsed.groups?.[3])`
+    - **Outcome:** Removed the dead metadata-parsing call and kept the parser behavior explicit: the reserved `( ... )` suffix is ignored until real metadata persistence is designed.
+    - **Follow-up:** Revisit only as part of the broader metadata/output persistence spec.
 
 4. **Move LSP command integration from comment to feature** (15 min)
    - **File:** src/commands.ts line 27 - commented `await commands.executeCommand('routeroslsp.runCommand', 'show.output.log')`
@@ -211,11 +210,11 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 - Items #2, #3, #4, and #5 are all <= 15 min each
 - Item #2 helps prevent future dead code
 
-### Rationalize Notebook Serialization Code
+### Rationalize Notebook Serialization Code — Done (2026-04-23)
 
 **Files:** notebook.ts lines 560-599, README.md format specification
-**Issue:** Code and README are out of sync. Commented code uses different markers (`#|`, `#.`) than current implementation.
-**Task:** Either document why alternative code is preserved (reference? future format?) or remove as dead code. Ensure README format spec matches actual implementation.
+**Outcome:** Removed the obsolete commented serializer that used old `#|` markers and
+updated the README notebook-format notes to match the current implementation.
 
 ## Pending Tasks
 
@@ -356,8 +355,6 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 - The archived `vscode-sanity` checks still need triage into a future `scripts/lint-sanity.ts` so the highest-value custom coverage is not lost.
 - Implement LSP command integration for showing RouterOS LSP logs. Currently commands.ts line 27 has commented code `routeroslsp.runCommand` that could enable this. Currently shows warning message instead.
 - Clean up commented exception handling in converters.ts lines 55-60. Code appears to be leftover from refactoring - either implement proper error handling or remove the commented block.
-- Fix markdown cell separator detection in notebook.ts line 265. Comment says "uses a markdown comment hack to break markdown cells... have to find it..." - indicates the regex/logic may be fragile.
-- Enable or remove metadata parsing in notebook.ts line 269. Line is commented: `commitPending('markdown', rawMetadataParsed.groups?.[3])`. Related to metadata persistence feature.
 - Add more user settings to control internal behavior and enable/disable UI elements (currently hardcoded - mentioned in Known Issues)
   > **Status:** Only 7 settings currently exist in package.json (baseUrl, username, password, apiTimeout, sshCommand, checkCertificates, provideLspServerCredentials). Many UI behaviors and features are hardcoded.
 - Add VS Code custom `when` context to track connection status. This will enable dynamic menu visibility and wording based on whether RouterOS is online.
@@ -379,7 +376,9 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 
 ## Completed
 
-- (Move finished items here with links to the implementation or notes.)
+- 2026-04-23: Cleaned up Markdown RouterOS notebook parsing in `src/notebook.ts` by extracting named separator/shebang regexes, removing dead metadata parsing code, and dropping the obsolete commented serializer block.
+- 2026-04-23: Added notebook tests that cover explicit Markdown cell breaks, reserved metadata suffix handling, and consecutive-markdown serialization.
+- 2026-04-23: Aligned CHR/UTM docs with the current parked state in `README.md`, `CLAUDE.md`, and `docs/specs/README.md`.
 
 ## Notes
 
@@ -421,17 +420,14 @@ These items were found by reviewing commented-out code in the codebase:
 ### Commented Code Blocks to Review
 
 1. **Alternative notebook serialization** (notebook.ts lines 560-599)
-   - ~50 lines of different serialization approach using `#|` and `#.` markers
-   - Either document why it's kept or remove dead code
-   - May be useful reference for future metadata work
+   - **Done 2026-04-23:** removed the old `#|`/`#.` experimental serializer block after syncing README docs to the current format.
 
 2. **Exception handling** (converters.ts lines 55-60)
    - Commented try-catch block for JSON conversion
    - Either implement proper error handling or remove
 
 3. **Metadata parsing** (notebook.ts line 269)
-   - `commitPending('markdown', rawMetadataParsed.groups?.[3])`
-   - Disabled but may be needed for metadata support feature
+   - **Done 2026-04-23:** removed the dead call; reserved `( ... )` suffix stays ignored until a real metadata/output persistence spec exists.
 
 4. **Alternative active notebook getter** (virtualdocs.ts line 289)
    - `const nb = window.activeNotebookEditor?.notebook`
@@ -441,8 +437,7 @@ These items were found by reviewing commented-out code in the codebase:
 ### Implementation Notes from Comments
 
 1. **Markdown cell separator** (notebook.ts line 265)
-   - Comment: "uses a markdown comment hack to break markdown cells... have to find it..."
-   - Suggests fragile implementation that may need robustness improvements
+   - **Done 2026-04-23:** named regex + comment now explain the fake-footnote separator, and tests cover the parsing behavior.
 
 2. **LSP command integration** (commands.ts line 27)
    - Commented: `await commands.executeCommand('routeroslsp.runCommand', 'show.output.log')`

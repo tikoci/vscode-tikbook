@@ -49,6 +49,16 @@ suite('TikBook Notebook Parsing', () => {
     assert.strictEqual(nb.cells.length, 3)
     assert.strictEqual(nb.cells[1].kind, NotebookCellKind.Markup)
     assert.strictEqual(nb.cells[2].kind, NotebookCellKind.Code)
+    assert.strictEqual(nb.cells[1].value, '## Section')
+    assert.ok(!nb.cells[1].value.includes('[//]: #.'), 'cell break marker should not leak into markdown cell text')
+  })
+
+  test('ignores reserved metadata payload on Markdown RouterOS cell break markers', async () => {
+    const input = `# Title\n\n[//]: #. (future metadata)\n\n## Section\n`
+    const nb = await deserializeMarkdown(input)
+    assert.strictEqual(nb.cells.length, 2)
+    assert.strictEqual(nb.cells[1].kind, NotebookCellKind.Markup)
+    assert.strictEqual(nb.cells[1].value, '## Section')
   })
 
   test('serializes and parses round-trip for .md.rsc', async () => {
@@ -121,5 +131,15 @@ suite('TikBook Notebook Parsing', () => {
     const out = await serializeMarkdown(nb)
     const nb2 = await Promise.resolve(new MarkdownSerializer().deserializeNotebook(out, createToken()))
     assert.ok(nb2.cells[1].value.includes('/ip/address/print'))
+  })
+
+  test('serializes consecutive markdown cells with explicit separator marker', async () => {
+    const notebook = new vscode.NotebookData([
+      new vscode.NotebookCellData(NotebookCellKind.Markup, '# Title', 'markdown'),
+      new vscode.NotebookCellData(NotebookCellKind.Markup, '## Section', 'markdown'),
+    ])
+
+    const serialized = new TextDecoder().decode(await serializeMarkdown(notebook))
+    assert.ok(serialized.includes('[//]: #.\n\n## Section\n\n'))
   })
 })

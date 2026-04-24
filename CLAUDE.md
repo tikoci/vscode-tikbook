@@ -101,9 +101,10 @@ TikBook is the VS Code-specific companion to the `TIKOCI.lsp-routeros-ts` extens
 (`notebook.ts`, two formats: `.md.rsc` / `.tikbook` and `.rsc.md` / `.rscmd`), two
 virtual filesystems (`rscena://` read-only views in `virtualdocs.ts`; `rscfile://`
 read-write ScriptFS in `scriptfs.ts`), a REST client (`routeros.ts` / `shared.ts`),
-a status watchdog (`watchdog.ts`), a CHR VM explorer (`vm-explorer.ts` +
-`vm-providers/` — currently UTM-only, **slated for replacement by quickchr**, see
-ROADMAP.md), and converters/commands/menus. Desktop-only code must be gated with
+a status watchdog (`watchdog.ts`), and converters/commands/menus. The codebase also
+contains parked CHR VM explorer/provider work (`vm-explorer.ts` + `vm-providers/`)
+that is not currently activated while the roadmap shifts from UTM toward quickchr.
+Desktop-only code must be gated with
 `vscode.env.uiKind === UIKind.Desktop`; prefer `vscode.workspace.fs` over `node:fs`
 and `SecretStorage` over settings for credentials. Language parsing and
 diagnostics belong to the LSP, not here.

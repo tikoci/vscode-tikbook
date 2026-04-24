@@ -5,6 +5,9 @@ import { log } from './shared';
 import { getActiveNotebook } from './vscode-compat';
 
 const encoding = 'utf-8'
+const MARKDOWN_NOTEBOOK_SHEBANG_RE = /^\[\/\/\]: #!tikbook(?:\s+(?<value>.*))?$/
+// `[//]: #.` is a Markdown-it-safe fake footnote/comment used only to force a new markup cell.
+const MARKDOWN_NOTEBOOK_CELL_BREAK_RE = /^\[\/\/\]: #\.(?: \((?<metadata>.*)\))?$/
 
 // MARK: init
 
@@ -247,9 +250,9 @@ export class MarkdownSerializer implements NotebookSerializer {
     }
     lines.forEach((c) => {
       c = c.trimEnd()
-      const shebangParsed = c.match(/^[[][/][/][\]]: #!tikbook[ ]*(.*)$/)
+      const shebangParsed = c.match(MARKDOWN_NOTEBOOK_SHEBANG_RE)
       if (shebangParsed) {
-        metadata.shebang = shebangParsed.groups?.[0] ?? true
+        metadata.shebang = shebangParsed.groups?.value ?? true
         return
       }
       if (c.match(/^```routeros/)) {
@@ -262,12 +265,13 @@ export class MarkdownSerializer implements NotebookSerializer {
         cellType = NotebookCellKind.Markup
         return
       }
-      // uses a markdown comment hack to break markdown cells... have to find it...
-      // eslint-disable-next-line no-useless-escape
-      const rawMetadataParsed = c.match(/^([[][/][/][\]]: #[.])([ ][(](.*)[)])?/)
+      const rawMetadataParsed = c.match(MARKDOWN_NOTEBOOK_CELL_BREAK_RE)
       if (rawMetadataParsed && cellType !== NotebookCellKind.Code) {
-        // commitPending('markdown', rawMetadataParsed.groups?.[3])
         commitPending('markdown')
+        return
+      }
+      if (cellType === NotebookCellKind.Markup && pending.length === 0 && c.length === 0) {
+        return
       }
       pending += `${c.trimEnd()}\n`
     })
@@ -537,100 +541,3 @@ export class ReplController extends TikbookControllerBase {
     super(ReplController.controllerId, ReplController.notebookType, ReplController.label)
   }
 }
-
-// "old" logic
-// const markdownMark = "|";
-// const codeEndMark = ".";
-// const markdownMark = "|";
-// const langid = "routeros";
-// export class TikbookSerializer0 implements NotebookSerializer {
-//   async deserializeNotebook(
-//     content: Uint8Array,
-//     _token: CancellationToken
-//   ): Promise<NotebookData> {
-//     const decoded: string[] | null = new TextDecoder(encoding)
-//       .decode(content)
-//       .replace('\r\n', '\n')
-//       .replace(/^[\s\n]*/, '')  // Remove empty lines at start
-//       .replace(/[\s\n]*$/, '')  // Remove empty lines at end
-//       .replace(/[ \t]+$/gm, '') // Remove trailing whitespace from each line
-//       .replace(/\n$/, '')      // Remove final newline
-//       .split('\n');
-//
-//     const cells: NotebookCellData[] = [];
-//     let pendingMarkup = "";
-//     let pendingCode = "";
-//
-//     decoded.forEach((item, index) => {
-//       const isMarkdown = item[0] === '#' && item[1] === markdownMark;
-//       const isCodeEndMark = item[0] === '#' && item[1] === codeEndMark;
-//       const isLast = index === decoded?.length - 1;
-//
-//       if (isCodeEndMark) {
-//         cells.push(new NotebookCellData(NotebookCellKind.Code, pendingCode.trim(), langid));
-//         pendingCode = "";
-//         return;
-//       }
-//       if (isMarkdown) {
-//         if (pendingCode.length > 0) {
-//           cells.push(new NotebookCellData(NotebookCellKind.Code, pendingCode.trim(), langid));
-//           pendingCode = "";
-//         }
-//         pendingMarkup += `${item.substring(3)}\n`;
-//       } else { // isCode
-//         if (pendingMarkup.length > 0) {
-//           cells.push(new NotebookCellData(NotebookCellKind.Markup, pendingMarkup.trim(), "markdown"));
-//           pendingMarkup = "";
-//         }
-//         pendingCode += `${item}\n`;
-//       }
-//       if (isLast) {
-//         if (pendingMarkup.length > 0) {
-//           cells.push(new NotebookCellData(NotebookCellKind.Markup, pendingMarkup.trim(), "markdown"));
-//         }
-//         if (pendingCode.length > 0) {
-//           cells.push(new NotebookCellData(NotebookCellKind.Code, pendingCode.trim(), langid));
-//         }
-//       }
-//     });
-//     return new NotebookData(cells);
-//   }
-//   // ^(?'solmark'[#][\|])([ ](?'md'.*))?$ - find markdown
-//   // (?'markup'^[#][\|][\s](?'md'.*$)?|$)|(^(?'eoc'[#][.]).*$)|^(?<!$[#][\|.])(?'code'^.*$)?$
-//   async serializeNotebook(
-//     data: NotebookData,
-//     _token: CancellationToken
-//   ): Promise<Uint8Array> {
-//     const contents: string[] = [];
-//     let lastCellType;
-//     for (const cell of data.cells) {
-//       cell.value = cell.value
-//         .replace(/\r\n/, '\n')    // Convert Windows line endings
-//         .replace(/^[\s\n]*/, '')  // Remove empty lines at start
-//         .replace(/[\s\n]*$/, '')  // Remove empty lines at end
-//         .replace(/[ \t]+$/gm, '') // Remove trailing whitespace from each line
-//         .replace(/\n$/, '');      // Remove final newline
-//       if (cell.kind == NotebookCellKind.Markup) {
-//         cell.value
-//           .split('\n')
-//           .forEach(item => {
-//             contents.push(`#${markdownMark} ${item}`);
-//           });
-//         contents.push('\n');
-//         lastCellType = NotebookCellKind.Markup;
-//       }
-//       else {
-//         if (lastCellType == cell.kind) {
-//           contents.push(`#${codeEndMark}\n`);
-//           contents.push(cell.value);
-//         } else {
-//           contents.push(cell.value);
-//           lastCellType = cell.kind;
-//           //contents.push('\n');
-//         }
-//       }
-//     }
-//
-//     return new TextEncoder().encode(contents.join('\n').trim());
-//   }
-// }
