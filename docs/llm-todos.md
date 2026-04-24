@@ -1,8 +1,18 @@
 # LLM TODOs
 
-This file tracks **quick action items** from LLM sessions - typically 1-3 hour tasks with clear requirements.
+This file tracks **quick action items** from LLM sessions - typically 1-3 hour
+tasks with clear requirements that an agent can start without needing a fresh spec.
 
 ---
+
+## 📋 Planning Hierarchy
+
+| File | Use it for | Avoid using it for |
+|---|---|---|
+| [ROADMAP.md](../ROADMAP.md) | Near-term themes and "what should we do next?" | One-off quick fixes |
+| `docs/llm-todos.md` | Small, agent-startable work items | Long design docs or vague ideas |
+| [docs/specs/](./specs/README.md) | Design-heavy features with evolving requirements | General backlog tracking |
+| [future-features.md](./future-features.md) | Long-horizon, blocked, or still-vague work | Current implementation order |
 
 ## 📋 Organization System
 
@@ -22,16 +32,17 @@ This file tracks **quick action items** from LLM sessions - typically 1-3 hour t
 
 **Workflow:**
 
-1. Add quick items here
-2. Create spec in docs/specs/ for complex features
-3. Mark spec status: `draft` → `under-review` → `ready-for-implementation` → `implemented`
-4. When spec is ready, reference it from here or implement directly
+1. If it is near-term theme-setting work, add or update [ROADMAP.md](../ROADMAP.md) first
+2. Add quick, directly actionable items here
+3. Create a spec in `docs/specs/` for design-rich or multi-session features
+4. Keep `future-features.md` for ideas that are not ready to compete with roadmap work
 
 **See also:**
 
 - [DEVELOPMENT.md](../../DEVELOPMENT.md) - Main development guide
 - [docs/specs/README.md](./specs/README.md) - Feature spec system
 - [future-features.md](./future-features.md) - Long-term ideas and dependencies
+- [ROADMAP.md](../ROADMAP.md) - Near-term themes and active direction
 
 ---
 

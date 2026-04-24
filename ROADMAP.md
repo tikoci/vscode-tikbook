@@ -3,17 +3,20 @@
 Near-term agent-tracked work items. This is the **first stop** for "what should we
 do next." It intentionally sits above the existing trackers in scope:
 
-- `ROADMAP.md` (this file) — themes + seeded tasks with enough context to start
-- [docs/llm-todos.md](docs/llm-todos.md) — 1–3 hour items with clear requirements
+- `ROADMAP.md` (this file) — near-term themes and the first place to look for what matters next
+- [docs/llm-todos.md](docs/llm-todos.md) — agent-startable 1–3 hour tasks with clear requirements
 - [docs/specs/](docs/specs/README.md) — per-feature design lifecycle
   (`draft` → `under-review` → `ready-for-implementation` → `implemented`)
-- [docs/future-features.md](docs/future-features.md) — long-horizon vision and decision points
+- [docs/future-features.md](docs/future-features.md) — long-horizon, blocked, or still-vague ideas that are **not** next-up roadmap work yet
 
 `CHANGELOG.md` is **past-tense only**.
 
 **Process:** when a roadmap item solidifies into a concrete design, spin up a spec
 under `docs/specs/` and link it from the item here. When it ships, move the summary
 into `CHANGELOG.md` and strike through the entry (or remove it).
+
+**Rule of thumb:** if an idea is near-term enough that an agent could plausibly work
+on it next, it belongs here before it belongs in `future-features.md`.
 
 ---
 

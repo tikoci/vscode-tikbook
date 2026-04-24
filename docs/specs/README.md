@@ -6,6 +6,21 @@ This folder contains detailed design specifications for TikBook features. Specs 
 
 Feature specs solve the problem of **incremental design thinking** - you can write and refine design decisions over time, outside of chat sessions, at your own pace. When a spec is ready, signal to AI assistants or contributors to begin implementation.
 
+## Where Specs Fit
+
+Use specs as the **design layer**, not the backlog itself.
+
+| File | Primary role | Use it when | Avoid using it for |
+|------|--------------|-------------|--------------------|
+| [ROADMAP.md](../../ROADMAP.md) | Near-term themes | Work likely to matter soon; enough context to seed follow-up tasks | Long-horizon parking-lot ideas |
+| [docs/llm-todos.md](../llm-todos.md) | Quick actionable tasks | 1–3 hour agent-startable work with clear scope | Multi-session design work |
+| `docs/specs/*.md` | Design docs | A roadmap item needs multi-paragraph design, examples, constraints, or phased decisions | General "maybe someday" ideas |
+| [docs/future-features.md](../future-features.md) | Long-horizon backlog | Blocked, vague, or strategic ideas that are not next-up work yet | The main source of truth for current implementation order |
+
+**Promotion path:** `future-features.md` → `ROADMAP.md` → spec → implementation.
+If an item is already a real roadmap theme, the spec should refine it rather than
+compete with it.
+
 ## Spec Lifecycle
 
 ```
@@ -182,7 +197,9 @@ See [_TEMPLATE.md](./_TEMPLATE.md) for the specification template. Copy it when 
 ## FAQ
 
 **Q: When should I create a spec vs add to `ROADMAP.md` or `llm-todos.md`?**  
-A: Use `ROADMAP.md` for near-term themes and seeded work, specs for features that need multi-paragraph design decisions, and `llm-todos.md` for quick action items with clear requirements.
+A: Use `ROADMAP.md` for near-term themes and seeded work, specs for design-rich
+features that need more than a quick task, `llm-todos.md` for agent-startable
+small tasks, and `future-features.md` for blocked or still-vague ideas.
 
 **Q: Can I have multiple specs in progress?**  
 A: Yes! Work on specs at your own pace. Mark them as `draft` until ready.

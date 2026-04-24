@@ -2,6 +2,20 @@
 
 This document tracks potential features, enhancements, and architectural improvements for TikBook. Items here may require significant design work, cross-component changes, or depend on external factors (like RouterOS or VS Code API changes).
 
+## How to Use This File
+
+This is the **long-horizon / not-ready-yet** planning document.
+
+| If the work is... | Put it in... |
+|---|---|
+| Likely next-up or near-term | [ROADMAP.md](../ROADMAP.md) |
+| Small and directly actionable | [llm-todos.md](./llm-todos.md) |
+| Ready for multi-paragraph design work | [docs/specs/](./specs/README.md) |
+| Still vague, blocked, strategic, or waiting on decisions | `future-features.md` (this file) |
+
+**Promotion rule:** when something in this file becomes likely near-term work, move or
+summarize it into `ROADMAP.md` rather than tracking it in both places indefinitely.
+
 ## 🔴 Decision Points - Choices Required
 
 These items require architectural or product decisions before implementation can proceed:

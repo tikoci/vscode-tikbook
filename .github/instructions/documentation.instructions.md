@@ -17,6 +17,17 @@ These guidelines apply to all documentation files in `docs/`.
 - `docs/architecture.md` - Component relationships and design decisions
 - `docs/conventions.md` - Code patterns and naming conventions
 
+## Scoped planning-doc instructions
+
+This file covers general documentation hygiene. Use the more specific instruction
+files when they apply:
+
+- `planning-docs.instructions.md` — `ROADMAP.md`, `docs/llm-todos.md`, `docs/future-features.md`
+- `specs.instructions.md` — `docs/specs/**/*.md`
+
+Prefer the most specific matching instruction file over generic `docs/**/*.md`
+guidance when they overlap.
+
 ## Markdown Linting Workflow
 
 **Linting strategy:** Human docs use a shared `.markdownlint.yaml` rule set. CLI
@@ -106,7 +117,8 @@ preferences.
 
 ### When to Add to `docs/future-features.md`
 
-**Use future-features.md for vague, complex, or architectural ideas:**
+**Use future-features.md for vague, complex, or architectural ideas that are *not*
+the current near-term roadmap:**
 
 - Features requiring design decisions ("Should we support SSH transport?")
 - Architectural changes spanning multiple components
@@ -141,10 +153,12 @@ preferences.
 
 When Copilot suggests "we could do X later" or "this might be a future feature":
 
-1. **Is it actionable with clear scope?** → Add to `llm-todos.md`
-2. **Is it vague or requires design?** → Add to `future-features.md`
-3. **Is it a mistake to prevent?** → Add to `conventions.md` + consider lint rule
-4. **Is it an architectural choice?** → Add to `decision-log.md` if decided, or `future-features.md` if deferred
+1. **Is it a near-term theme or major direction?** → Add/update `ROADMAP.md`
+2. **Is it actionable with clear scope?** → Add to `llm-todos.md`
+3. **Is it vague, blocked, or still needs product/design choices?** → Add to `future-features.md`
+4. **Does it now need multi-paragraph design work?** → Create/update a spec in `docs/specs/`
+5. **Is it a mistake to prevent?** → Add to `conventions.md` + consider lint rule
+6. **Is it an architectural choice already decided?** → Add to `decision-log.md`
 
 ### Examples
 
