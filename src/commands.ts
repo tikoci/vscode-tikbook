@@ -24,7 +24,6 @@ export function initializeCommands(): Disposable[] {
     commands.registerCommand('tikbook.show.output.routeroslsp', () => {
       log.info('[tikbook.show.output.routeroslsp] is not implemented, skipping')
       void window.showWarningMessage('Show RouterOS LSP Logs is not supported.\nUse Output panel and select "RouterOS LSP" as output type.')
-      // await commands.executeCommand('routeroslsp.runCommand', 'show.output.log')
     }),
     commands.registerCommand('tikbook.routeros.reopen.notebook.routeros', async (_uri?: Uri) => {
       const uri = _uri ?? window.activeTextEditor?.document.uri

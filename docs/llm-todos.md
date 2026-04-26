@@ -39,7 +39,7 @@ tasks with clear requirements that an agent can start without needing a fresh sp
 
 **See also:**
 
-- [DEVELOPMENT.md](../../DEVELOPMENT.md) - Main development guide
+- [DEVELOPMENT.md](../DEVELOPMENT.md) - Main development guide
 - [docs/specs/README.md](./specs/README.md) - Feature spec system
 - [future-features.md](./future-features.md) - Long-term ideas and dependencies
 - [ROADMAP.md](../ROADMAP.md) - Near-term themes and active direction
@@ -124,97 +124,20 @@ or per-notebook, how `.md.rsc` and `.rsc.md` encode it, and what stays transient
 
 These are 5-30 minute cleanups that improve codebase quality for future feature work. Grouped by effort.
 
-### 🟢 5-15 min fixes (cleanup, consolidation, documentation)
+### 🟡 Active items
 
-1. **Fix markdown cell separator regex fragility** (Done 2026-04-23)
-    - **File:** src/notebook.ts line 340-345
-    - **Outcome:** Extracted the regex to a named constant, documented the fake-footnote pattern (`[//]: #.`), and fixed parsing so the separator does not leak into Markdown cell text.
-    - **Benefit:** Markdown RouterOS format is clearer and the explicit cell break now behaves as documented.
-
-2. **Add lint/audit check for commented-out code** (10 min)
-   - **Files:** converters.ts lines 55-60, notebook.ts line 269, virtualdocs.ts line 289, commands.ts line 27
-   - **Pattern:** Multiple files have commented-out code blocks with unclear intent
-   - **Fix:** If we build `scripts/lint-sanity.ts`, include a simple check that flags commented code blocks > 3 lines
-   - **Benefit:** Prevents dead code accumulation; forces decisions: remove or preserve with clear reason
-
-### 🟡 15-25 min focused updates (code safety improvements)
-
-3. **Enable or remove metadata parsing in notebook.ts** (Done 2026-04-23)
-    - **File:** src/notebook.ts line 268 - commented `commitPending('markdown', rawMetadataParsed.groups?.[3])`
-    - **Outcome:** Removed the dead metadata-parsing call and kept the parser behavior explicit: the reserved `( ... )` suffix is ignored until real metadata persistence is designed.
-    - **Follow-up:** Revisit only as part of the broader metadata/output persistence spec.
-
-4. **Move LSP command integration from comment to feature** (15 min)
-   - **File:** src/commands.ts line 27 - commented `await commands.executeCommand('routeroslsp.runCommand', 'show.output.log')`
-   - **Current:** Falls back to warning message instead
-   - **Fix:** Implement as experimental feature behind `tikbook.lsp.showLogs` command
-   - **Benefit:** Users can see RouterOS LSP debug output; useful for troubleshooting; foundation for LSP coordination
-   - **Gating:** Either gate as experimental or add as simple feature if LSP extension is available
-
-5. **Decide scope for `scripts/lint-sanity.ts`** (10 min)
+1. **Decide scope for `scripts/lint-sanity.ts`** (LMA-5)
    - **Files:** tools/eslint/vscode-sanity.mjs, docs/linting-migration-audit.md
-   - **Issue:** Three archived lint checks still have no replacement (`require-eventemitter-dispose`, `no-floating-disposable`, `vscode-api-version-compat`)
-   - **Fix:** Decide what belongs in a standalone audit script versus what should stay as documented review guidance
-   - **Benefit:** Keeps Biome-first tooling while recovering the highest-value custom checks
+   - **Issue:** Three archived lint checks still have no replacement (`require-eventemitter-dispose`, `no-floating-disposable`, `vscode-api-version-compat`).
+   - **Decide:** What belongs in a standalone audit script versus documented review guidance. Keep Biome as default; only add a script for the highest-value checks.
 
-### 🟣 20-35 min focused enhancements (patterns for future work)
+2. **VM-integration patterns guide** (parked)
+   - The CHR/UTM provider work is currently de-exposed (Theme 1 in ROADMAP.md). Defer write-ups (`docs/vm-integration-patterns.md`, async-safety patterns) until the quickchr replacement lands and the patterns are re-validated against real code rather than parked code.
 
-6. **Document command boundary type guards pattern** (15 min)
-	- **File:** docs/conventions.md  - Add new section after "Type Safety"
-	- **Context:** Successfully applied during hardening pass (vm-commands.ts)
-	- **Document:**
-	  - Problem: Commands pass `unknown` args; optional chaining is fragile
-	  - Solution: Type guards like `isVMTreeCommandItem()` are more reliable
-	  - Example: Include guard patterns from vm-commands.ts
-	  - When to use: All command handlers + argument unpacking
-	- **Benefit:** Prevents silent type errors in command handlers; helps LLM agents write safer code
-
-7. **Add async/await best practices to TypeScript patterns** (15 min)
-	- **File:** docs/typescript-patterns.md - new section "Async Safety Patterns"
-	- **Context:** From VM explorer work, learned about async-safe UI construction
-	- **Document:**
-	  - Pattern: Await async provider methods before building UI strings
-	  - Why: Race conditions can cause stale data in tooltips/descriptions
-	  - Anti-pattern: Building UI in constructor, then calling async method
-	  - Example: Show before/after from vm-explorer.ts
-	- **Benefit:** Prevents subtle race condition bugs; improves code quality in async-heavy features
-
-8. **Create "Code Patterns from VM Integration" guide** (20 min)
-	- **New file:** docs/vm-integration-patterns.md
-	- **Content:** Lessons learned from CHR VM management that apply to future integrations (other VM systems, containers, etc.)
-	- **Sections:**
-	  - Provider abstraction pattern (how vm-providers registry works)
-	  - Type-safe status mapping (mapUTMStatusToVMStatus function)
-	  - AppleScript error handling in Node
-	  - UI gating for unavailable operations (hiding Delete when VM is running)
-	  - Tree view filtering/sorting (CHR version sorting with semver)
-	- **Benefit:** Future integrators (Hyper-V, libvirt, Docker) have playbook; foundation for extensible architecture
-
-### 📋 Recommended Priority Path for Quick Wins
-
-**Week 1 (Infrastructure for future features):**
-1. Document command boundary type guards pattern (item #6) — 15 min
-2. Add async/await best practices (item #7) — 15 min
-3. Fix markdown cell separator regex (item #1) — 5 min
-
-**Result:** Better foundations that help future features like experimental features, services integration, etc.
-
-**Week 2 (Code cleanup):**
-4. Create VM integration patterns guide (item #8) — 20 min *(applies to future expansions: Hyper-V, Docker, libvirt)*
-5. Review metadata parsing direction (item #3) — 10 min
-6. Review LSP log command path (item #4) — 15 min
-
-**Result:** Cleaner codebase, patterns documented for expansion.
-
-**Optional (if time):**
-- Items #2, #3, #4, and #5 are all <= 15 min each
-- Item #2 helps prevent future dead code
-
-### Rationalize Notebook Serialization Code — Done (2026-04-23)
-
-**Files:** notebook.ts lines 560-599, README.md format specification
-**Outcome:** Removed the obsolete commented serializer that used old `#|` markers and
-updated the README notebook-format notes to match the current implementation.
+3. **Command boundary type guards pattern** (15 min, design-light)
+   - **File:** docs/conventions.md - add a section after "Type Safety".
+   - **Context:** Applied during the 2026-02-27 hardening pass (vm-commands.ts).
+   - **Cover:** problem (`unknown` args + fragile optional chaining), solution (`is*` guards), when to use (all command handlers + argument unpacking).
 
 ## Pending Tasks
 
@@ -352,9 +275,6 @@ updated the README notebook-format notes to match the current implementation.
 **Note:** Requirements still being clarified. Needs more thinking time before actionable. Related to multi-router management across feature set.
 
 - Some older docs still imply markdownlint runs across every Markdown file; keep them aligned with the current `DEVELOPMENT.md` and npm-script workflow.
-- The archived `vscode-sanity` checks still need triage into a future `scripts/lint-sanity.ts` so the highest-value custom coverage is not lost.
-- Implement LSP command integration for showing RouterOS LSP logs. Currently commands.ts line 27 has commented code `routeroslsp.runCommand` that could enable this. Currently shows warning message instead.
-- Clean up commented exception handling in converters.ts lines 55-60. Code appears to be leftover from refactoring - either implement proper error handling or remove the commented block.
 - Add more user settings to control internal behavior and enable/disable UI elements (currently hardcoded - mentioned in Known Issues)
   > **Status:** Only 7 settings currently exist in package.json (baseUrl, username, password, apiTimeout, sshCommand, checkCertificates, provideLspServerCredentials). Many UI behaviors and features are hardcoded.
 - Add VS Code custom `when` context to track connection status. This will enable dynamic menu visibility and wording based on whether RouterOS is online.
@@ -376,6 +296,8 @@ updated the README notebook-format notes to match the current implementation.
 
 ## Completed
 
+- 2026-04-26: Removed remaining commented-out dead code blocks (`converters.ts` JSON-array clipboard try/catch + inline regex hints, `virtualdocs.ts` alternative `activeNotebookEditor` getter, `commands.ts` `routeroslsp.runCommand` placeholder). Re-implementing the LSP-log path is parked until it has a spec.
+- 2026-04-26: De-duplicated `llm-todos.md` — collapsed the trailing "Code Cleanup & Technical Debt from Comments" section into the active item list, dropped Quick-Code-Wins entries already shipped, and removed the stale "Recommended Priority Path" plan.
 - 2026-04-23: Cleaned up Markdown RouterOS notebook parsing in `src/notebook.ts` by extracting named separator/shebang regexes, removing dead metadata parsing code, and dropping the obsolete commented serializer block.
 - 2026-04-23: Added notebook tests that cover explicit Markdown cell breaks, reserved metadata suffix handling, and consecutive-markdown serialization.
 - 2026-04-23: Aligned CHR/UTM docs with the current parked state in `README.md`, `CLAUDE.md`, and `docs/specs/README.md`.
@@ -410,42 +332,3 @@ Tooling notes from this hardening pass:
 - Less helpful in this workflow:
   - `test_failure` (did not surface details for this harness run pattern).
   - Direct `npx mocha` for extension tests (fails outside VS Code test host).
-
----
-
-## Code Cleanup & Technical Debt from Comments
-
-These items were found by reviewing commented-out code in the codebase:
-
-### Commented Code Blocks to Review
-
-1. **Alternative notebook serialization** (notebook.ts lines 560-599)
-   - **Done 2026-04-23:** removed the old `#|`/`#.` experimental serializer block after syncing README docs to the current format.
-
-2. **Exception handling** (converters.ts lines 55-60)
-   - Commented try-catch block for JSON conversion
-   - Either implement proper error handling or remove
-
-3. **Metadata parsing** (notebook.ts line 269)
-   - **Done 2026-04-23:** removed the dead call; reserved `( ... )` suffix stays ignored until a real metadata/output persistence spec exists.
-
-4. **Alternative active notebook getter** (virtualdocs.ts line 289)
-   - `const nb = window.activeNotebookEditor?.notebook`
-   - Commented in favor of workspace.openNotebookDocument
-   - Cleanup or document why alternative is kept
-
-### Implementation Notes from Comments
-
-1. **Markdown cell separator** (notebook.ts line 265)
-   - **Done 2026-04-23:** named regex + comment now explain the fake-footnote separator, and tests cover the parsing behavior.
-
-2. **LSP command integration** (commands.ts line 27)
-   - Commented: `await commands.executeCommand('routeroslsp.runCommand', 'show.output.log')`
-   - Could enable showing RouterOS LSP logs from TikBook
-   - Currently shows warning message instead
-
-3. **RouterOS Code Style Settings** (converters.ts line 154)
-   - Commented alternative for conditional key quoting in JSON-to-Array conversion
-   - Should be implemented as configurable setting coordinated with RouterOS LSP
-   - Part of broader "RouterOS Code Style" settings that should be consistent across both extensions
-   - See FUTURE_FEATURES.md "JSON Key Formatting Options" for full context

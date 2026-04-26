@@ -286,8 +286,6 @@ export class RouterConfigProvider implements TextDocumentContentProvider {
   // MARK: get rsc
 
   async getScriptFromNotebook(uri: Uri, token?: CancellationToken): Promise<string> {
-    // const nb = window.activeNotebookEditor?.notebook
-    // if (!nb) return
     if (this.isCanceled(token)) throw new Error('Request cancelled')
     const nb = await workspace.openNotebookDocument(uri)
     if (!nb) throw new Error('URI must be to a valid notebook document')

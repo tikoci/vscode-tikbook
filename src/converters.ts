@@ -42,7 +42,6 @@ export function initializeConverters(): Disposable[] {
         log.info(`[tikbook.convert.escapedRouterString.clipboard] warned user '${warningMsg}'`)
         return
       }
-      // try {
       await env.clipboard.writeText(
         escapeRouterString(
           editor.document.getText(
@@ -53,12 +52,6 @@ export function initializeConverters(): Disposable[] {
       const msg = 'RouterOS array copied to clipboard'
       void window.showInformationMessage(msg)
       log.debug(`[tikbook.convert.escapedRouterString.clipboard] notified user '${msg}'`)
-      /* }
-      catch (error) {
-        const msg = `Invalid JSON cannot be copied as RouterOS array.\nGot exception ${error?.cause}`
-        window.showWarningMessage(msg)
-        log.warn(`[tikbook.convert.escapedRouterString.clipboard] got exception and warned user '${msg}'`, error)
-      } */
     }),
 
     commands.registerCommand('tikbook.convert.escapedRouterString', async () => {
@@ -255,7 +248,7 @@ export function routerosArrayFromJson(data: string | boolean | number | object):
   // Handle primitive types
   if (typeof data === 'string') {
     // Escape double quotes and backslashes in strings
-    const escapedString = escapeRouterString(data)// data.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+    const escapedString = escapeRouterString(data)
     return `"${escapedString}"`
   }
   if (typeof data === 'number') {
@@ -284,8 +277,6 @@ export function routerosArrayFromJson(data: string | boolean | number | object):
     }
 
     const keyValuePairs = keys.map((key: string) => {
-      // MikroTik keys can't have spaces or special characters without quoting
-      // const formattedKey = key.includes(' ') || key.includes('=') || key.includes(';') ? `"${key}"` : key;
       const value = routerosArrayFromJson((data as Record<string, string | number | boolean | object>)[key])
       return `"${key}"=${value}`
     })

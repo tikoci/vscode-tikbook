@@ -39,9 +39,11 @@ direction is unresolved.
 
 **Tasks:**
 
-- [ ] De-expose the current CHR/UTM UI: stop contributing the explorer/commands
+- [x] De-expose the current CHR/UTM UI: stop contributing the explorer/commands
       and stop activating the provider while quickchr replacement is pending.
       Keep the code/tests/docs in-tree as parked implementation history.
+      *(Done — `src/extension.ts` and `package.json` no longer wire `vm-explorer.ts` /
+      `vm-commands.ts` / `UTMProvider`; modules remain parked in-tree.)*
 - [ ] Capture everything we learned about UTM-from-VS-Code as a skill
       (AppleScript dictionary quirks, `utmctl` behaviour, `utm://` URL-scheme
       download flow, macOS permission prompt, VM list filtering). Candidate name:
@@ -124,9 +126,9 @@ RouterOS-7 answers without the user having to know what MCP is.
       opt-in.
 - [ ] Handle the web target: rosetta is Node/SQLite — web target can only
       *document* the MCP, not run it.
-- [ ] Add to `CLAUDE.md` + `.github/copilot-instructions.md`: "when touching
+- [x] Add to `CLAUDE.md` + `.github/copilot-instructions.md`: "when touching
       RouterOS behaviour, reach for rosetta MCP first." *(Already in CLAUDE.md
-      — add the Copilot side too.)*
+      and `.github/copilot-instructions.md`.)*
 
 ## Theme 4: `/app` YAML JSONSchema + Monaco parity with tikapp.html
 
@@ -138,7 +140,7 @@ client-side Monaco editor that validates against it. TikBook should offer the sa
 validation + completion inside "real" VS Code — no browser detour.
 
 Related: [docs/specs/app-yaml-schema.md](docs/specs/app-yaml-schema.md) (draft) +
-[docs/future-features.md#routeros-app-yaml-schema-verification](docs/future-features.md).
+[docs/future-features.md#routeros-app-yaml-schema-verification](docs/future-features.md#routeros-app-yaml-schema-verification).
 
 **Tasks:**
 
