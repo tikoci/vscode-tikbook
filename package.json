@@ -52,7 +52,8 @@
     "https://coff.ee/amm0"
   ],
   "extensionPack": [
-    "TIKOCI.lsp-routeros-ts"
+    "TIKOCI.lsp-routeros-ts",
+    "redhat.vscode-yaml"
   ],
   "activationEvents": [
     "onNotebook:tikbook",
@@ -61,6 +62,7 @@
     "onNotebook:routeros",
     "onLanguage:routeros",
     "onLanguage:markdown",
+    "onLanguage:yaml",
     "onFileSystem:rscfile"
   ],
   "contributes": {
@@ -500,6 +502,20 @@
         "icon": "$(mikrotik-icon-line)"
       },
       {
+        "command": "tikbook.appYaml.newManifest",
+        "title": "New RouterOS /app YAML Manifest",
+        "shortTitle": "New /app YAML",
+        "category": "RouterOS",
+        "icon": "$(symbol-object)"
+      },
+      {
+        "command": "tikbook.appYaml.newStoreManifest",
+        "title": "New RouterOS /app Store YAML",
+        "shortTitle": "New /app Store YAML",
+        "category": "RouterOS",
+        "icon": "$(list-tree)"
+      },
+      {
         "command": "tikbook.notebook.reopen.routeros",
         "title": "Open as RouterOS Script File",
         "category": "TikBook",
@@ -643,7 +659,39 @@
           "fontPath": "./media/fonticon/tikoci.woff2"
         }
       }
-    }
+    },
+    "yamlValidation": [
+      {
+        "fileMatch": [
+          "*.tikapp.yaml",
+          "*.tikapp.yml",
+          "*.app.yaml",
+          "*.app.yml",
+          "**/app/app.yaml",
+          "**/app/app.yml",
+          "**/apps/app.yaml",
+          "**/apps/app.yml",
+          "**/tikapp/app.yaml",
+          "**/tikapp/app.yml"
+        ],
+        "url": "./resources/schemas/routeros-app-yaml-schema.editor.json"
+      },
+      {
+        "fileMatch": [
+          "*.tikappstore.yaml",
+          "*.tikappstore.yml",
+          "*.appstore.yaml",
+          "*.appstore.yml",
+          "**/app/app-store.yaml",
+          "**/app/app-store.yml",
+          "**/apps/app-store.yaml",
+          "**/apps/app-store.yml",
+          "**/tikapp/app-store.yaml",
+          "**/tikapp/app-store.yml"
+        ],
+        "url": "./resources/schemas/routeros-app-yaml-store-schema.editor.json"
+      }
+    ]
   },
   "config": {
     "prereleaseflag": "--pre-release",
@@ -693,6 +741,7 @@
     "clean": "rm -rf out",
     "clean:all": "npm run clean && rm -rf dist *.vsix .vsix-serve",
     "clean:srcjs": "rm -rf src/*.js src/*.map",
+    "schemas:sync": "node scripts/sync-app-yaml-schemas.mjs",
     "serve": "npx serve@latest --cors --listen 3000",
     "serve:https": "npx serve@latest --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem"
   },

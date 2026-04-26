@@ -635,16 +635,16 @@ These features have interdependencies or potential conflicts that need coordinat
 
 ### RouterOS `/app` YAML Schema Verification
 
-**Status:** Missing feature  
-**Description:** Add validation for RouterOS container `/app` YAML manifests, including schema checks and diagnostics.  
+**Status:** First slice implemented; follow-ups remain  
+**Description:** TikBook now validates and assists RouterOS container `/app` YAML manifests with bundled restraml schemas, Red Hat YAML associations, native completions, scaffold commands, and low-noise diagnostics.  
 **Reference:** <https://forum.mikrotik.com/t/amm0s-manual-for-custom-app-containers-7-22beta/268036/4>
 **Scope Ideas:**
 
-- Provide YAML schema for RouterOS `/app` format
-- Validate required fields and value types
-- Offer diagnostics and quick fixes in VS Code
-- Integrate with RouterOS LSP for shared validation logic
-- Include example templates and snippets for container apps
+- Live connected-router readiness checks for RouterOS version, container package, device-mode, storage, RAM, and architecture
+- Strict validation command using `.latest.json` while editor associations stay on `.editor.json`
+- Version-specific schema selector for pinned RouterOS targets
+- Built-in app example browser from restraml `app.json`
+- Possible RouterOS LSP or MCP integration for shared validation logic
 **Schema Sources:**
 - Single-app schema: <https://tikoci.github.io/restraml/routeros-app-yaml-schema.latest.json>
 - App-store schema: <https://tikoci.github.io/restraml/routeros-app-yaml-store-schema.latest.json>

@@ -22,7 +22,7 @@ on it next, it belongs here before it belongs in `future-features.md`.
 
 ## Theme 1: Shift CHR backend from UTM to quickchr
 
-**Status:** proposed — 2026-04
+**Status:** first slice implemented — 2026-04
 
 **Why:** `tikoci/quickchr` is the designated QEMU/CHR expert in the tikoci ecosystem
 and works cross-platform. The current `src/vm-providers/utm-provider.ts` is
@@ -68,7 +68,7 @@ direction is unresolved.
 
 ## Theme 2: Broaden RouterOS virtual filesystem beyond the current ScriptFS slice
 
-**Status:** proposed — 2026-04
+**Status:** first slice implemented — 2026-04
 
 **Why:** `rscfile://` is not just "mount `/system/script`." The next body of work is a
 broader RouterOS virtual filesystem theme where the current script-attribute editor
@@ -109,7 +109,7 @@ Related: [docs/specs/scriptfs-completion.md](docs/specs/scriptfs-completion.md),
 
 ## Theme 3: Bundle rosetta MCP with the extension
 
-**Status:** proposed — 2026-04
+**Status:** first slice implemented — 2026-04
 
 **Why:** `tikoci/rosetta` is a SQLite-FTS5 RAG over RouterOS 7 docs exposed as an
 MCP server. If TikBook auto-installs/configures it in the user's VS Code at
@@ -139,19 +139,19 @@ RouterOS-7 answers without the user having to know what MCP is.
 client-side Monaco editor that validates against it. TikBook should offer the same
 validation + completion inside "real" VS Code — no browser detour.
 
-Related: [docs/specs/app-yaml-schema.md](docs/specs/app-yaml-schema.md) (draft) +
+Related: [docs/specs/app-yaml-schema.md](docs/specs/app-yaml-schema.md) +
 [docs/future-features.md#routeros-app-yaml-schema-verification](docs/future-features.md#routeros-app-yaml-schema-verification).
 
 **Tasks:**
 
-- [ ] Fetch or bundle the `/app` YAML JSONSchema from restraml.
-- [ ] Register it via VS Code's `yaml.schemas` contribution (requires
+- [x] Fetch or bundle the `/app` YAML JSONSchema from restraml.
+- [x] Register it via VS Code/Red Hat YAML schema associations (requires
       `redhat.vscode-yaml` — either take it as a dep in `extensionPack` or
       degrade gracefully).
-- [ ] Port the Monaco-specific UX tricks from `tikapp.html` — inline diagnostics,
+- [x] Port the Monaco-specific UX tricks from `tikapp.html` — inline diagnostics,
       enum completions, device-mode constraints — adapting them to VS Code's
       editor APIs rather than raw Monaco.
-- [ ] Document the trigger: file pattern (e.g. `*.app.yaml`, `app.yaml` inside a
+- [x] Document the trigger: file pattern (e.g. `*.app.yaml`, `app.yaml` inside a
       `/app`-shaped directory) — see the `routeros-app-yaml` skill for format
       rules.
 

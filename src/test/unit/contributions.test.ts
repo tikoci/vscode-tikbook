@@ -1,6 +1,86 @@
 import { strict as assert } from 'node:assert';
 import * as vscode from 'vscode';
 
+type TikBookPackageJson = {
+	extensionPack?: unknown;
+	contributes?: {
+		yamlValidation?: unknown;
+	};
+};
+
+type YamlValidationContribution = {
+	fileMatch?: unknown;
+	url?: unknown;
+};
+
+const APP_YAML_SCHEMA_PATH = './resources/schemas/routeros-app-yaml-schema.editor.json';
+const APP_YAML_STORE_SCHEMA_PATH = './resources/schemas/routeros-app-yaml-store-schema.editor.json';
+const APP_YAML_PATTERNS = [
+	'*.tikapp.yaml',
+	'*.tikapp.yml',
+	'*.app.yaml',
+	'*.app.yml',
+	'**/app/app.yaml',
+	'**/app/app.yml',
+	'**/apps/app.yaml',
+	'**/apps/app.yml',
+	'**/tikapp/app.yaml',
+	'**/tikapp/app.yml',
+];
+const APP_YAML_STORE_PATTERNS = [
+	'*.tikappstore.yaml',
+	'*.tikappstore.yml',
+	'*.appstore.yaml',
+	'*.appstore.yml',
+	'**/app/app-store.yaml',
+	'**/app/app-store.yml',
+	'**/apps/app-store.yaml',
+	'**/apps/app-store.yml',
+	'**/tikapp/app-store.yaml',
+	'**/tikapp/app-store.yml',
+];
+
+function getTikBookExtension(): vscode.Extension<unknown> {
+	const ext = vscode.extensions.getExtension('TIKOCI.tikbook');
+	assert.ok(ext, 'Extension should be installed');
+	return ext;
+}
+
+function getTikBookPackageJson(): TikBookPackageJson {
+	return getTikBookExtension().packageJSON as TikBookPackageJson;
+}
+
+function getStringArray(value: unknown, message: string): string[] {
+	if (typeof value === 'string') {
+		return [value];
+	}
+	assert.ok(Array.isArray(value), message);
+	for (const item of value) {
+		assert.strictEqual(typeof item, 'string', message);
+	}
+	return value;
+}
+
+function getYamlValidationContributions(): YamlValidationContribution[] {
+	const packageJson = getTikBookPackageJson();
+	const yamlValidation = packageJson.contributes?.yamlValidation;
+	assert.ok(Array.isArray(yamlValidation), 'yamlValidation should be contributed');
+	return yamlValidation.map((entry) => {
+		assert.ok(typeof entry === 'object' && entry !== null, 'yamlValidation entries should be objects');
+		const contribution = entry as Record<string, unknown>;
+		return {
+			fileMatch: contribution.fileMatch,
+			url: contribution.url,
+		};
+	});
+}
+
+async function readBundledSchema(relativePath: string): Promise<Record<string, unknown>> {
+	const schemaUri = vscode.Uri.joinPath(getTikBookExtension().extensionUri, relativePath);
+	const content = await vscode.workspace.fs.readFile(schemaUri);
+	return JSON.parse(new TextDecoder().decode(content)) as Record<string, unknown>;
+}
+
 suite('Priority 0: Extension Contributions', () => {
 	suite('Command Registration', () => {
 		let allCommands: string[];
@@ -37,6 +117,8 @@ suite('Priority 0: Extension Contributions', () => {
 			'tikbook.new.notebook.repl',
 			'tikbook.new.notebook.markdown',
 			'tikbook.new.notebook.router.scripts',
+			'tikbook.appYaml.newManifest',
+			'tikbook.appYaml.newStoreManifest',
 			'tikbook.notebook.reopen.routeros',
 			'tikbook.routeros.reopen.notebook.routeros',
 			'tikbook.notebook.clone.routeros',
@@ -170,6 +252,83 @@ suite('Priority 0: Extension Contributions', () => {
 					`Setting 'tikbook.${setting}' should be defined`
 				);
 			});
+		});
+	});
+
+
+	suite('Package Contributions', () => {
+		test('extension pack recommends RouterOS LSP and Red Hat YAML', () => {
+			const extensionPack = getStringArray(
+				getTikBookPackageJson().extensionPack,
+				'extensionPack should be an array of extension ids'
+			);
+
+			assert.ok(
+				extensionPack.includes('TIKOCI.lsp-routeros-ts'),
+				'extensionPack should include RouterOS LSP'
+			);
+			assert.ok(
+				extensionPack.includes('redhat.vscode-yaml'),
+				'extensionPack should include Red Hat YAML for schema validation'
+			);
+		});
+
+		test('RouterOS /app YAML schemas are contributed with conservative file patterns', () => {
+			const yamlValidation = getYamlValidationContributions();
+			const appContribution = yamlValidation.find((entry) => entry.url === APP_YAML_SCHEMA_PATH);
+			const storeContribution = yamlValidation.find((entry) => entry.url === APP_YAML_STORE_SCHEMA_PATH);
+
+			assert.ok(appContribution, 'single-app YAML schema should be contributed');
+			assert.ok(storeContribution, 'app-store YAML schema should be contributed');
+			assert.deepStrictEqual(
+				getStringArray(appContribution.fileMatch, 'single-app fileMatch should be string patterns').sort(),
+				[...APP_YAML_PATTERNS].sort(),
+				'single-app schema should match only conservative app manifest patterns'
+			);
+			assert.deepStrictEqual(
+				getStringArray(storeContribution.fileMatch, 'app-store fileMatch should be string patterns').sort(),
+				[...APP_YAML_STORE_PATTERNS].sort(),
+				'app-store schema should match only conservative store manifest patterns'
+			);
+		});
+
+		test('RouterOS /app YAML schemas are bundled as package assets', async () => {
+			const appEditorSchema = await readBundledSchema('resources/schemas/routeros-app-yaml-schema.editor.json');
+			const storeEditorSchema = await readBundledSchema(
+				'resources/schemas/routeros-app-yaml-store-schema.editor.json'
+			);
+			const appStrictSchema = await readBundledSchema('resources/schemas/routeros-app-yaml-schema.latest.json');
+			const storeStrictSchema = await readBundledSchema(
+				'resources/schemas/routeros-app-yaml-store-schema.latest.json'
+			);
+
+			assert.strictEqual(
+				appEditorSchema.$id,
+				'https://tikoci.github.io/restraml/routeros-app-yaml-schema.editor.json'
+			);
+			assert.strictEqual(
+				storeEditorSchema.$id,
+				'https://tikoci.github.io/restraml/routeros-app-yaml-store-schema.editor.json'
+			);
+			assert.strictEqual(
+				appStrictSchema.$id,
+				'https://tikoci.github.io/restraml/routeros-app-yaml-schema.latest.json'
+			);
+			assert.strictEqual(
+				storeStrictSchema.$id,
+				'https://tikoci.github.io/restraml/routeros-app-yaml-store-schema.latest.json'
+			);
+
+			const required = appEditorSchema.required;
+			assert.ok(Array.isArray(required), 'app editor schema should declare required fields');
+			assert.ok(required.includes('services'), 'app editor schema should require services');
+
+			const storeItems = storeEditorSchema.items as Record<string, unknown> | undefined;
+			assert.strictEqual(
+				storeItems?.$ref,
+				'https://tikoci.github.io/restraml/routeros-app-yaml-schema.editor.json',
+				'store editor schema should reference the app editor schema'
+			);
 		});
 	});
 

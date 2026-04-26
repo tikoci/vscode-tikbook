@@ -117,6 +117,16 @@ async function showMenuNew(): Promise<void> {
         cmd: 'tikbook.new.notebook.router.scripts',
       },
       {
+        label: '$(symbol-object)  New RouterOS /app YAML',
+        description: 'single .tikapp.yaml manifest',
+        cmd: 'tikbook.appYaml.newManifest',
+      },
+      {
+        label: '$(list-tree)  New RouterOS /app Store YAML',
+        description: 'app-store-urls= array manifest',
+        cmd: 'tikbook.appYaml.newStoreManifest',
+      },
+      {
         label: '$(terminal-powershell)  Start Interactive REPL',
         cmd: 'tikbook.new.notebook.repl',
       },

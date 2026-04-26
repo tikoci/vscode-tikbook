@@ -28,6 +28,10 @@ The [RouterOS LSP](https://marketplace.visualstudio.com/items?itemName=TIKOCI.ls
 
 > To install using a `.vsix` file, download from the project's GitHub [Releases](https://github.com/tikoci/vscode-tikbook/releases/latest).  _TikBook for RouterOS_ is also available on [Open-VSIX](https://open-vsx.org/extension/TIKOCI/tikbook) repository for installing into "forked" versions for VS Code.
 
+## RouterOS `/app` YAML manifests
+
+TikBook adds schema-backed editing for RouterOS 7.22+ `/app` YAML manifests using `tikoci/restraml` JSON Schemas and Red Hat YAML. It uses editor-friendly schemas by default. Use `.tikapp.yaml` for single apps or `.tikappstore.yaml` for `app-store-urls=` arrays. See [docs/routeros-app-yaml.md](docs/routeros-app-yaml.md) for file naming triggers, schema variants, strict validation guidance, and RouterOS container requirements.
+
 ## Copilot (Contributors)
 
 This repo is designed as a best-practices example for agentic development with Copilot. Repository instructions are automatically applied when you open this workspace in VS Code.

@@ -212,20 +212,32 @@ These are 5-30 minute cleanups that improve codebase quality for future feature 
 5. Research restraml RAML usage for REST validation inside TikBook (agentic use)
 6. Define how to surface schema downloads in Quick Commander (RAML/OAS2/inspect.json)
 
-### RouterOS /app Dev Workflow → MOVED TO SPEC
+### RouterOS `/app` YAML Dev Workflow → FIRST SLICE IMPLEMENTED
 
-**Status:** Placeholder spec created (draft), awaiting user input
-**Spec:** [docs/specs/app-yaml-schema.md](./specs/app-yaml-schema.md)
-**Priority:** YAML schema is higher priority than full UI (per user)
-**Reason for Draft:** Needs user specification of:
+**Status:** First implementation slice landed; follow-ups below remain.  
+**Spec:** [docs/specs/app-yaml-schema.md](./specs/app-yaml-schema.md)  
+**User guide:** [docs/routeros-app-yaml.md](./routeros-app-yaml.md)  
+**Priority:** 🔴 High - aligns with `ROADMAP.md` Theme 4.
 
-- Complete /app YAML property list
-- Example /app YAML file
-- File detection pattern preference
-- Auto-configuration behavior
-**Next Step:** User provides schema requirements in spec
+**Implemented slice:** bundled restraml schemas, Red Hat YAML schema associations, scoped VS Code providers/diagnostics, scaffold commands, and unit/package contribution tests.
 
-**Note:** Full /app UI toolkit is future work, schema is Phase 1
+**Deferred follow-ups after the first code pass:**
+
+1. **Live connected-router readiness checks**
+   - **Files:** likely `src/app-yaml.ts`, RouterOS connection helpers, unit tests.
+   - **Scope:** warn from the connected router's actual state: RouterOS 7.22+ for custom apps, `container` package installed, container device-mode enabled where needed, supported architecture, storage/RAM guidance.
+
+2. **Strict validation command and version-specific schema selector**
+   - **Files:** schema assets, command contributions, app YAML tests, docs.
+   - **Scope:** keep editor associations on `.editor.json`, but offer an explicit strict validation path using `.latest.json` or a pinned RouterOS-version schema.
+
+3. **Built-in app example browser**
+   - **Files:** app YAML command module, bundled/fetched restraml examples, tests.
+   - **Scope:** QuickPick built-in app examples from restraml `app.json` and open them as editable `.tikapp.yaml` documents.
+
+4. **Future MCP/WebMCP parity**
+   - **Files:** revisit after Theme 3 MCP direction lands.
+   - **Scope:** decide whether any `tikapp.html` WebMCP/share/import behavior belongs in TikBook or should remain in the browser tool.
 
 ### RouterOS Certificate UX → MOVED TO SPEC
 

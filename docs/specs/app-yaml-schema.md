@@ -1,407 +1,127 @@
-# RouterOS /app YAML Schema Integration
+# RouterOS `/app` YAML Schema Integration
 
-> **Status:** `draft`  
-> **Priority:** `medium`  
-> **Effort Estimate:** TBD  
+> **Status:** `implemented`  
+> **Priority:** `high`  
+> **Effort:** First slice complete; follow-ups tracked separately  
 > **Created:** 2026-02-26  
-> **Last Updated:** 2026-02-26  
-> **Owner:** Awaiting user specification
+> **Last Updated:** 2026-04-26  
+> **Owner:** Theme 4 implementation
 
 **Related:**
 
-- Spec: N/A
-- Issue: N/A
-- Forum: <https://forum.mikrotik.com/t/amm0s-manual-for-custom-app-containers-7-22beta/268036>
-- Docs: future-features.md (mentions /app toolkit)
+- Roadmap: [Theme 4: `/app` YAML JSONSchema + Monaco parity with tikapp.html](../../ROADMAP.md#theme-4-app-yaml-jsonschema--monaco-parity-with-tikapphtml)
+- User guide: [RouterOS `/app` YAML manifests](../routeros-app-yaml.md)
+- Future-feature context: [RouterOS `/app` YAML Schema Verification](../future-features.md#routeros-app-yaml-schema-verification)
+- Forum reference: [Amm0's manual for custom app containers](https://forum.mikrotik.com/t/amm0s-manual-for-custom-app-containers-7-22beta/268036)
 
 ---
 
 ## Overview
 
-### What This Feature Does
+TikBook provides native VS Code editing support for RouterOS `/app` YAML manifests. The first implementation round makes real YAML files pleasant to edit: schema validation, completions, hover text, low-noise RouterOS-specific warnings, and scaffolds.
 
-Provide YAML schema validation for RouterOS `/app` container manifests in VS Code. When users edit YAML files for custom app containers, they get autocomplete, validation, and inline documentation.
+This spec replaces the older placeholder that asked where the schema and file patterns should come from. Those decisions are now made by `ROADMAP.md` Theme 4 and `tikoci/restraml`.
 
-### Why We Need It
+## Source of truth
 
-RouterOS 7.22+ supports custom app containers defined via YAML manifests. Currently, users edit YAML files without validation, leading to errors. Schema support provides:
+- Schema source: generated JSON Schemas from `tikoci/restraml`.
+- Editor UX reference: `~/GitHub/restraml/docs/tikapp.html` and its Monaco schema/completion behavior.
+- Runtime facts:
+  - `/app` command tree appears in RouterOS 7.21.
+  - Custom YAML app creation is RouterOS 7.22+.
+  - `/app` depends on the `container` package and container device-mode support.
+  - Practical deployments require supported architecture (`arm64` or `x86` for this feature scope), enough RAM, and preferably external storage.
 
-- Autocomplete for valid properties
-- Inline errors for invalid configs
-- Documentation hover for each property
-- Better developer experience for /app development
+## Decisions
 
-### Success Criteria
+### Schema variants
 
-- [ ] User opens .yaml file for RouterOS /app manifest
-- [ ] VS Code recognizes it as RouterOS /app YAML (file detection)
-- [ ] RedHat YAML extension provides validation and autocomplete
-- [ ] Schema matches RouterOS /app requirements
-- [ ] Clear documentation on how to use
+Use two schema variants with different jobs:
 
----
+| Variant | Use in TikBook | Why |
+|---|---|---|
+| `*.editor.json` | Default VS Code YAML association | Keeps completions useful by avoiding strict regex patterns that suppress suggestions. |
+| `*.latest.json` | CI/manual strict validation and optional strict mode | Enforces tighter port-string and environment-name rules. |
 
-## Current State
+The user guide lists the current schema URLs and `# yaml-language-server: $schema=...` examples.
 
-### What Exists Today
+### Dependency
 
-**Nothing implemented yet.** This is a net-new feature.
+TikBook should recommend or bundle support through Red Hat YAML (`redhat.vscode-yaml`). It should be an `extensionPack` recommendation rather than a hard `extensionDependencies` requirement so TikBook degrades gracefully if the YAML extension is missing.
 
-User mentioned priority: "adding the /app JSON schema file to vscode is more important, a UI for it can come later"
+### File detection
 
-### What's Missing
+Do not claim every `app.yaml` in a workspace. Use conservative patterns:
 
-- YAML schema definition file
-- Auto-configuration for RedHat YAML extension
-- Documentation on how to create /app manifests
-- File association patterns
+- Single app: `*.tikapp.yaml`, `*.tikapp.yml`, `*.app.yaml`, `*.app.yml`, `**/{app,apps,tikapp}/app.{yaml,yml}`
+- App store: `*.tikappstore.yaml`, `*.tikappstore.yml`, `*.appstore.yaml`, `*.appstore.yml`, `**/{app,apps,tikapp}/app-store.{yaml,yml}`
 
----
+Keep files as language id `yaml`; Red Hat YAML owns parsing and schema validation.
 
-## Design Questions
+### Strictness model
 
-> **USER INPUT NEEDED:** Please fill in this section with your requirements
+Default editing should favor completion quality. Strict checks should be opt-in through a command, setting, CI guidance, or per-file `$schema` header. TikBook-specific diagnostics can warn about RouterOS requirements that the editor schema intentionally leaves permissive.
 
-### Question 1: Schema Source
+## Functional requirements
 
-**Context:** Where should the schema come from?
+### First implementation round
 
-**Options:**
+1. Bundle or fetch the current restraml app and app-store schemas.
+2. Register editor-friendly schemas for the file patterns above.
+3. Add `redhat.vscode-yaml` to extension recommendations/packaging without making TikBook unusable if it is absent.
+4. Add native VS Code providers, scoped only to matching YAML files, for:
+   - schema-derived completions that preserve Monaco parity where Red Hat YAML is insufficient;
+   - hover/inlay help for important `/app` fields;
+   - low-noise diagnostics for root-shape mistakes, device-mode-sensitive fields, and optionally relaxed port strings.
+5. Add commands for a new single-app manifest and a new app-store manifest.
+6. Document the workflow and manual schema override path.
 
-- Create schema manually based on RouterOS documentation
-- Extract schema from RouterOS `/console/inspect`
-- Use community-maintained schema (if exists)
-- Combine multiple sources
+This round is implemented. Rich built-in example browsing remains a follow-up.
 
-**Decision:** TBD - What's your preference?
+### Out of scope for first round
 
-### Question 2: Schema Format
+- Deploying YAML to a router through `/rest/app`.
+- Live connected-router readiness checks.
+- Full browser/webview clone of `tikapp.html`.
+- MCP/WebMCP integration.
+- Treating `/app` YAML as docker-compose-compatible.
 
-**Context:** What format should the schema use?
+## UX requirements
 
-**Options:**
+Users should be able to:
 
-- JSON Schema (standard for VS Code/RedHat YAML)
-- XML Schema Definition (XSD)
-- Custom DSL
+1. Create `my-service.tikapp.yaml` or `apps/app.yaml`.
+2. See YAML validation and completions without manually finding the schema URL.
+3. Override the schema with a `$schema` header for strict or pinned validation.
+4. Create a starter manifest from a TikBook command.
+5. Read concise warnings that RouterOS custom apps require RouterOS 7.22+, the container package, container device-mode when devices are used, and enough storage/RAM.
 
-**Decision:** Likely JSON Schema (most common for VS Code), confirm?
+## Implementation notes
 
-### Question 3: File Detection
+- Prefer static YAML schema contributions when possible; fall back to configuration defaults only if the contribution point cannot express the needed local schema/file-match behavior.
+- Keep schema assets in a package-included location such as `resources/schemas/`.
+- Add a sync script for refreshing schema assets from restraml, but do not require network access at runtime.
+- Keep provider helpers pure and unit-testable: file matching, schema walking, suggestion extraction, root-shape diagnostics, and port/device warnings.
+- If built-in example browsing from restraml `app.json` grows too large, ship scaffold commands first and track the example browser as a deferred quick task.
 
-**Context:** How should VS Code know a YAML file is for RouterOS /app?
+## Testing strategy
 
-**Options:**
+Automated tests should cover:
 
-- File naming pattern (e.g., `*.app.yaml`, `app-*.yaml`)
-- First-line comment (e.g., `# RouterOS App Container`)
-- File location (e.g., in `/app` folder)
-- User manually associates via setting
+- app/store file pattern matching;
+- schema assets exist and expose expected top-level requirements/enums;
+- package contributions recommend `redhat.vscode-yaml` and register schema associations;
+- root object vs root array diagnostics;
+- device-mode warning detection;
+- strict-vs-editor schema selection behavior when implemented.
 
-**Decision:** TBD - What pattern makes sense?
+Manual checks should include opening `.tikapp.yaml` and `.tikappstore.yaml` files in VS Code desktop and VS Code for Web with Red Hat YAML installed.
 
-### Question 4: Auto-Configuration
+## Deferred follow-ups
 
-**Context:** Should TikBook auto-configure RedHat YAML extension?
+Track concrete deferred work in [docs/llm-todos.md](../llm-todos.md#routeros-app-yaml-dev-workflow--ready-for-implementation), including:
 
-**Options:**
-
-- Auto-add schema association on TikBook activation
-- Prompt user to add schema association
-- Document manual steps only
-- Provide command to configure
-
-**Decision:** TBD - User mentioned this should be handled, clarify approach?
-
-### Question 5: Schema Scope
-
-**Context:** What should the schema cover?
-
-**RouterOS /app YAML Properties (preliminary list, verify):**
-
-- `name` - App name
-- `version` - App version
-- `icon` - App icon URL
-- `description` - App description
-- `url-path` - Web UI path
-- `container` - Container image/config
-- ...more properties?
-
-**Decision:** TBD - Provide complete list or link to RouterOS documentation
-
----
-
-## Requirements
-
-### Functional Requirements
-
-#### Must Have
-
-1. JSON Schema file for RouterOS /app YAML format
-2. Schema validation in VS Code when editing /app YAML files
-3. Autocomplete for valid properties
-4. Inline documentation for each property
-5. Error highlighting for invalid values
-
-#### Should Have
-
-1. Auto-configuration of RedHat YAML extension
-2. Example /app YAML files
-3. Documentation on /app development workflow
-
-#### Could Have (Future)
-
-1. Command to scaffold new
- /app YAML
-2. Integration with `/rest/app` endpoint (deploy to router)
-3. Validation against running RouterOS version
-
-### Non-Functional Requirements
-
-**Compatibility:**
-
-- Works with RedHat YAML extension (de facto standard)
-- VS Code desktop and web
-- RouterOS 7.22+ (when /app was introduced)
-
-**Usability:**
-
-- Easy to enable (automatic or one command)
-- Clear error messages
-- Good developer experience
-
----
-
-## User Experience
-
-### User Flows
-
-**Flow 1: Create New /app Manifest**
-
-1. User creates `my-app.yaml` file
-2. TikBook detects file (via pattern or prompt)
-3. RedHat YAML extension activated with RouterOS /app schema
-4. User types `name:` → sees autocomplete with description
-5. User adds invalid property → sees inline error
-6. User hovers property → sees documentation
-
-**Flow 2: Edit Existing Manifest**
-
-1. User opens existing `app.yaml`
-2. Schema validation active
-3. User makes change
-4. Instant feedback on validity
-
-### UI/UX Design
-
-**Commands:**
-
-- `tikbook.app.configureSchema` - Manually enable /app YAML schema
-
-**Settings:**
-
-```json
-{
-  "routeros.app.autoConfigureSchema": {
-    "type": "boolean",
-    "default": true,
-    "description": "Automatically configure YAML schema for RouterOS /app files"
-  }
-}
-```
-
-**File Patterns:**
-> **USER INPUT NEEDED:** What file naming pattern should trigger /app schema?
-
-- `*.app.yaml`?
-- `app.yaml` (specific name)?
-- Any YAML in `/apps/` folder?
-
-### Examples
-
-**Example 1: Basic /app YAML**
-
-```yaml
-# RouterOS App Container
-name: my-custom-app
-version: 1.0.0
-icon: https://example.com/icon.png
-description: My custom application
-url-path: /my-app
-container:
-  image: docker.io/myapp:latest
-  # ... more container config
-```
-
----
-
-## Implementation Notes
-
-### Architecture
-
-**Components:**
-
-- JSON Schema file (static resource)
-- Schema registration in extension.ts
-- Optional: Command to configure RedHat YAML extension
-- Documentation
-
-**Data Flow:**
-
-```
-User edits .yaml file → VS Code detects pattern → Applies schema → RedHat YAML validates
-```
-
-### Technical Approach
-
-**Phase 1: Create Schema (TBD hours)**
-> **BLOCKED:** Awaiting user specification of schema properties
-
-1. Research RouterOS /app YAML format (docs, examples)
-2. Create JSON Schema file
-3. Test with example /app YAMLs
-4. Refine based on feedback
-
-**Phase 2: Integration (1-2 hours)**
-
-1. Add schema file to extension resources
-2. Register schema with VS Code/RedHat YAML
-3. Add command for manual configuration
-4. Test auto-configuration
-
-**Phase 3: Documentation (1 hour)**
-
-1. Add /app development guide to docs/
-2. Update README with /app schema feature
-3. Provide example /app YAML files
-
-### Key Implementation Details
-
-**Schema Registration:**
-
-```typescript
-// In extension.ts or new app-schema.ts
-const schemaUri = context.asAbsolutePath('resources/routeros-app-schema.json');
-const schemaConfig = {
-  fileMatch: ['*.app.yaml', 'app-*.yaml'], // TBD pattern
-  uri: schemaUri
-};
-
-// Register with RedHat YAML extension
-await vscode.commands.executeCommand('yaml.setSchema', schemaConfig);
-```
-
-**JSON Schema Template:**
-
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "RouterOS App Container",
-  "description": "Schema for RouterOS custom app container manifests",
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Unique name for the app"
-    },
-    "version": {
-      "type": "string",
-      "description": "App version (semver recommended)"
-    },
-    // ... more properties per user spec
-  },
-  "required": ["name", "version"]
-}
-```
-
-### Dependencies
-
-**Required Before Implementation:**
-
-- [ ] User specification of complete /app YAML schema
-- [ ] RouterOS /app documentation reference
-- [ ] File pattern decision
-- [ ] Example /app YAML files
-
-**Nice to Have:**
-
-- [ ] RedHat YAML extension installed (recommend in extensionpack)
-
----
-
-## Testing Strategy
-
-### Unit Tests
-
-- Schema validation against known-good /app YAML examples
-- Schema catches known-bad /app YAML examples
-
-### Integration Tests
-
-- Schema registration works
-- File pattern detection works
-- Auto-configuration works
-
-### Manual Testing
-
-- Create new /app YAML → schema validates correctly
-- Edit existing /app YAML → autocomplete works
-- Deploy validated YAML to RouterOS → works as expected
-
----
-
-## Rollout Plan
-
-### Feature Flags
-
-- [ ] Experimental
-- [x] Stable (when schema validated against RouterOS)
-
-### Documentation Updates
-
-- [ ] Add docs/app-development-guide.md
-- [ ] Update README.md with /app schema feature
-- [ ] Update CHANGELOG.md
-
----
-
-## Open Issues & Risks
-
-### Risks
-
-- **Risk: RouterOS /app format undocumented or changes frequently**
-  - Impact: High (schema becomes outdated)
-  - Mitigation: Version schema alongside RouterOS versions
-
-### Unresolved Questions
-
-- [ ] Complete /app YAML property list
-- [ ] Required vs optional properties
-- [ ] File detection pattern
-- [ ] Auto-configuration behavior
-
----
-
-## Notes / Scratchpad
-
-**USER: Please add your notes here**
-
-Requirements to fill in:
-
-1. Complete list of /app YAML properties (or link to docs)
-2. Example /app YAML file (working example)
-3. File naming pattern preference
-4. Auto-configuration preference (auto, prompt, manual)
-5. Any RouterOS version-specific differences in /app format
-
-**Resources:**
-
-- Forum post: <https://forum.mikrotik.com/t/amm0s-manual-for-custom-app-containers-7-22beta/268036>
-- RouterOS docs: [Link to official /app documentation when available]
-- Example apps: [Link to examples if exist]
-
-**Next Steps:**
-
-1. User fills in schema property list
-2. User provides example YAML
-3. Change status to `ready-for-implementation`
+- live connected-router `/app` readiness checks;
+- a strict validation command or version-specific schema selector;
+- a richer built-in app example browser;
+- future MCP/WebMCP parity after TikBook's MCP direction lands.

@@ -1,4 +1,5 @@
 import type { ExtensionContext } from 'vscode'
+import { initializeAppYamlSupport } from './app-yaml'
 import { MarkdownHandlers } from './codelens'
 import { initializeCommands } from './commands'
 import { SecretManager } from './config'
@@ -30,6 +31,7 @@ export function activate(context: ExtensionContext): void {
     ...initializeSSH(),
     ...initializeConverters(),
     ...initializeSystemScriptFileSystem(),
+    ...initializeAppYamlSupport(context),
     RouterRestClient.default,
     new MarkdownHandlers(context),
     new StatusWatchdog(context),
