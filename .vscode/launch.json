@@ -12,7 +12,8 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "--disable-extension=TIKOCI.lsp-routeros-ts"
+        "--disable-extension=TIKOCI.lsp-routeros-ts",
+        "${workspaceFolder}/test-corpus/discourse-bookmarks"
       ],
       "outFiles": [
         "${workspaceFolder}/out/**/*.js"
@@ -26,7 +27,8 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionDevelopmentPath=${workspaceFolder}/../lsp-routeros-ts"
+        "--extensionDevelopmentPath=${workspaceFolder}/../lsp-routeros-ts",
+        "${workspaceFolder}/test-corpus/discourse-bookmarks"
       ],
       "outFiles": [
         "${workspaceFolder}/out/**/*.js",
@@ -41,7 +43,8 @@
       "request": "launch",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionDevelopmentKind=web"
+        "--extensionDevelopmentKind=web",
+        "${workspaceFolder}/test-corpus/discourse-bookmarks"
       ],
       "outFiles": [
         "${workspaceFolder}/out/**/*.js"

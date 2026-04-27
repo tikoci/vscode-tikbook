@@ -11,7 +11,7 @@
  */
 
 import * as assert from 'node:assert';
-import { getRouterOSTestConfig, hasRouterOSTestConfig } from './integration-test-config';
+import { getRouterOSTestConfig, hasRouterOSTestConfig } from '../helpers/integration-test-config';
 
 suite('RouterOS Connection Validation', function() {
 	// Increase timeout for network operations

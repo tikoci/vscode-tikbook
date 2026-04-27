@@ -156,7 +156,12 @@ export class RouterRestClient {
 
     // update from setting per request
     client.interceptors.request.use(async (req) => {
-      const password = await SecretManager.default.getPassword()
+      // Optional-chain SecretManager.default so a not-yet-initialized
+      // singleton (e.g. when REST is invoked outside the activated extension,
+      // including unit-test bundles) falls back to plain settings instead of
+      // throwing. In production, activate() always sets it before any notebook
+      // execution, so this is a defensive guard, not a behavior change.
+      const password = await SecretManager.default?.getPassword()
       const settings = getSettings()
       req.auth = {
         username: settings.username,
