@@ -240,7 +240,7 @@ Provides access to SSH and WebFig, along with various data extracts — includin
 
 Essentially, "bookmarks" to various other web content with information about RouterOS scripting.  All items that start with "Browse" will open a new web browser with the selected page.  For example, you can access MikroTik documentation and the forum from the menu.  Other options include:
 
-- [TIKOCI](https://tikoci.github.io) has other projects than TikBook, including containers.  _Browser TIKOCI Projects_ will show another menu that lists TIKOCI projects, and allows navigation directly to the GitHub page for a selected project.  The _Git Clone_ will show the same list, but "copy" (`git clone`) any TIKOCI project as a local `git` repo on a computer running VS Code that can be modified as desired.
+- [TIKOCI](https://tikoci.github.io/) has other projects than TikBook, including containers.  _Browser TIKOCI Projects_ will show another menu that lists TIKOCI projects, and allows navigation directly to the GitHub page for a selected project.  The _Git Clone_ will show the same list, but "copy" (`git clone`) any TIKOCI project as a local `git` repo on a computer running VS Code that can be modified as desired.
 - _Browser RouterOS Schema Tools_ opens a browser to a [web tool](https://tikoci.github.io/restraml/) to "diff" commands and arguments between different versions, and allows download of RAML and OpenAPI schemas for RouterOS's REST API.
 - Selected "TikTube" videos about scripting topics that play inside of VS Code. _Experimental, see below_
 
