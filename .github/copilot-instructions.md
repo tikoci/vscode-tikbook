@@ -18,7 +18,6 @@ Pattern guides in `docs/`:
 - `versioning-patterns.md` - VS Code version compatibility (API gates, runtime fallbacks)
 - `testing-vscode-web-local.md` - Testing web extensions locally and on vscode.dev
 - `copilot-setup.md` - Copilot configuration and troubleshooting
-- `web-desktop-compatibility.md` - Design-time verification for VS Code for Web (if created)
 - `agentic-collaboration-patterns.md` - AI-assisted spec refinement workflows (iterative Q&A, research patterns)
 
 Architectural reference: See [docs/architecture.md](../docs/architecture.md), [docs/conventions.md](../docs/conventions.md), and [docs/sarb/code-review-checklist.md](../docs/sarb/code-review-checklist.md).
@@ -61,12 +60,12 @@ the work.
 - **Before editing code:** Read `.github/instructions/ai-editing-best-practices.md` - prevents corruption from ambiguous context matching
 - Review [ROADMAP.md](../ROADMAP.md) first, then [docs/llm-todos.md](../docs/llm-todos.md) and [docs/future-features.md](../docs/future-features.md) for active constraints and decision points.
 - Run biome (npm run lint) on code changes. Use `npm run lint:fix` to auto-fix safe issues.
-- Add tests when behavior is uncertain; use llm-experiments.test.js for one-off tests.
+- Add tests when behavior is uncertain; place pure tests in `src/test/unit/` and external/system tests in `src/test/integration/` (see [docs/test-running-policy.md](../docs/test-running-policy.md)).
 - Keep commands, contributions, and activation events in package.json in sync with code.
 - For RouterOS questions, use rosetta/RouterOS docs tooling first when available; otherwise validate commands using v7 docs or RouterOS LSP.
 - Publishing is only via .github/workflows/build.yaml (no direct publish).
 - Gate experimental features behind settings when noted in docs/llm-todos.md or docs/future-features.md.
-- If third-party test tooling is buggy, document it in docs/interop-issues.md and consider filing an upstream issue.
+- If third-party test tooling is buggy, document it in the relevant file under `docs/` (or open an upstream issue) and consider filing one.
 - **When adding runtime assets** (media/, web resources): Update `.vscodeignore` if patterns need adjustment.
 - **Web research source note (MikroTik):** `help.mikrotik.com` runs on Atlassian Confluence; `forum.mikrotik.com` runs on Discourse. For fetch-based extraction, query for specific section headers (Confluence) or post/reply structure and versions (Discourse) to reduce navigation noise.
 

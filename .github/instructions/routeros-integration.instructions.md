@@ -1,4 +1,3 @@
-```instructions
 ---
 name: 'RouterOS REST API Integration'
 description: 'Guidelines for src/**/*.ts files with RouterOS API calls'
@@ -261,4 +260,3 @@ it('gets address', async () => {
 - [docs/conventions.md](../../docs/conventions.md) - General code patterns
 - [docs/sarb/code-review-checklist.md](../../docs/sarb/code-review-checklist.md) - Review guidance
 
-```

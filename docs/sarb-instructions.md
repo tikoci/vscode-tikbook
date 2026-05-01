@@ -41,7 +41,7 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 
 - Do not use console.log. Use the existing output logging pattern (e.g., log.info()).
 - Run Biome (`npm run lint`) and pay attention to warnings.
-- Add tests when behavior is uncertain. Use llm-experiments.test.js for one-off checks.
+- Add tests when behavior is uncertain. Place pure tests in `src/test/unit/`, external-system tests in `src/test/integration/`.
 - Validate RouterOS commands against current v7 schema. Use RouterOS LSP to verify syntax where possible.
 - Avoid Node-specific APIs in extension code. Tools scripts may use Node, but prefer portable options.
 - Keep types open to new attributes; RouterOS adds fields over time.
@@ -160,7 +160,6 @@ When the owner says "SARB," it refers to the agentic AI instructions and LLM too
 **Test types:**
 
 - **Feature tests:** `src/test/unit/*.test.ts` and `src/test/integration/*.test.ts` → compile to `out/test/**/*.test.js`
-- **Experiments:** `src/test/llm-experiments.test.ts` for one-off validation during development
 - **Integration tests:** Test with real VS Code APIs when mocking is too complex (preferred over mocks)
 
 **VS Code test context benefits:**
@@ -234,7 +233,7 @@ suite('RouterOS REST Client', () => {
 
 - Pure UI interactions that require manual verification (consider integration test instead)
 - Code that directly wraps VS Code APIs without logic (test the caller instead)
-- One-time migration scripts (though llm-experiments.test.js can validate logic)
+- One-time migration scripts
 
 **Web compatibility checklist:**
 

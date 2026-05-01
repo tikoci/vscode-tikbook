@@ -265,9 +265,10 @@ src/
 ├── shared.ts             # Shared utilities, REST client
 ├── vscode-compat.ts      # VS Code version compatibility
 └── test/
-    ├── suite/
-    │   └── integration/  # Integration tests
-    └── *.test.ts         # Unit tests
+    ├── unit/            # Pure tests (default `npm test` suite)
+    ├── integration/     # External-system tests (opt-in, gated with suite.skip)
+    ├── helpers/
+    └── fixtures/
 ```
 
 ### Key Components

@@ -1,7 +1,7 @@
 ---
 name: 'Testing & Validation'
 description: 'Guidelines for test files and experimental code'
-applyTo: '**/*.test.ts,**/*.spec.ts,llm-experiments.test.js'
+applyTo: '**/*.test.ts,**/*.spec.ts'
 ---
 
 # Testing & Experimental Code Guidelines
@@ -50,7 +50,7 @@ These rules apply to test files and one-off validation code.
 
 ### General Tests
 
-- Use `llm-experiments.test.js` for quick validation of uncertain behavior
+- Place quick validation tests under `src/test/unit/` (or `src/test/integration/` if they touch external systems)
 - Test edge cases before committing to main code
 - Validate RouterOS API assumptions (does this command exist in v7?)
 - Use clear test names that describe the assumption being validated

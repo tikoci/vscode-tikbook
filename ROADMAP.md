@@ -60,9 +60,8 @@ direction is unresolved.
       `src/test/integration/utm-*`, `vm-applescript-*`.
 - [ ] Wire `quickchr` (npm: `@tikoci/quickchr`) into `src/vm-providers/` as the
       primary provider. Keep the `VMProvider` interface; replace the
-      implementation.
-- [ ] Update `src/extension.ts` activation — it currently `new UTMProvider()` +
-      registers it; swap for the quickchr-backed provider.
+      implementation. (Activation in `src/extension.ts` is currently no-op for
+      VM providers — wire the new provider here once it exists.)
 - [ ] Update `docs/specs/chr-test-environment.md` to the quickchr design (or
       open a new spec and mark this one abandoned).
 

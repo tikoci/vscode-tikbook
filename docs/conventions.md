@@ -1,15 +1,8 @@
----
-
-## Test Suite Structure & Migration
-
-For the current organization of all test files, migration summary, and next steps for test categorization (unit vs integration), see:
-
-- [test-suite-structure.md](test-suite-structure.md)
-
----
 # TikBook Code Conventions & Patterns
 
 This document captures recurring patterns, naming conventions, and style guidance specific to TikBook. Use this to write code that fits the project naturally.
+
+> **Test layout:** see [test-suite-structure.md](test-suite-structure.md) and [test-running-policy.md](test-running-policy.md) for the current `src/test/{unit,integration}/` organization.
 
 ## Logging & Output
 
@@ -313,27 +306,28 @@ import type { RouterOsItem } from './types';
 ### Node Built-ins in Extension Code
 
 - Avoid in general (not web-compatible)
-- Allowed (with carve-out) in: routeros.ts (`node:https`), virtualdocs.ts (`node:path`), vm-providers/utm-provider.ts (`node:child_process`, `node:util`)
+- Allowed (with carve-out) in: routeros.ts (`node:https`), virtualdocs.ts (`node:path`), and the parked vm-providers/utm-provider.ts (`node:child_process`, `node:util` — currently unwired from activation; see ROADMAP Theme 1)
 - Biome enforces `style.noRestrictedImports` for shipped extension code
 
 ## Testing
 
 ### Unit Tests
 
-- Use `llm-experiments.test.js` for one-off validation tests
+- Place pure tests under `src/test/unit/*.test.ts`
+- Place external/system tests (UTM, QEMU, real RouterOS, etc.) under `src/test/integration/*.test.ts` and gate with `suite.skip`
 - Test uncertain behavior and edge cases
 - Validate assumptions about RouterOS API before committing
 
 ### Third-Party Tooling Issues
 
-- If tooling or libraries misbehaves or requires a workaround, capture it in `docs/interop-issues.md`.
+- If tooling or libraries misbehave or require a workaround, capture it in a focused doc under `docs/` (or open an upstream issue).
 - File an upstream issue when functionality is lost or behavior is misleading.
 - Keep notes actionable: repro steps, versions, and observed vs expected results.
 
 **Example:**
 
 ```typescript
-// In llm-experiments.test.js
+// In src/test/unit/router-error.test.ts
 it('should parse RouterOS error message', () => {
   const error = '... invalid value for argument ...';
   expect(isRouterOsError(error)).toBe(true);
