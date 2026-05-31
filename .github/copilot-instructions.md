@@ -35,6 +35,50 @@ the work.
 
 `CHANGELOG.md` is past-tense only — do not record planned work there.
 
+## Build, test, lint commands
+
+Bundler is **Bun** (`bun build`), not webpack/esbuild. Two targets: `out/extension.js`
+(node `main`) and `dist/extension.js` (browser `browser`).
+
+| Command | What it does |
+|---|---|
+| `npm run compile` | clean + lint + typecheck + build node target (`out/extension.js`) |
+| `npm run compile:web` | build browser target (`dist/extension.js`) |
+| `npm run compile:test` | build `out/test/{unit,integration}/**/*.test.js` — **required before GUI Test Runner discovers tests** |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` / `npm run lint:fix` | `biome check .` / `biome check --write .` |
+| `npm test` | unit tests only (`out/test/unit/**`, via `.vscode-test-cli.mjs`) |
+| `npm run test:web` | same unit tests in the web extension host (`--browser`) |
+| `npm run format` | biome `--write` + markdown `--fix:all` |
+| `npm run vsix:package` | build node + web `.vsix` |
+
+**Run a single test** (mocha flags pass through `vscode-test`):
+
+- By name: `npm test -- --grep "credential"` (or `-f` for fixed-string match)
+- By file: `npm test -- --run out/test/unit/converters.test.js`
+
+`npm test` runs `pretest` (compiles node + test) automatically. Integration tests in
+`src/test/integration/` are opt-in (each file uses top-level `suite.skip`); default
+`npm test` runs unit only.
+
+## Architecture in one paragraph
+
+TikBook is the VS Code companion to the `TIKOCI.lsp-routeros-ts` extension (shipped as
+an `extensionPack`); language parsing/diagnostics live in that LSP, not here. Entry
+`src/extension.ts` wires up: a **notebook kernel** (`notebook.ts`) supporting two
+formats (`.tikbook`/`.md.rsc` and `.rscmd`/`.rsc.md`); two **virtual filesystems**
+(`rscena://` read-only views in `virtualdocs.ts`; `rscfile://` read-write ScriptFS in
+`scriptfs.ts`); a **REST client** for RouterOS (`routeros.ts` + `shared.ts`); a status
+**watchdog** (`watchdog.ts`); `/app` YAML + schema tooling (`app-yaml.ts`,
+`schema-mapper.ts`, `scriptfs-schema.ts`); and `converters.ts`/`commands.ts`/`menus.ts`/
+`codelens.ts`. Parked CHR VM explorer work (`vm-explorer.ts`, `vm-commands.ts`,
+`vm-providers/`) exists but is not currently activated. The same `src/extension.ts`
+compiles to both node and browser targets, so **all** extension code must be
+web-safe: gate desktop-only paths with `vscode.env.uiKind === UIKind.Desktop`, prefer
+`vscode.workspace.fs`/`vscode.Uri` over `node:fs`/`path`, and use `SecretStorage` (via
+`config.ts`) for credentials. `vscode-compat.ts` holds VS Code version-gating shims
+(min engine `^1.78.2`).
+
 ## Core rules
 
 - This is a VS Code extension. Avoid Node-only APIs in extension code, especially for web.
